@@ -577,6 +577,17 @@ describe("chat route", () => {
     const res = await chatPOST(req);
     expect(res.status).toBe(502);
   });
+
+  it("maps network failure to 502 chat_offline", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("down")));
+    const req = new Request("http://x/api/chat", {
+      method: "POST",
+      body: JSON.stringify({ messages: [{ role: "user", content: "hi" }] }),
+    });
+    const res = await chatPOST(req);
+    expect(res.status).toBe(502);
+    expect(((await res.json()) as { error: string }).error).toBe("chat_offline");
+  });
 });
 ```
 
@@ -643,17 +654,27 @@ export async function POST(req: Request) {
   }
   const trimmed = messages.slice(-20);
 
-  const upstream = await fetch(url, {
-    method: "POST",
-    headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
-    body: JSON.stringify({
-      model,
-      messages: [{ role: "system", content: SYSTEM_PROMPT }, ...trimmed],
-      temperature: 0.7,
-    }),
-  });
+  let upstream: Response;
+  try {
+    upstream = await fetch(url, {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
+      body: JSON.stringify({
+        model,
+        messages: [{ role: "system", content: SYSTEM_PROMPT }, ...trimmed],
+        temperature: 0.7,
+      }),
+    });
+  } catch {
+    return NextResponse.json({ error: "chat_offline" }, { status: 502 });
+  }
   if (!upstream.ok) return NextResponse.json({ error: "chat_offline" }, { status: 502 });
-  const data = (await upstream.json()) as { choices?: { message?: { content?: string } }[] };
+  let data: { choices?: { message?: { content?: string } }[] };
+  try {
+    data = (await upstream.json()) as { choices?: { message?: { content?: string } }[] };
+  } catch {
+    return NextResponse.json({ error: "chat_offline" }, { status: 502 });
+  }
   const reply = data.choices?.[0]?.message?.content ?? "";
   if (!reply) return NextResponse.json({ error: "chat_offline" }, { status: 502 });
   return NextResponse.json({ reply });
