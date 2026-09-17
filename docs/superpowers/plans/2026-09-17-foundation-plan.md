@@ -232,9 +232,118 @@ git commit -m 'feat: scaffold Next.js studio shell'
 
 **Interfaces:**
 - Consumes: nothing
-- Produces: `getChain(id: number | string)`, `parseDraftReply(text: string): Partial<Draft>`, `validateDraft(d: Partial<Draft>): string[]`, `saveReceipt(r: Receipt)`, `listReceipts(): Receipt[]` — used by Tasks 4, 5, 7 and Plans 2–4
+- Produces: `getChain(id: number | string)`, `parseDraftReply(text: string): Partial<Draft>`, `validateDraft(d: Partial<Draft>): string[]`, `saveReceipt(r: Receipt)`, `listReceipts(): Receipt[]` — used by Tasks 4, 5, 6 and Plans 2–4
 
-- [ ] **Step 1: Write lib/chains.ts**
+- [ ] **Step 1: Write vitest.config.ts**
+
+```ts
+import { defineConfig } from "vitest/config";
+
+export default defineConfig({
+  test: {
+    environment: "node",
+    include: ["tests/**/*.test.ts"],
+  },
+});
+```
+
+- [ ] **Step 2: Write tests/chains.test.ts**
+
+```ts
+import { describe, expect, it } from "vitest";
+import { CHAINS, DIRECT_SUPPLY, getChain } from "../lib/chains";
+
+describe("chains", () => {
+  it("finds Hood mainnet by id", () => {
+    expect(getChain(4663)?.name).toBe("Robinhood Chain");
+  });
+
+  it("returns undefined for unknown chain", () => {
+    expect(getChain(999999)).toBeUndefined();
+  });
+
+  it("pins direct supply", () => {
+    expect(DIRECT_SUPPLY).toBe(999000000);
+    expect(CHAINS.length).toBe(4);
+  });
+});
+```
+
+- [ ] **Step 3: Write tests/draft.test.ts**
+
+```ts
+import { describe, expect, it } from "vitest";
+import { parseDraftReply, validateDraft } from "../lib/draft";
+
+describe("parseDraftReply", () => {
+  it("extracts draft JSON embedded in prose", () => {
+    const out = parseDraftReply('Sure! Here it is {"ticker":"ember","pooled":"800000"} done');
+    expect(out.ticker).toBe("EMBER");
+    expect(out.pooled).toBe("800000");
+  });
+
+  it("returns empty object when no JSON present", () => {
+    expect(parseDraftReply("no json here")).toEqual({});
+  });
+
+  it("returns empty object on broken JSON", () => {
+    expect(parseDraftReply('{"ticker":')).toEqual({});
+  });
+});
+
+describe("validateDraft", () => {
+  it("requires ticker", () => {
+    expect(validateDraft({})).toContain("ticker is required");
+  });
+
+  it("rejects non-positive numbers", () => {
+    expect(validateDraft({ ticker: "X", pooled: "-5" })).toContain("pooled must be a positive number");
+    expect(validateDraft({ ticker: "X", liquidity: "abc" })).toContain("liquidity must be a positive number");
+  });
+
+  it("accepts a good draft", () => {
+    expect(validateDraft({ ticker: "EMBER", pooled: "800000", liquidity: "0.1" })).toEqual([]);
+  });
+});
+```
+
+- [ ] **Step 4: Write tests/receipts.test.ts**
+
+```ts
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { clearReceipts, listReceipts, saveReceipt } from "../lib/receipts";
+
+describe("receipts", () => {
+  beforeEach(() => {
+    const mem = new Map<string, string>();
+    vi.stubGlobal("localStorage", {
+      getItem: (k: string) => mem.get(k) ?? null,
+      setItem: (k: string, v: string) => void mem.set(k, v),
+      removeItem: (k: string) => void mem.delete(k),
+    });
+    clearReceipts();
+  });
+
+  it("saves and lists newest first", () => {
+    saveReceipt({ chainId: 4663, hash: "0xaaa", createdAt: "t1" });
+    saveReceipt({ chainId: 4663, hash: "0xbbb", createdAt: "t2" });
+    const list = listReceipts();
+    expect(list.map((r) => r.hash)).toEqual(["0xbbb", "0xaaa"]);
+  });
+
+  it("returns empty list when storage is corrupt", () => {
+    (localStorage as Storage).setItem("kentir.receipts.v1", "not-json{{{");
+    expect(listReceipts()).toEqual([]);
+  });
+});
+```
+
+- [ ] **Step 5: Run tests to verify they fail**
+
+Run: `npm test`
+Expected: FAIL with "Cannot find module" or "Failed to resolve import" for `../lib/chains`. This proves the tests execute before the implementation exists.
+
+- [ ] **Step 6: Write lib/chains.ts**
 
 ```ts
 export type Chain = {
@@ -259,7 +368,7 @@ export function getChain(id: number | string): Chain | undefined {
 export const DIRECT_SUPPLY = 999000000;
 ```
 
-- [ ] **Step 2: Write lib/draft.ts**
+- [ ] **Step 7: Write lib/draft.ts**
 
 ```ts
 export type Draft = {
@@ -308,7 +417,7 @@ export function validateDraft(d: Partial<Draft>): string[] {
 }
 ```
 
-- [ ] **Step 3: Write lib/receipts.ts**
+- [ ] **Step 8: Write lib/receipts.ts**
 
 ```ts
 export type Receipt = {
@@ -355,116 +464,12 @@ export function clearReceipts(): void {
 }
 ```
 
-- [ ] **Step 4: Write tests/chains.test.ts**
-
-```ts
-import { describe, expect, it } from "vitest";
-import { CHAINS, DIRECT_SUPPLY, getChain } from "../lib/chains";
-
-describe("chains", () => {
-  it("finds Hood mainnet by id", () => {
-    expect(getChain(4663)?.name).toBe("Robinhood Chain");
-  });
-
-  it("returns undefined for unknown chain", () => {
-    expect(getChain(999999)).toBeUndefined();
-  });
-
-  it("pins direct supply", () => {
-    expect(DIRECT_SUPPLY).toBe(999000000);
-    expect(CHAINS.length).toBe(4);
-  });
-});
-```
-
-- [ ] **Step 5: Write tests/draft.test.ts**
-
-```ts
-import { describe, expect, it } from "vitest";
-import { parseDraftReply, validateDraft } from "../lib/draft";
-
-describe("parseDraftReply", () => {
-  it("extracts draft JSON embedded in prose", () => {
-    const out = parseDraftReply('Sure! Here it is {"ticker":"ember","pooled":"800000"} done');
-    expect(out.ticker).toBe("EMBER");
-    expect(out.pooled).toBe("800000");
-  });
-
-  it("returns empty object when no JSON present", () => {
-    expect(parseDraftReply("no json here")).toEqual({});
-  });
-
-  it("returns empty object on broken JSON", () => {
-    expect(parseDraftReply('{"ticker":')).toEqual({});
-  });
-});
-
-describe("validateDraft", () => {
-  it("requires ticker", () => {
-    expect(validateDraft({})).toContain("ticker is required");
-  });
-
-  it("rejects non-positive numbers", () => {
-    expect(validateDraft({ ticker: "X", pooled: "-5" })).toContain("pooled must be a positive number");
-    expect(validateDraft({ ticker: "X", liquidity: "abc" })).toContain("liquidity must be a positive number");
-  });
-
-  it("accepts a good draft", () => {
-    expect(validateDraft({ ticker: "EMBER", pooled: "800000", liquidity: "0.1" })).toEqual([]);
-  });
-});
-```
-
-- [ ] **Step 6: Write tests/receipts.test.ts**
-
-```ts
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { clearReceipts, listReceipts, saveReceipt } from "../lib/receipts";
-
-describe("receipts", () => {
-  beforeEach(() => {
-    const mem = new Map<string, string>();
-    vi.stubGlobal("localStorage", {
-      getItem: (k: string) => mem.get(k) ?? null,
-      setItem: (k: string, v: string) => void mem.set(k, v),
-      removeItem: (k: string) => void mem.delete(k),
-    });
-    clearReceipts();
-  });
-
-  it("saves and lists newest first", () => {
-    saveReceipt({ chainId: 4663, hash: "0xaaa", createdAt: "t1" });
-    saveReceipt({ chainId: 4663, hash: "0xbbb", createdAt: "t2" });
-    const list = listReceipts();
-    expect(list.map((r) => r.hash)).toEqual(["0xbbb", "0xaaa"]);
-  });
-
-  it("returns empty list when storage is corrupt", () => {
-    (localStorage as Storage).setItem("kentir.receipts.v1", "not-json{{{");
-    expect(listReceipts()).toEqual([]);
-  });
-});
-```
-
-- [ ] **Step 7: Write vitest.config.ts**
-
-```ts
-import { defineConfig } from "vitest/config";
-
-export default defineConfig({
-  test: {
-    environment: "node",
-    include: ["tests/**/*.test.ts"],
-  },
-});
-```
-
-- [ ] **Step 8: Run tests, expect failures fixed by implementation order**
+- [ ] **Step 9: Run tests to verify they pass**
 
 Run: `npm test`
-Expected: PASS (libs already written; tests prove the contract). If any FAIL, fix lib code, not test expectations, unless the test contradicts the spec.
+Expected: PASS all suites. If any FAIL, fix lib code, not test expectations, unless the test contradicts the spec.
 
-- [ ] **Step 9: Commit**
+- [ ] **Step 10: Commit**
 
 ```bash
 git add lib tests vitest.config.ts
@@ -481,73 +486,7 @@ git commit -m 'feat: add chain registry, draft parsing, receipts store'
 - Consumes: `parseDraftReply` from Task 2 (chat route does not parse; client does — route returns raw text)
 - Produces: `GET /api/status → {configured: boolean, model: string, networks: {id, name, testnet}[]}`; `POST /api/chat {messages: {role, content}[], draft: Draft} → {reply: string} | {error: string}` with 502 + `{error: "chat_offline"}` when unconfigured
 
-- [ ] **Step 1: Write app/api/status/route.ts**
-
-```ts
-import { NextResponse } from "next/server";
-import { CHAINS } from "../../../lib/chains";
-
-export async function GET() {
-  const configured = Boolean(process.env.LLM_API_URL && process.env.LLM_API_KEY);
-  return NextResponse.json({
-    configured,
-    model: process.env.LLM_MODEL ?? "mimo-v2.5",
-    networks: CHAINS.map((c) => ({ id: c.id, name: c.name, testnet: c.testnet })),
-  });
-}
-```
-
-- [ ] **Step 2: Write app/api/chat/route.ts**
-
-```ts
-import { NextResponse } from "next/server";
-
-const SYSTEM_PROMPT = [
-  "You are Kentir, a coin launch copilot.",
-  "Help the user shape a token draft: name, ticker, pool tokens, starting liquidity, route.",
-  "Always end your reply with one fenced JSON block holding draft keys:",
-  '{"name": string, "ticker": string, "pooled": string, "liquidity": string, "route": "direct" | "pumpfun"}.',
-  "Supply is fixed and never editable: 999000000 direct, 1000000000 pumpfun.",
-  "Never ask for private keys or recovery phrases. Never claim to sign transactions.",
-].join(" ");
-
-type ChatMessage = { role: "user" | "assistant"; content: string };
-
-export async function POST(req: Request) {
-  const url = process.env.LLM_API_URL;
-  const key = process.env.LLM_API_KEY;
-  const model = process.env.LLM_MODEL ?? "mimo-v2.5";
-  if (!url || !key) return NextResponse.json({ error: "chat_offline" }, { status: 502 });
-
-  let body: { messages?: ChatMessage[] };
-  try {
-    body = (await req.json()) as { messages?: ChatMessage[] };
-  } catch {
-    return NextResponse.json({ error: "bad_request" }, { status: 400 });
-  }
-  const messages = Array.isArray(body.messages) ? body.messages.slice(-20) : [];
-  if (messages.length === 0 || messages.some((m) => typeof m.content !== "string" || m.content.length > 1000)) {
-    return NextResponse.json({ error: "bad_request" }, { status: 400 });
-  }
-
-  const upstream = await fetch(url, {
-    method: "POST",
-    headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
-    body: JSON.stringify({
-      model,
-      messages: [{ role: "system", content: SYSTEM_PROMPT }, ...messages],
-      temperature: 0.7,
-    }),
-  });
-  if (!upstream.ok) return NextResponse.json({ error: "chat_offline" }, { status: 502 });
-  const data = (await upstream.json()) as { choices?: { message?: { content?: string } }[] };
-  const reply = data.choices?.[0]?.message?.content ?? "";
-  if (!reply) return NextResponse.json({ error: "chat_offline" }, { status: 502 });
-  return NextResponse.json({ reply });
-}
-```
-
-- [ ] **Step 3: Write tests/chat-route.test.ts**
+- [ ] **Step 1: Write tests/chat-route.test.ts**
 
 ```ts
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -589,6 +528,15 @@ describe("chat route", () => {
     expect(res.status).toBe(400);
   });
 
+  it("rejects malformed message items with 400", async () => {
+    const req = new Request("http://x/api/chat", {
+      method: "POST",
+      body: JSON.stringify({ messages: [{ role: "user" }, null, "hi"] }),
+    });
+    const res = await chatPOST(req);
+    expect(res.status).toBe(400);
+  });
+
   it("proxies to upstream and returns reply", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
       ok: true,
@@ -615,12 +563,94 @@ describe("chat route", () => {
 });
 ```
 
-- [ ] **Step 4: Run tests**
+- [ ] **Step 2: Run tests to verify they fail**
+
+Run: `npx vitest run tests/chat-route.test.ts`
+Expected: FAIL with "Cannot find module" or "Failed to resolve import" for the route files.
+
+- [ ] **Step 3: Write app/api/status/route.ts**
+
+```ts
+import { NextResponse } from "next/server";
+import { CHAINS } from "../../../lib/chains";
+
+export async function GET() {
+  const configured = Boolean(process.env.LLM_API_URL && process.env.LLM_API_KEY);
+  return NextResponse.json({
+    configured,
+    model: process.env.LLM_MODEL ?? "mimo-v2.5",
+    networks: CHAINS.map((c) => ({ id: c.id, name: c.name, testnet: c.testnet })),
+  });
+}
+```
+
+- [ ] **Step 4: Write app/api/chat/route.ts**
+
+```ts
+import { NextResponse } from "next/server";
+
+const SYSTEM_PROMPT = [
+  "You are Kentir, a coin launch copilot.",
+  "Help the user shape a token draft: name, ticker, pool tokens, starting liquidity, route.",
+  "Always end your reply with one fenced JSON block holding draft keys:",
+  '{"name": string, "ticker": string, "pooled": string, "liquidity": string, "route": "direct" | "pumpfun"}.',
+  "Supply is fixed and never editable: 999000000 direct, 1000000000 pumpfun.",
+  "Never ask for private keys or recovery phrases. Never claim to sign transactions.",
+].join(" ");
+
+type ChatMessage = { role: "user" | "assistant"; content: string };
+
+export async function POST(req: Request) {
+  const url = process.env.LLM_API_URL;
+  const key = process.env.LLM_API_KEY;
+  const model = process.env.LLM_MODEL ?? "mimo-v2.5";
+  if (!url || !key) return NextResponse.json({ error: "chat_offline" }, { status: 502 });
+
+  let body: { messages?: unknown };
+  try {
+    body = (await req.json()) as { messages?: unknown };
+  } catch {
+    return NextResponse.json({ error: "bad_request" }, { status: 400 });
+  }
+  const rawItems: unknown = body.messages;
+  const raw = Array.isArray(rawItems) ? rawItems : [];
+  const messages = raw.filter(
+    (m): m is ChatMessage =>
+      typeof m === "object" &&
+      m !== null &&
+      ((m as ChatMessage).role === "user" || (m as ChatMessage).role === "assistant") &&
+      typeof (m as ChatMessage).content === "string",
+  );
+  if (messages.length === 0 || messages.some((m) => m.content.length === 0 || m.content.length > 1000)) {
+    return NextResponse.json({ error: "bad_request" }, { status: 400 });
+  }
+  const trimmed = messages.slice(-20);
+
+  const upstream = await fetch(url, {
+    method: "POST",
+    headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
+    body: JSON.stringify({
+      model,
+      messages: [{ role: "system", content: SYSTEM_PROMPT }, ...trimmed],
+      temperature: 0.7,
+    }),
+  });
+  if (!upstream.ok) return NextResponse.json({ error: "chat_offline" }, { status: 502 });
+  const data = (await upstream.json()) as { choices?: { message?: { content?: string } }[] };
+  const reply = data.choices?.[0]?.message?.content ?? "";
+  if (!reply) return NextResponse.json({ error: "chat_offline" }, { status: 502 });
+  return NextResponse.json({ reply });
+}
+```
+
+- [ ] **Step 5: Run tests to verify they pass**
 
 Run: `npm test`
-Expected: PASS all suites including Task 2 suites
+Expected: PASS all suites including Task 2 suites. If any FAIL on logic, fix route code, not test expectations, unless the test contradicts the spec.
 
-- [ ] **Step 5: Commit**
+Fallback (import failure only): if the run fails importing `next/server` under vitest (unresolvable or edge-runtime error), do not fight the bundler. Extract the handler bodies into `lib/chat.ts` (`export async function postChat(req: Request): Promise<Response>`) and `lib/status.ts` (`export async function getStatus(): Promise<Response>`), keep both route files as thin re-exports, repoint the test imports at the lib files, rerun, and add the lib files to the Step 6 commit.
+
+- [ ] **Step 6: Commit**
 
 ```bash
 git add app/api tests/chat-route.test.ts
@@ -760,6 +790,9 @@ export default function StudioChat() {
 
 Run: `npm run dev`
 Expected: badge shows offline without env; typing + Send with `LLM_*` unset shows offline fallback line; no console errors. Stop server.
+
+Run: `npm run build`
+Expected: BUILD passes (typechecks the new client components).
 
 - [ ] **Step 5: Commit**
 
@@ -965,7 +998,25 @@ Expected: installed
 Run: `npm install -D @types/three`
 Expected: installed
 
-- [ ] **Step 2: Write lib/webgl.ts**
+- [ ] **Step 2: Write tests/webgl.test.ts**
+
+```ts
+import { describe, expect, it } from "vitest";
+import { isWebGLAvailable } from "../lib/webgl";
+
+describe("webgl probe", () => {
+  it("returns false without DOM", () => {
+    expect(isWebGLAvailable()).toBe(false);
+  });
+});
+```
+
+- [ ] **Step 3: Run tests to verify they fail**
+
+Run: `npx vitest run tests/webgl.test.ts`
+Expected: FAIL with "Cannot find module" for `../lib/webgl`.
+
+- [ ] **Step 4: Write lib/webgl.ts**
 
 ```ts
 export function isWebGLAvailable(): boolean {
@@ -979,20 +1030,7 @@ export function isWebGLAvailable(): boolean {
 }
 ```
 
-- [ ] **Step 3: Write tests/webgl.test.ts**
-
-```ts
-import { describe, expect, it } from "vitest";
-import { isWebGLAvailable } from "../lib/webgl";
-
-describe("webgl probe", () => {
-  it("returns false without DOM", () => {
-    expect(isWebGLAvailable()).toBe(false);
-  });
-});
-```
-
-- [ ] **Step 4: Write components/CharacterStage.tsx**
+- [ ] **Step 5: Write components/CharacterStage.tsx**
 
 ```tsx
 "use client";
@@ -1007,34 +1045,37 @@ export default function CharacterStage() {
   useEffect(() => {
     if (!isWebGLAvailable() || !mount.current) return;
     let alive = true;
+    let raf = 0;
+    let renderer: { dispose: () => void } | null = null;
+    const el = mount.current;
     void import("three").then((THREE) => {
-      if (!alive || !mount.current) return;
-      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-      renderer.setSize(320, 320);
-      mount.current.appendChild(renderer.domElement);
+      if (!alive || !el.isConnected) return;
+      const r = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer = r;
+      r.setSize(320, 320);
+      el.appendChild(r.domElement);
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
       camera.position.z = 4;
-      const geo = new THREE.IcosahedronGeometry(1.2, 1);
-      const mat = new THREE.MeshStandardMaterial({ color: 0xb82535, wireframe: true });
-      const mesh = new THREE.Mesh(geo, mat);
+      const mesh = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(1.2, 1),
+        new THREE.MeshStandardMaterial({ color: 0xb82535, wireframe: true }),
+      );
       scene.add(mesh);
       scene.add(new THREE.AmbientLight(0xffffff, 1.2));
       const spin = () => {
         if (!alive) return;
         mesh.rotation.y += 0.01;
-        renderer.render(scene, camera);
-        requestAnimationFrame(spin);
+        r.render(scene, camera);
+        raf = requestAnimationFrame(spin);
       };
       spin();
       setReady(true);
-      return () => {
-        alive = false;
-        renderer.dispose();
-      };
     });
     return () => {
       alive = false;
+      cancelAnimationFrame(raf);
+      renderer?.dispose();
     };
   }, []);
 
@@ -1050,11 +1091,11 @@ export default function CharacterStage() {
 }
 ```
 
-- [ ] **Step 5: Add public/kentir.png placeholder**
+- [ ] **Step 6: Add public/kentir.png placeholder**
 
 Any small PNG file saved as `public/kentir.png`. Replace with final art later; v1 only needs the fallback path to exist.
 
-- [ ] **Step 6: Run tests plus build**
+- [ ] **Step 7: Run tests plus build**
 
 Run: `npm test`
 Expected: PASS including webgl suite
@@ -1062,7 +1103,7 @@ Expected: PASS including webgl suite
 Run: `npm run build`
 Expected: BUILD passes
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 8: Commit**
 
 ```bash
 git add lib/webgl.ts components/CharacterStage.tsx public/kentir.png tests/webgl.test.ts package.json package-lock.json
