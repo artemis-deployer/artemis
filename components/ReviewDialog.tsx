@@ -22,13 +22,14 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
   { draft, mainnet },
   ref,
 ) {
-  const chainId = draft.chainId === 4663 ? 4663 : 46630;
+  const rawChain = draft.chainId;
+  const chainId = rawChain === 4663 ? 4663 : rawChain === 46630 ? 46630 : null;
   const [account, setAccount] = useState<Address | null>(null);
   const [hood, setHood] = useState<HoodState>("idle");
   const [token, setToken] = useState<Address | null>(null);
   const [note, setNote] = useState("");
 
-  async function fail(message: string) {
+  function fail(message: string): void {
     setNote(message);
     setHood("error");
   }
@@ -37,6 +38,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
     setNote("");
     setHood("working");
     try {
+      if (chainId === null) return fail("Unsupported chain.");
       await ensureChain(chainId);
       const acc = account ?? (await connectWallet());
       setAccount(acc);
@@ -74,17 +76,13 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       }
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : "launch_failed";
-      if (message === "pool_unsupported_on_testnet") {
-        setHood("stub");
-        setNote("Testnet rehearsal: token deployed, pool step unavailable (no V2 on testnet).");
-        return;
-      }
       fail(message);
     }
   }
 
   async function resumePool() {
     if (!token || !account) return;
+    if (chainId === null) return;
     setHood("working");
     try {
       const liq = await addLiquidity({
@@ -117,7 +115,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
         <dd>{DIRECT_SUPPLY.toLocaleString("en-US")} fixed · no mint</dd>
       </dl>
       {mainnet && <p>Real funds. Review the chain, amounts, and cost before signing.</p>}
-      <WalletButton chainId={chainId} />
+      {chainId !== null ? <WalletButton chainId={chainId} /> : <p role="alert">Unsupported chain.</p>}
       <p role="status">Hood: {hood}</p>
       {note && <p role="alert">{note}</p>}
       {token && <p>Token: {token}</p>}
