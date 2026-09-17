@@ -4,6 +4,7 @@ export type Receipt = {
   pool?: string;
   hash: string;
   createdAt: string;
+  ticker?: string;
 };
 
 const KEY = "kentir.receipts.v1";

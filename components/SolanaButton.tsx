@@ -5,6 +5,7 @@ import { useState } from "react";
 export type SolanaProvider = {
   publicKey: { toBase58(): string };
   connect(): Promise<unknown>;
+  signTransaction: <T>(tx: T) => Promise<T>;
 };
 
 function pickProvider(): SolanaProvider | null {

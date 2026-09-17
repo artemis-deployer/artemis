@@ -50,7 +50,13 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
   const isPump = draft.route === "pumpfun" && String(draft.chainId).startsWith("solana");
   const rpc = draft.chainId === "solana-mainnet" ? MAINNET_RPC : DEVNET_RPC;
   const resume = isPump
-    ? listReceipts().find((r) => String(r.chainId) === String(draft.chainId) && r.token && !r.pool)
+    ? listReceipts().find(
+        (r) =>
+          String(r.chainId) === String(draft.chainId) &&
+          r.token &&
+          !r.pool &&
+          (r.ticker === draft.ticker || r.ticker === undefined),
+      )
     : undefined;
   const explorer = getChain(draft.chainId)?.explorer ?? "https://solscan.io";
 
@@ -77,7 +83,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
         supply: toTokenUnits(String(DIRECT_SUPPLY)),
       });
       setToken(dep.token);
-      saveReceipt({ chainId, token: dep.token, hash: dep.hash, createdAt: new Date().toISOString() });
+      saveReceipt({ chainId, token: dep.token, hash: dep.hash, createdAt: new Date().toISOString(), ticker: draft.ticker });
       setHood("token-done");
       try {
         await validateRouter(cfg);
@@ -88,7 +94,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
           tokenAmount: toTokenUnits(draft.pooled || "0"),
           ethAmount: parseEther(draft.liquidity || "0"),
         });
-        saveReceipt({ chainId, token: dep.token, hash: liq.hash, createdAt: new Date().toISOString() });
+        saveReceipt({ chainId, token: dep.token, hash: liq.hash, createdAt: new Date().toISOString(), ticker: draft.ticker });
         setHood("pool-done");
       } catch (inner: unknown) {
         const m = inner instanceof Error ? inner.message : "launch_failed";
@@ -117,7 +123,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
         tokenAmount: toTokenUnits(draft.pooled || "0"),
         ethAmount: parseEther(draft.liquidity || "0"),
       });
-      saveReceipt({ chainId, token, hash: liq.hash, createdAt: new Date().toISOString() });
+      saveReceipt({ chainId, token, hash: liq.hash, createdAt: new Date().toISOString(), ticker: draft.ticker });
       setHood("pool-done");
     } catch (e: unknown) {
       fail(e instanceof Error ? e.message : "launch_failed");
@@ -221,7 +227,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       });
       await confirmTx(MAINNET_RPC, sig);
       setMint(mintBase58);
-      saveReceipt({ chainId: draft.chainId, token: mintBase58, hash: sig, createdAt: new Date().toISOString() });
+      saveReceipt({ chainId: draft.chainId, token: mintBase58, hash: sig, createdAt: new Date().toISOString(), ticker: draft.ticker });
       setPump("sent");
     } catch (e: unknown) {
       setPumpNote(mapPumpError(e));
@@ -277,7 +283,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
           )}
         </section>
       )}
-      <p>Wallet launcher lands in Plan 3 (pump.fun) for Solana. Nothing is submitted yet.</p>
+      <p>Wallet launcher lands in Plan 3 (pump.fun) for Solana. Hood pool step needs mainnet; pump.fun section above handles Solana.</p>
       <form method="dialog">
         <button value="close">Edit launch details</button>
       </form>
