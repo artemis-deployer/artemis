@@ -142,24 +142,18 @@ export default config;
 
 - [ ] **Step 5: Write eslint.config.mjs**
 
-Run first: `npm install -D @eslint/eslintrc`
-Expected: installed (provides FlatCompat for the Next presets)
+`eslint-config-next@16` is flat-native; do NOT use FlatCompat (`@eslint/eslintrc` crashes on its circular plugin objects). Write:
 
 ```js
-import { FlatCompat } from "@eslint/eslintrc";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+import nextVitals from "eslint-config-next/core-web-vitals";
+import nextTs from "eslint-config-next/typescript";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const compat = new FlatCompat({ baseDirectory: __dirname });
-
-const config = [
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
-  { ignores: [".next/", "next-env.d.ts"] },
-];
+const config = [...nextVitals, ...nextTs, { ignores: [".next/", "next-env.d.ts"] }];
 
 export default config;
 ```
+
+Expected: `npm run lint` exits 0. No extra eslint deps needed.
 
 - [ ] **Step 6: Write app/globals.css**
 
