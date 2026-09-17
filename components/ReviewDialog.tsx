@@ -3,6 +3,7 @@
 import { forwardRef, useState } from "react";
 import { Keypair } from "@solana/web3.js";
 import { parseEther, type Address } from "viem";
+import { X, ExternalLink } from "lucide-react";
 import { DIRECT_SUPPLY, getChain } from "../lib/chains";
 import type { Draft } from "../lib/draft";
 import {
@@ -58,7 +59,8 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
           (r.ticker === draft.ticker || r.ticker === undefined),
       )
     : undefined;
-  const explorer = getChain(draft.chainId)?.explorer ?? "https://solscan.io";
+  const chainObj = getChain(draft.chainId);
+  const explorer = chainObj?.explorer ?? "https://solscan.io";
 
   function fail(message: string): void {
     setNote(message);
@@ -100,7 +102,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
         const m = inner instanceof Error ? inner.message : "launch_failed";
         if (m === "pool_unsupported_on_testnet") {
           setHood("stub");
-          setNote("Testnet rehearsal: token deployed, pool step unavailable (no V2 on testnet).");
+          setNote("Testnet rehearsal: token deployed, pool step unavailable (no V2 router on testnet).");
           return;
         }
         throw inner;
@@ -151,7 +153,6 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       return;
     }
     if (rpc !== MAINNET_RPC) {
-      // Devnet rehearsal: no wallet, no funds, no broadcast. Build metadata + payload, stop.
       const mintKp = Keypair.generate();
       const mintBase58 = mintKp.publicKey.toBase58();
       if (!mintBase58) {
@@ -186,7 +187,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
         return;
       }
       setMint(mintBase58);
-      setPumpNote(`Devnet rehearsal: transaction built (${size} bytes), broadcast refused by design.`);
+      setPumpNote(`Devnet rehearsal: transaction built (${size} bytes), broadcast omitted by design.`);
       setPump("built");
       return;
     }
@@ -238,74 +239,158 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
 
   return (
     <dialog ref={ref} aria-label="Review your launch">
-      <h2>Ready to begin?</h2>
-      <dl>
-        <dt>Name</dt>
-        <dd>{draft.name || draft.ticker}</dd>
-        <dt>Ticker</dt>
-        <dd>{draft.ticker}</dd>
-        <dt>Pool tokens</dt>
-        <dd>{draft.pooled}</dd>
-        <dt>Liquidity</dt>
-        <dd>{draft.liquidity}</dd>
-        <dt>Supply</dt>
-        <dd>{DIRECT_SUPPLY.toLocaleString("en-US")} fixed · no mint</dd>
-      </dl>
-      {mainnet && <p>Real funds. Review the chain, amounts, and cost before signing.</p>}
-      {!isPump && (
-        <>
-          {chainId !== null ? <WalletButton chainId={chainId} /> : <p role="alert">Unsupported chain.</p>}
-          <p role="status">Hood: {hood}</p>
-          {note && <p role="alert">{note}</p>}
-          {token && (
-        <p>
-          Token:{" "}
-          <a href={`${explorer}/address/${token}`} target="_blank" rel="noreferrer">
-            {token}
-          </a>
-        </p>
-      )}
-          <button type="button" onClick={() => void launch()}>
-            Launch on Hood
-          </button>
-          {token && (hood === "token-done" || hood === "error") && (
-            <button type="button" onClick={() => void resumePool()}>
-              Resume pool funding
+      <div className="dialog-inner">
+        <div className="dialog-header">
+          <div>
+            <h3>Review Launch Parameters</h3>
+            <p className="text-xs text-[var(--muted)] m-0">Confirm details before submitting signatures</p>
+          </div>
+          <form method="dialog">
+            <button value="close" className="btn-ghost p-1" aria-label="Close dialog">
+              <X size={18} />
             </button>
-          )}
-        </>
-      )}
-      {isPump && (
-        <section aria-label="Pump.fun launch">
-          <h3>Pump.fun (Solana)</h3>
-          <SolanaButton onConnect={setProvider} />
-          <p role="status">Pump: {pump}</p>
-          {pumpNote && <p role="alert">{pumpNote}</p>}
-          {mint && (
-            <p>
-              Mint:{" "}
-              <a href={`https://solscan.io/token/${mint}`} target="_blank" rel="noreferrer">
-                {mint}
-              </a>
+          </form>
+        </div>
+
+        <dl className="dialog-summary-list">
+          <dt>Network:</dt>
+          <dd>{chainObj?.name ?? String(draft.chainId)}</dd>
+          <dt>Token Name:</dt>
+          <dd>{draft.name || draft.ticker || "-"}</dd>
+          <dt>Ticker Symbol:</dt>
+          <dd className="font-mono uppercase font-bold">{draft.ticker}</dd>
+          <dt>Pool Tokens:</dt>
+          <dd className="font-mono">{draft.pooled}</dd>
+          <dt>Initial Liquidity:</dt>
+          <dd className="font-mono">{draft.liquidity} {chainObj?.currency}</dd>
+          <dt>Supply Rule:</dt>
+          <dd className="font-mono">{DIRECT_SUPPLY.toLocaleString("en-US")} (Fixed · No Mint)</dd>
+        </dl>
+
+        {mainnet && (
+          <p className="text-xs text-[var(--muted)] m-0 p-2 bg-[var(--canvas)] border border-[var(--line)] rounded">
+            <strong>Mainnet Deployment:</strong> Wallet signatures will execute live blockchain transactions and spend real tokens for gas and initial pool liquidity.
+          </p>
+        )}
+
+        {/* EVM Rail (Robinhood Chain) */}
+        {!isPump && (
+          <div className="flex flex-col gap-3 pt-2">
+            {chainId !== null ? (
+              <WalletButton chainId={chainId} />
+            ) : (
+              <p role="alert" className="text-xs text-[var(--accent)] font-medium">
+                Unsupported chain.
+              </p>
+            )}
+
+            <p role="status" className="text-xs font-mono text-[var(--muted)] m-0">
+              State: {hood}
             </p>
-          )}
-          <button type="button" onClick={() => void launchPump()}>
-            Launch on pump.fun
+
+            {note && (
+              <p role="alert" className="text-xs text-[var(--accent)] font-medium m-0">
+                {note}
+              </p>
+            )}
+
+            {token && (
+              <p className="text-xs text-[var(--ink)] font-mono m-0 flex items-center gap-1">
+                <span>Token:</span>
+                <a
+                  href={`${explorer}/address/${token}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline inline-flex items-center gap-0.5"
+                >
+                  <span>{token.slice(0, 10)}…{token.slice(-8)}</span>
+                  <ExternalLink size={11} />
+                </a>
+              </p>
+            )}
+
+            <button
+              type="button"
+              disabled={hood === "working"}
+              onClick={() => void launch()}
+              className="btn-primary w-full justify-center"
+            >
+              {hood === "working" ? "Deploying & Funding…" : "Confirm & Launch on Hood"}
+            </button>
+
+            {token && (hood === "token-done" || hood === "error") && (
+              <button
+                type="button"
+                onClick={() => void resumePool()}
+                className="btn-secondary w-full justify-center"
+              >
+                Resume Pool Funding (Step 2)
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Solana Rail (pump.fun) */}
+        {isPump && (
+          <div className="flex flex-col gap-3 pt-2" aria-label="Pump.fun launch">
+            <SolanaButton onConnect={setProvider} />
+
+            <p role="status" className="text-xs font-mono text-[var(--muted)] m-0">
+              State: {pump}
+            </p>
+
+            {pumpNote && (
+              <p role="alert" className="text-xs text-[var(--accent)] font-medium m-0">
+                {pumpNote}
+              </p>
+            )}
+
+            {mint && (
+              <p className="text-xs text-[var(--ink)] font-mono m-0 flex items-center gap-1">
+                <span>Mint:</span>
+                <a
+                  href={`https://solscan.io/token/${mint}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline inline-flex items-center gap-0.5"
+                >
+                  <span>{mint.slice(0, 10)}…{mint.slice(-8)}</span>
+                  <ExternalLink size={11} />
+                </a>
+              </p>
+            )}
+
+            <button
+              type="button"
+              disabled={pump === "working"}
+              onClick={() => void launchPump()}
+              className="btn-primary w-full justify-center"
+            >
+              {pump === "working" ? "Building Transaction…" : "Confirm & Launch on Solana"}
+            </button>
+
+            {resume?.token && (
+              <p className="text-xs text-[var(--muted)] font-mono m-0">
+                <span>Resume prior launch: </span>
+                <a
+                  href={`${explorer}/address/${resume.token}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline"
+                >
+                  {resume.token.slice(0, 8)}…
+                </a>
+              </p>
+            )}
+          </div>
+        )}
+
+        <form method="dialog" className="pt-2 border-t border-[var(--line)] flex justify-end">
+          <button value="close" className="btn-ghost">
+            Back to editing
           </button>
-          {resume?.token && (
-            <p>
-              Resume: open the mint in explorer{" "}
-              <a href={`${explorer}/address/${resume.token}`} target="_blank" rel="noreferrer">
-                {resume.token}
-              </a>
-            </p>
-          )}
-        </section>
-      )}
-      <p>Wallet launcher lands in Plan 3 (pump.fun) for Solana. Hood pool step needs mainnet; pump.fun section above handles Solana.</p>
-      <form method="dialog">
-        <button value="close">Edit launch details</button>
-      </form>
+        </form>
+      </div>
     </dialog>
   );
 });

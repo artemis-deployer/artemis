@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
+import { RotateCcw, ArrowLeft, ArrowRight } from "lucide-react";
 import { isWebGLAvailable } from "../lib/webgl";
 
 export default function CharacterStage() {
@@ -25,12 +27,13 @@ export default function CharacterStage() {
     let geo: { dispose: () => void } | null = null;
     let mat: { dispose: () => void } | null = null;
     const el = mount.current;
+
     void import("three")
       .then((THREE) => {
         if (!alive || !el.isConnected) return;
         const r = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer = r;
-        r.setSize(320, 320);
+        r.setSize(280, 280);
         el.appendChild(r.domElement);
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
@@ -41,7 +44,7 @@ export default function CharacterStage() {
         mat = m;
         const mesh = new THREE.Mesh(g, m);
         scene.add(mesh);
-        scene.add(new THREE.AmbientLight(0xffffff, 1.2));
+        scene.add(new THREE.AmbientLight(0xffffff, 1.4));
         const spin = () => {
           if (!alive) return;
           mesh.rotation.y = yaw.current + (reduced ? 0 : performance.now() / 12000);
@@ -52,6 +55,7 @@ export default function CharacterStage() {
         setReady(true);
       })
       .catch(() => {});
+
     return () => {
       alive = false;
       cancelAnimationFrame(raf);
@@ -67,12 +71,23 @@ export default function CharacterStage() {
   }
 
   if (probed && !webgl) {
-    return <img src="/kentir.png" alt="Kentir character" />;
+    return (
+      <div className="pedestal-card" aria-label="Character stage">
+        <div className="character-viewport">
+          <Image src="/kentir.png" alt="Kentir character" width={240} height={240} priority className="object-contain" />
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div aria-label="Character stage">
+    <div className="pedestal-card" aria-label="Character stage">
+      <div className="pedestal-badge">
+        <span>Interactive Figure</span>
+      </div>
+
       <div
+        className="character-viewport"
         ref={mount}
         tabIndex={0}
         role="img"
@@ -94,17 +109,50 @@ export default function CharacterStage() {
           window.addEventListener("pointermove", move);
           window.addEventListener("pointerup", up);
         }}
-      />
-      {!ready && <img src="/kentir.png" alt="Kentir character" />}
-      <div className="scene-controls">
-        <span>Drag to turn · Arrow keys to rotate</span>
+      >
+        {!ready && (
+          <Image
+            src="/kentir.png"
+            alt="Kentir character fallback"
+            width={240}
+            height={240}
+            priority
+            className="object-contain"
+          />
+        )}
+      </div>
+
+      <div className="character-controls">
+        <div className="flex items-center gap-1.5 text-xs text-stone-500">
+          <button
+            type="button"
+            onClick={() => nudge(-0.25)}
+            className="p-1 rounded hover:bg-stone-200 transition"
+            title="Rotate left"
+            aria-label="Rotate left"
+          >
+            <ArrowLeft size={13} />
+          </button>
+          <span>Drag or turn</span>
+          <button
+            type="button"
+            onClick={() => nudge(0.25)}
+            className="p-1 rounded hover:bg-stone-200 transition"
+            title="Rotate right"
+            aria-label="Rotate right"
+          >
+            <ArrowRight size={13} />
+          </button>
+        </div>
         <button
           type="button"
+          className="character-btn-reset inline-flex items-center gap-1"
           onClick={() => {
             yaw.current = -0.18;
           }}
         >
-          Reset view
+          <RotateCcw size={11} />
+          <span>Reset</span>
         </button>
       </div>
     </div>
