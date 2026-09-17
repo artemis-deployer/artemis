@@ -145,6 +145,29 @@ h1, h2, h3, h4 {
   gap: 12px;
 }
 
+.topbar-actions button {
+  min-height: 36px;
+  padding: 6px 16px;
+  font-size: 13px;
+}
+
+.topbar-actions p {
+  margin: 0;
+  font-size: 13px;
+}
+
+.testnet-pill {
+  display: inline-flex;
+  align-items: center;
+  border: 1px dashed var(--gold);
+  color: var(--gold);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 /* ---------- Status Pill Badge ---------- */
 
 .status-badge {

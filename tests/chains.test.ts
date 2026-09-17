@@ -10,6 +10,11 @@ describe("chains", () => {
     expect(getChain(999999)).toBeUndefined();
   });
 
+  it("coerces numeric strings from database rows", () => {
+    expect(getChain("4663")?.name).toBe("Robinhood Chain");
+    expect(getChain("solana-mainnet")?.name).toBe("Solana");
+  });
+
   it("pins direct supply", () => {
     expect(DIRECT_SUPPLY).toBe(999000000);
     expect(CHAINS.length).toBe(4);

@@ -14,7 +14,8 @@ export const CHAINS: Chain[] = [
 ];
 
 export function getChain(id: number | string): Chain | undefined {
-  return CHAINS.find((c) => c.id === id);
+  const norm = typeof id === "string" && /^\d+$/.test(id) ? Number(id) : id;
+  return CHAINS.find((c) => c.id === norm);
 }
 
 export const DIRECT_SUPPLY = 999000000;
