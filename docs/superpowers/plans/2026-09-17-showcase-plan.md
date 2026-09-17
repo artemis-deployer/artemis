@@ -257,7 +257,7 @@ NOTE: neon `sql()` template tag does not accept a dynamic LIMIT param as a plain
 ```ts
 import { NextResponse } from "next/server";
 import { classifyAddress } from "../../../../lib/addresses";
-import { isDbConfigured, listTokens, saveToken } from "../../../lib/community-db";
+import { isDbConfigured, listTokens, saveToken } from "../../../../lib/community-db";
 
 export async function GET() {
   if (!isDbConfigured()) return NextResponse.json({ error: "db_offline" }, { status: 502 });
