@@ -124,7 +124,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       <button type="button" onClick={() => void launch()}>
         Launch on Hood
       </button>
-      {hood === "token-done" && (
+      {token && (hood === "token-done" || hood === "error") && (
         <button type="button" onClick={() => void resumePool()}>
           Resume pool funding
         </button>
