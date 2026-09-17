@@ -228,7 +228,8 @@ function sql() {
 }
 
 export async function listTokens(limit = 50): Promise<TokenRow[]> {
-  const rows = await sql()`SELECT * FROM tokens ORDER BY created_at DESC LIMIT (${limit})`;
+  const n = Number.isFinite(limit) ? Math.min(Math.max(Math.floor(limit), 1), 100) : 50;
+  const rows = await sql()`SELECT * FROM tokens ORDER BY created_at DESC LIMIT ${n}`;
   return rows as TokenRow[];
 }
 
@@ -260,7 +261,11 @@ import { isDbConfigured, listTokens, saveToken } from "../../../lib/community-db
 
 export async function GET() {
   if (!isDbConfigured()) return NextResponse.json({ error: "db_offline" }, { status: 502 });
-  return NextResponse.json({ tokens: await listTokens() });
+  try {
+    return NextResponse.json({ tokens: await listTokens() });
+  } catch {
+    return NextResponse.json({ error: "db_offline" }, { status: 502 });
+  }
 }
 
 export async function POST(req: Request) {
@@ -278,15 +283,19 @@ export async function POST(req: Request) {
   if (!chainId || classifyAddress(address) === null) {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
   }
-  await saveToken({
-    chainId,
-    address,
-    creator: str(b.creator),
-    name: str(b.name),
-    symbol: str(b.symbol),
-    pool: str(b.pool),
-    txHash: str(b.txHash),
-  });
+  try {
+    await saveToken({
+      chainId,
+      address,
+      creator: str(b.creator),
+      name: str(b.name),
+      symbol: str(b.symbol),
+      pool: str(b.pool),
+      txHash: str(b.txHash),
+    });
+  } catch {
+    return NextResponse.json({ error: "db_offline" }, { status: 502 });
+  }
   return NextResponse.json({ ok: true });
 }
 ```
