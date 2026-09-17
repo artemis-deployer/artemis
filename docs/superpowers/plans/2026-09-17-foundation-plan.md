@@ -855,14 +855,17 @@ git commit -m 'feat: add draft context, chat UI, status badge'
 ```tsx
 "use client";
 
+import { useState } from "react";
 import { CHAINS } from "../lib/chains";
 import { validateDraft } from "../lib/draft";
 import { useDraft } from "./DraftContext";
 
 export default function LaunchForm({ onReview }: { onReview: () => void }) {
   const { draft, setDraft } = useDraft();
+  const [consent, setConsent] = useState(false);
   const errors = validateDraft(draft);
   const chain = CHAINS.find((c) => c.id === draft.chainId) ?? CHAINS[2];
+  const mainnet = !chain.testnet;
 
   return (
     <section aria-label="Your launch">
@@ -885,6 +888,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
           onChange={(e) => {
             const raw = e.target.value;
             setDraft({ ...draft, chainId: isNaN(Number(raw)) ? raw : Number(raw) });
+            setConsent(false);
           }}
         >
           {CHAINS.map((c) => (
@@ -903,12 +907,18 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
         Starting liquidity ({chain.currency})
         <input value={draft.liquidity} inputMode="decimal" onChange={(e) => setDraft({ ...draft, liquidity: e.target.value })} />
       </label>
+      {mainnet && (
+        <label>
+          <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
+          I reviewed the chain, token amounts, and real-money cost.
+        </label>
+      )}
       {errors.map((x) => (
         <p key={x} role="alert">
           {x}
         </p>
       ))}
-      <button type="button" disabled={errors.length > 0} onClick={onReview}>
+      <button type="button" disabled={errors.length > 0 || (mainnet && !consent)} onClick={onReview}>
         Review your launch
       </button>
     </section>
