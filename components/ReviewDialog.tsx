@@ -1,8 +1,9 @@
 "use client";
 
 import { forwardRef, useState } from "react";
+import { Keypair } from "@solana/web3.js";
 import { parseEther, type Address } from "viem";
-import { DIRECT_SUPPLY } from "../lib/chains";
+import { DIRECT_SUPPLY, getChain } from "../lib/chains";
 import type { Draft } from "../lib/draft";
 import {
   addLiquidity,
@@ -13,10 +14,23 @@ import {
   toTokenUnits,
   validateRouter,
 } from "../lib/launcher-evm";
-import { saveReceipt } from "../lib/receipts";
+import {
+  DEVNET_RPC,
+  MAINNET_RPC,
+  buildCreateTx,
+  buildMetadata,
+  buildTradePayload,
+  confirmTx,
+  mapPumpError,
+  signAndSend,
+  uploadMetadata,
+} from "../lib/launcher-solana";
+import { listReceipts, saveReceipt } from "../lib/receipts";
+import SolanaButton, { getSolanaProvider, type SolanaProvider } from "./SolanaButton";
 import WalletButton from "./WalletButton";
 
 type HoodState = "idle" | "working" | "token-done" | "pool-done" | "stub" | "error";
+type PumpState = "idle" | "working" | "built" | "sent" | "error";
 
 const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: boolean }>(function ReviewDialog(
   { draft, mainnet },
@@ -28,6 +42,17 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
   const [hood, setHood] = useState<HoodState>("idle");
   const [token, setToken] = useState<Address | null>(null);
   const [note, setNote] = useState("");
+  const [provider, setProvider] = useState<SolanaProvider | null>(null);
+  const [mint, setMint] = useState("");
+  const [pump, setPump] = useState<PumpState>("idle");
+  const [pumpNote, setPumpNote] = useState("");
+
+  const isPump = draft.route === "pumpfun" && String(draft.chainId).startsWith("solana");
+  const rpc = draft.chainId === "solana-mainnet" ? MAINNET_RPC : DEVNET_RPC;
+  const resume = isPump
+    ? listReceipts().find((r) => String(r.chainId) === String(draft.chainId) && r.token && !r.pool)
+    : undefined;
+  const explorer = getChain(draft.chainId)?.explorer ?? "https://solscan.io";
 
   function fail(message: string): void {
     setNote(message);
@@ -99,6 +124,100 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
     }
   }
 
+  async function launchPump() {
+    let meta;
+    try {
+      meta = buildMetadata({
+        name: draft.name || draft.ticker,
+        symbol: draft.ticker,
+        description: draft.ticker,
+      });
+    } catch (e: unknown) {
+      setPumpNote(e instanceof Error ? e.message : "bad_metadata");
+      setPump("error");
+      return;
+    }
+    const amountSol = Number(draft.liquidity);
+    if (!Number.isFinite(amountSol) || amountSol <= 0) {
+      setPumpNote("liquidity must be a positive number");
+      setPump("error");
+      return;
+    }
+    if (rpc !== MAINNET_RPC) {
+      // Devnet rehearsal: no wallet, no funds, no broadcast. Build metadata + payload, stop.
+      const mintKp = Keypair.generate();
+      const mintBase58 = mintKp.publicKey.toBase58();
+      if (!mintBase58) {
+        setPumpNote("pump_failed");
+        setPump("error");
+        return;
+      }
+      const payer = (() => {
+        try {
+          return provider?.publicKey.toBase58() ?? getSolanaProvider()?.publicKey.toBase58() ?? mintBase58;
+        } catch {
+          return mintBase58;
+        }
+      })();
+      buildTradePayload({
+        publicKey: payer,
+        mint: mintBase58,
+        name: meta.name,
+        symbol: meta.symbol,
+        uri: "devnet-rehearsal",
+        amountSol,
+      });
+      setMint(mintBase58);
+      setPumpNote("Devnet rehearsal: transaction built, broadcast refused by design.");
+      setPump("built");
+      return;
+    }
+    const p = provider ?? getSolanaProvider();
+    if (!p) {
+      setPumpNote("Connect a Solana wallet first.");
+      setPump("error");
+      return;
+    }
+    const wallet = p as SolanaProvider & { signTransaction?: <T>(tx: T) => Promise<T> };
+    if (typeof wallet.signTransaction !== "function") {
+      setPumpNote("Wallet cannot sign transactions.");
+      setPump("error");
+      return;
+    }
+    const signTransaction = wallet.signTransaction;
+    setPump("working");
+    setPumpNote("");
+    try {
+      const uri = await uploadMetadata(meta);
+      if (!uri) throw new Error("pump_rejected: no metadata uri");
+      const mintKp = Keypair.generate();
+      const mintBase58 = mintKp.publicKey.toBase58();
+      if (!mintBase58) throw new Error("pump_failed");
+      const payload = buildTradePayload({
+        publicKey: p.publicKey.toBase58(),
+        mint: mintBase58,
+        name: meta.name,
+        symbol: meta.symbol,
+        uri,
+        amountSol,
+      });
+      const tx = await buildCreateTx(payload);
+      const sig = await signAndSend({
+        rpc: MAINNET_RPC,
+        tx,
+        mintSecret: mintKp.secretKey,
+        wallet: { publicKey: p.publicKey, signTransaction },
+      });
+      await confirmTx(MAINNET_RPC, sig);
+      setMint(mintBase58);
+      saveReceipt({ chainId: draft.chainId, token: mintBase58, hash: sig, createdAt: new Date().toISOString() });
+      setPump("sent");
+    } catch (e: unknown) {
+      setPumpNote(mapPumpError(e));
+      setPump("error");
+    }
+  }
+
   return (
     <dialog ref={ref} aria-label="Review your launch">
       <h2>Ready to begin?</h2>
@@ -126,6 +245,26 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
         <button type="button" onClick={() => void resumePool()}>
           Resume pool funding
         </button>
+      )}
+      {isPump && (
+        <section aria-label="Pump.fun launch">
+          <h3>Pump.fun (Solana)</h3>
+          <SolanaButton onConnect={setProvider} />
+          <p role="status">Pump: {pump}</p>
+          {pumpNote && <p role="alert">{pumpNote}</p>}
+          {mint && <p>Mint: {mint}</p>}
+          <button type="button" onClick={() => void launchPump()}>
+            Launch on pump.fun
+          </button>
+          {resume?.token && (
+            <p>
+              Resume: open the mint in explorer{" "}
+              <a href={`${explorer}/address/${resume.token}`} target="_blank" rel="noreferrer">
+                {resume.token}
+              </a>
+            </p>
+          )}
+        </section>
       )}
       <p>Wallet launcher lands in Plan 3 (pump.fun) for Solana. Nothing is submitted yet.</p>
       <form method="dialog">
