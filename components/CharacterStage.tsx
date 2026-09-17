@@ -38,7 +38,6 @@ export default function CharacterStage() {
         el.appendChild(r.domElement);
 
         const sc = new THREE.Scene();
-        scene = sc;
         const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
         camera.position.z = 4.2;
 
