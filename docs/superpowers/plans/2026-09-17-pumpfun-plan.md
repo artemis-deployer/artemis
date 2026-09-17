@@ -253,22 +253,23 @@ git commit -m 'feat: add Solana pump.fun launcher library'
 
 import { useState } from "react";
 
-type Provider = {
+export type SolanaProvider = {
   publicKey: { toBase58(): string };
   connect(): Promise<unknown>;
+  signTransaction: <T>(tx: T) => Promise<T>;
 };
 
-function pickProvider(): Provider | null {
-  const w = window as unknown as { phantom?: { solana?: Provider }; solflare?: Provider; solana?: Provider };
+function pickProvider(): SolanaProvider | null {
+  const w = window as unknown as { phantom?: { solana?: SolanaProvider }; solflare?: SolanaProvider; solana?: SolanaProvider };
   const p = w.phantom?.solana ?? w.solflare ?? w.solana;
   return p && typeof p.connect === "function" ? p : null;
 }
 
-export function getSolanaProvider(): Provider | null {
+export function getSolanaProvider(): SolanaProvider | null {
   return pickProvider();
 }
 
-export default function SolanaButton({ onConnect }: { onConnect: (p: Provider) => void }) {
+export default function SolanaButton({ onConnect }: { onConnect: (p: SolanaProvider) => void }) {
   const [label, setLabel] = useState("Connect Solana wallet");
   const [error, setError] = useState("");
 
