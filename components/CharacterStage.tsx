@@ -12,8 +12,11 @@ export default function CharacterStage() {
     let alive = true;
     let raf = 0;
     let renderer: { dispose: () => void } | null = null;
+    let geo: { dispose: () => void } | null = null;
+    let mat: { dispose: () => void } | null = null;
     const el = mount.current;
-    void import("three").then((THREE) => {
+    void import("three")
+      .then((THREE) => {
       if (!alive || !el.isConnected) return;
       const r = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer = r;
@@ -22,10 +25,11 @@ export default function CharacterStage() {
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
       camera.position.z = 4;
-      const mesh = new THREE.Mesh(
-        new THREE.IcosahedronGeometry(1.2, 1),
-        new THREE.MeshStandardMaterial({ color: 0xb82535, wireframe: true }),
-      );
+      const g = new THREE.IcosahedronGeometry(1.2, 1);
+      const m = new THREE.MeshStandardMaterial({ color: 0xb82535, wireframe: true });
+      geo = g;
+      mat = m;
+      const mesh = new THREE.Mesh(g, m);
       scene.add(mesh);
       scene.add(new THREE.AmbientLight(0xffffff, 1.2));
       const spin = () => {
@@ -36,10 +40,14 @@ export default function CharacterStage() {
       };
       spin();
       setReady(true);
-    });
+      })
+      .catch(() => {});
     return () => {
       alive = false;
       cancelAnimationFrame(raf);
+      el.replaceChildren();
+      geo?.dispose();
+      mat?.dispose();
       renderer?.dispose();
     };
   }, []);
