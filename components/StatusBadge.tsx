@@ -2,13 +2,20 @@
 
 import { useEffect, useState } from "react";
 
+type BadgeState = "connecting" | "online" | "offline";
+
 export default function StatusBadge() {
-  const [label, setLabel] = useState("Connecting…");
+  const [state, setState] = useState<BadgeState>("connecting");
   useEffect(() => {
     fetch("/api/status")
       .then((r) => r.json())
-      .then((j: { configured: boolean }) => setLabel(j.configured ? "AI connected" : "AI offline · manual form works"))
-      .catch(() => setLabel("AI offline · manual form works"));
+      .then((j: { configured: boolean }) => setState(j.configured ? "online" : "offline"))
+      .catch(() => setState("offline"));
   }, []);
-  return <span role="status">{label}</span>;
+  const label = state === "online" ? "AI connected" : state === "offline" ? "AI offline · manual form works" : "Connecting…";
+  return (
+    <span role="status" data-state={state}>
+      {label}
+    </span>
+  );
 }

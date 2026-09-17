@@ -257,7 +257,14 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
           {chainId !== null ? <WalletButton chainId={chainId} /> : <p role="alert">Unsupported chain.</p>}
           <p role="status">Hood: {hood}</p>
           {note && <p role="alert">{note}</p>}
-          {token && <p>Token: {token}</p>}
+          {token && (
+        <p>
+          Token:{" "}
+          <a href={`${explorer}/address/${token}`} target="_blank" rel="noreferrer">
+            {token}
+          </a>
+        </p>
+      )}
           <button type="button" onClick={() => void launch()}>
             Launch on Hood
           </button>
@@ -274,7 +281,14 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
           <SolanaButton onConnect={setProvider} />
           <p role="status">Pump: {pump}</p>
           {pumpNote && <p role="alert">{pumpNote}</p>}
-          {mint && <p>Mint: {mint}</p>}
+          {mint && (
+            <p>
+              Mint:{" "}
+              <a href={`https://solscan.io/token/${mint}`} target="_blank" rel="noreferrer">
+                {mint}
+              </a>
+            </p>
+          )}
           <button type="button" onClick={() => void launchPump()}>
             Launch on pump.fun
           </button>

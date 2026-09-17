@@ -16,6 +16,7 @@ type Token = {
 export default function TokensPage() {
   const [tokens, setTokens] = useState<Token[] | null>(null);
   const [local, setLocal] = useState<Receipt[]>([]);
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     fetch("/api/community/tokens")
@@ -28,11 +29,31 @@ export default function TokensPage() {
 
   if (tokens === null) return <main>Loading tokens…</main>;
 
+  const q = query.trim().toLowerCase();
+  const shown = q
+    ? tokens.filter((t) =>
+        [t.name, t.symbol, t.address].some((f) => (f ?? "").toLowerCase().includes(q)),
+      )
+    : tokens;
+
   return (
     <main>
+      <p className="eyebrow">The Kentir showcase</p>
       <h1>Token showcase</h1>
+      <label className="search">
+        Search name, ticker, or address
+        <input
+          type="search"
+          value={query}
+          placeholder="Search name, ticker, or address"
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      </label>
+      <p role="status">
+        {shown.length} launch{shown.length === 1 ? "" : "es"}
+      </p>
       {tokens.length === 0 && local.length === 0 && <p>No launches yet. Be the first spark.</p>}
-      {tokens.map((t) => (
+      {shown.map((t) => (
         <article key={`${t.chain_id}:${t.address}`}>
           <h2>
             {t.name || t.symbol || (t.address ?? "").slice(0, 10)}
