@@ -1,13 +1,96 @@
 "use client";
 
-import { forwardRef } from "react";
-import type { Draft } from "../lib/draft";
+import { forwardRef, useState } from "react";
+import { parseEther, type Address } from "viem";
 import { DIRECT_SUPPLY } from "../lib/chains";
+import type { Draft } from "../lib/draft";
+import {
+  addLiquidity,
+  connectWallet,
+  deployToken,
+  ensureChain,
+  getHoodConfig,
+  toTokenUnits,
+  validateRouter,
+} from "../lib/launcher-evm";
+import { saveReceipt } from "../lib/receipts";
+import WalletButton from "./WalletButton";
+
+type HoodState = "idle" | "working" | "token-done" | "pool-done" | "stub" | "error";
 
 const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: boolean }>(function ReviewDialog(
   { draft, mainnet },
   ref,
 ) {
+  const chainId = draft.chainId === 4663 ? 4663 : 46630;
+  const [account, setAccount] = useState<Address | null>(null);
+  const [hood, setHood] = useState<HoodState>("idle");
+  const [token, setToken] = useState<Address | null>(null);
+  const [note, setNote] = useState("");
+
+  async function fail(message: string) {
+    setNote(message);
+    setHood("error");
+  }
+
+  async function launch() {
+    setNote("");
+    setHood("working");
+    try {
+      await ensureChain(chainId);
+      const acc = account ?? (await connectWallet());
+      setAccount(acc);
+      const cfg = getHoodConfig(chainId);
+      if (!cfg) return fail("Unsupported chain.");
+      await validateRouter(cfg);
+      const dep = await deployToken({
+        chainId,
+        account: acc,
+        name: draft.name || draft.ticker,
+        ticker: draft.ticker,
+        supply: toTokenUnits(String(DIRECT_SUPPLY)),
+      });
+      setToken(dep.token);
+      saveReceipt({ chainId, token: dep.token, hash: dep.hash, createdAt: new Date().toISOString() });
+      setHood("token-done");
+      const liq = await addLiquidity({
+        chainId,
+        account: acc,
+        token: dep.token,
+        tokenAmount: toTokenUnits(draft.pooled || "0"),
+        ethAmount: parseEther(draft.liquidity || "0"),
+      });
+      saveReceipt({ chainId, token: dep.token, hash: liq.hash, createdAt: new Date().toISOString() });
+      setHood("pool-done");
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "launch_failed";
+      if (message === "pool_unsupported_on_testnet") {
+        setHood("stub");
+        setNote("Testnet rehearsal: token deployed, pool step unavailable (no V2 on testnet).");
+        return;
+      }
+      fail(message);
+    }
+  }
+
+  async function resumePool() {
+    if (!token || !account) return;
+    setHood("working");
+    try {
+      const liq = await addLiquidity({
+        chainId,
+        account,
+        token,
+        tokenAmount: toTokenUnits(draft.pooled || "0"),
+        ethAmount: parseEther(draft.liquidity || "0"),
+      });
+      saveReceipt({ chainId, token, hash: liq.hash, createdAt: new Date().toISOString() });
+      setHood("pool-done");
+    } catch (e: unknown) {
+      fail(e instanceof Error ? e.message : "launch_failed");
+    }
+  }
+
   return (
     <dialog ref={ref} aria-label="Review your launch">
       <h2>Ready to begin?</h2>
@@ -24,7 +107,19 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
         <dd>{DIRECT_SUPPLY.toLocaleString("en-US")} fixed · no mint</dd>
       </dl>
       {mainnet && <p>Real funds. Review the chain, amounts, and cost before signing.</p>}
-      <p>Wallet launcher lands in Plan 2 (Hood) and Plan 3 (pump.fun). Nothing is submitted yet.</p>
+      <WalletButton chainId={chainId} />
+      <p role="status">Hood: {hood}</p>
+      {note && <p role="alert">{note}</p>}
+      {token && <p>Token: {token}</p>}
+      <button type="button" onClick={() => void launch()}>
+        Launch on Hood
+      </button>
+      {hood === "token-done" && (
+        <button type="button" onClick={() => void resumePool()}>
+          Resume pool funding
+        </button>
+      )}
+      <p>Wallet launcher lands in Plan 3 (pump.fun) for Solana. Nothing is submitted yet.</p>
       <form method="dialog">
         <button value="close">Edit launch details</button>
       </form>
