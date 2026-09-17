@@ -6,7 +6,7 @@
 
 **Architecture:** `migrations/0001_init.sql` creates a `tokens` table. `lib/community-db.ts` wraps `@neondatabase/serverless` with parameterized queries. API routes list (GET, newest 50) and submit (POST, validated, upsert by chain+address). The page renders server-fetched tokens, falling back to localStorage receipts when the API reports `db_offline`. No secrets leak: `DATABASE_URL` server-only.
 
-**Tech Stack:** @neondatabase/serverless, existing Next/vitest.
+**Tech Stack:** postgres (postgres-js, Supabase-compatible pooler with `prepare: false`), existing Next/vitest.
 
 ## Global Constraints
 
@@ -106,8 +106,8 @@ git commit -m 'feat: add chain address classifier'
 
 - [ ] **Step 1: Install @neondatabase/serverless**
 
-Run: `npm install @neondatabase/serverless`
-Expected: installed (`--legacy-peer-deps` fallback once if needed).
+Run: `npm install postgres`
+Expected: installed (`--legacy-peer-deps` fallback once if needed). NOTE: `@neondatabase/serverless` was dropped — no Neon database exists in the workspace; the live database is Supabase Postgres (pooler), which needs postgres-js with `prepare: false`. `lib/community-db.ts` uses `postgres(url, { prepare: false })`; the `sql` tag API is otherwise identical.
 
 - [ ] **Step 2: Write migrations/0001_init.sql**
 

@@ -1,4 +1,4 @@
-import { neon } from "@neondatabase/serverless";
+import postgres from "postgres";
 
 export type TokenRow = {
   chain_id: string;
@@ -16,7 +16,7 @@ export function isDbConfigured(): boolean {
 }
 
 function sql() {
-  return neon(process.env.DATABASE_URL as string);
+  return postgres(process.env.DATABASE_URL as string, { prepare: false });
 }
 
 export async function listTokens(limit = 50): Promise<TokenRow[]> {
