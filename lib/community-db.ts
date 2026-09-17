@@ -20,7 +20,7 @@ function sql() {
 }
 
 export async function listTokens(limit = 50): Promise<TokenRow[]> {
-  const n = Math.min(Math.max(Math.floor(limit), 1), 100);
+  const n = Number.isFinite(limit) ? Math.min(Math.max(Math.floor(limit), 1), 100) : 50;
   const rows = await sql()`SELECT * FROM tokens ORDER BY created_at DESC LIMIT ${n}`;
   return rows as TokenRow[];
 }

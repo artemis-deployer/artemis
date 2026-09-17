@@ -62,4 +62,24 @@ describe("tokens route", () => {
     const res = await POST(req);
     expect(res.status).toBe(502);
   });
+
+  it("GET returns db_offline when listTokens throws", async () => {
+    mocked.isDbConfigured.mockReturnValue(true);
+    mocked.listTokens.mockRejectedValue(new Error("down"));
+    const res = await GET();
+    expect(res.status).toBe(502);
+    expect(((await res.json()) as { error: string }).error).toBe("db_offline");
+  });
+
+  it("POST returns db_offline when saveToken throws", async () => {
+    mocked.isDbConfigured.mockReturnValue(true);
+    mocked.saveToken.mockRejectedValue(new Error("down"));
+    const req = new Request("http://x/api/community/tokens", {
+      method: "POST",
+      body: JSON.stringify({ chainId: "4663", address: "0x097716e767df17605627def0030110f8ee559ec4" }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(502);
+    expect(((await res.json()) as { error: string }).error).toBe("db_offline");
+  });
 });

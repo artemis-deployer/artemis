@@ -4,7 +4,11 @@ import { isDbConfigured, listTokens, saveToken } from "../../../../lib/community
 
 export async function GET() {
   if (!isDbConfigured()) return NextResponse.json({ error: "db_offline" }, { status: 502 });
-  return NextResponse.json({ tokens: await listTokens() });
+  try {
+    return NextResponse.json({ tokens: await listTokens() });
+  } catch {
+    return NextResponse.json({ error: "db_offline" }, { status: 502 });
+  }
 }
 
 export async function POST(req: Request) {
@@ -22,14 +26,18 @@ export async function POST(req: Request) {
   if (!chainId || classifyAddress(address) === null) {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
   }
-  await saveToken({
-    chainId,
-    address,
-    creator: str(b.creator),
-    name: str(b.name),
-    symbol: str(b.symbol),
-    pool: str(b.pool),
-    txHash: str(b.txHash),
-  });
+  try {
+    await saveToken({
+      chainId,
+      address,
+      creator: str(b.creator),
+      name: str(b.name),
+      symbol: str(b.symbol),
+      pool: str(b.pool),
+      txHash: str(b.txHash),
+    });
+  } catch {
+    return NextResponse.json({ error: "db_offline" }, { status: 502 });
+  }
   return NextResponse.json({ ok: true });
 }
