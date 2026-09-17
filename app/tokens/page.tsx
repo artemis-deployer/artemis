@@ -149,13 +149,13 @@ export default function TokensPage() {
             </button>
           </div>
 
-          <div className="relative w-full sm:w-80">
-            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--muted)]" />
+          <div className="search-wrapper">
+            <Search size={14} className="search-icon" />
             <input
               type="search"
               value={query}
-              placeholder="Search ticker, name, or address…"
-              className="field-input pl-9"
+              placeholder="Search ticker, name, address…"
+              className="search-input"
               onChange={(e) => setQuery(e.target.value)}
             />
           </div>

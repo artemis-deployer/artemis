@@ -29,7 +29,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
         <div>
           <h3>Launch Parameters</h3>
           <p className="text-xs text-[var(--muted)] m-0 mt-0.5">
-            Configure your token details or use Kentir Copilot suggestions
+            Configure parameters or let Kentir Copilot draft them
           </p>
         </div>
         <span className="text-xs font-semibold text-[var(--muted)] border border-[var(--line)] px-2.5 py-1 rounded">
@@ -37,11 +37,29 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
         </span>
       </div>
 
-      {/* Chain Selector */}
+      {/* Live Token Stamp Preview */}
+      <div className="token-preview-stamp">
+        <div className="token-stamp-left">
+          <span className="token-stamp-ticker">
+            {draft.ticker ? `$${draft.ticker}` : "$TICKER"}
+          </span>
+          <span className="token-stamp-name">
+            {draft.name ? draft.name : "Your Coin Draft"}
+          </span>
+        </div>
+        <div className="text-right">
+          <span className="token-stamp-meta block">{chain.name}</span>
+          <span className="text-[11px] font-mono text-[var(--accent)] font-bold">
+            {totalSupply.toLocaleString("en-US")} Fixed
+          </span>
+        </div>
+      </div>
+
+      {/* Target Network Selector */}
       <div className="field-group full">
         <label className="field-label">
           <span>Target Network</span>
-          <span className="field-label-hint">Testnet recommended for rehearse</span>
+          <span className="field-label-hint">Testnet recommended for rehearsal</span>
         </label>
         <div className="chain-picker-grid">
           {CHAINS.map((c) => {

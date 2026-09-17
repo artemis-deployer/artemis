@@ -70,19 +70,21 @@ function Studio() {
       <main id="top" className="page-container">
         {/* Hero Section */}
         <section className="hero-section" id="meet" aria-label="Meet Kentir">
-          <div className="hero-banner">
-            <div className="hero-content">
-              <p className="eyebrow">Non-Custodial Launchpad</p>
-              <h1 className="hero-title">Kentir</h1>
-              <p className="hero-tagline">
-                Liquidity you control. A community token you own from your wallet.
+          <div className="hero-header">
+            <p className="eyebrow">A little spark. A new beginning.</p>
+            <h1 className="hero-display">Kentir</h1>
+            <p className="hero-tagline">Liquidity you control. A community you run.</p>
+          </div>
+
+          <div className="hero-grid">
+            <div className="hero-intro">
+              <span className="eyebrow">Non-Custodial Launchpad</span>
+              <p>
+                From a little spark to an onchain community. Pair direct liquidity on Robinhood Chain or launch via pump.fun on Solana. No custody, zero platform fees.
               </p>
-              <p className="hero-desc">
-                Deploy ERC20 tokens with direct Uniswap V2 liquidity on Robinhood Chain or launch bonding-curve tokens on Solana via pump.fun. Zero custody, zero platform fees.
-              </p>
-              <div className="hero-cta-group">
+              <div className="flex items-center gap-3 pt-2 flex-wrap">
                 <a className="btn-primary" href="#studio">
-                  Start Your Launch ↗
+                  Start Launch ↗
                 </a>
                 <a className="btn-secondary" href="/tokens">
                   Browse Showcase
@@ -91,17 +93,29 @@ function Studio() {
             </div>
 
             <CharacterStage />
+
+            <aside className="note-card" aria-label="Talk invitation">
+              <p className="eyebrow light">Right here with you</p>
+              <p className="note-big">
+                A little idea?
+                <br />
+                Let&apos;s give it life.
+              </p>
+              <a className="btn-light" href="#studio">
+                Talk to Kentir ↗
+              </a>
+            </aside>
           </div>
         </section>
 
         {/* Studio Workspace Section */}
         <section id="studio" className="studio-section" aria-label="Token Studio">
-          <div className="studio-header">
-            <div className="studio-title-group">
-              <p className="eyebrow">Interactive Launchpad Studio</p>
-              <h2>Create & Launch</h2>
-              <p>Chat with Kentir Copilot or manually configure your token details.</p>
-            </div>
+          <div className="studio-heading">
+            <p className="eyebrow">From a little conversation</p>
+            <h2>
+              A new <em>beginning.</em>
+            </h2>
+            <p>Your idea takes shape here. You stay in control of every detail.</p>
           </div>
 
           <div className="studio-grid">
@@ -120,9 +134,10 @@ function Studio() {
         {/* How It Works Section */}
         <section className="section-container" id="how" aria-label="How it works">
           <div className="section-head">
-            <p className="eyebrow">Architecture & Mechanism</p>
+            <p className="eyebrow">From an idea to an onchain token</p>
             <h2>
-              From idea to <em>onchain liquidity.</em>
+              A little conversation.
+              <br />A launch you control.
             </h2>
             <p>Every step is verifiable, transparent, and executed directly through your browser wallet.</p>
           </div>
@@ -141,7 +156,7 @@ function Studio() {
         {/* Supported Rails Section */}
         <section className="section-container" aria-label="Supported Rails">
           <div className="section-head">
-            <p className="eyebrow">Dual Blockchain Infrastructure</p>
+            <p className="eyebrow">Choose your token&apos;s home</p>
             <h2>Two rails. Four networks.</h2>
             <p>Deploy directly to decentralized exchanges with verified parameters.</p>
           </div>
@@ -152,10 +167,10 @@ function Studio() {
                 <span className="chain-detail-tag">EVM Rail · Uniswap V2</span>
                 <h3>Robinhood Chain</h3>
                 <p>
-                  Two-step transparent execution: Deploy fixed-supply ERC20 contract, then fund liquidity pool via standard V2 router. Rehearse on testnet (Chain ID 46630) before mainnet.
+                  Two-step transparent execution: Deploy fixed-supply ERC20 contract, then fund liquidity pool via standard V2 router. Rehearse on testnet (Chain ID 46630) for free.
                 </p>
               </div>
-              <div className="pt-4 border-t border-stone-800 text-xs text-stone-400 font-mono">
+              <div className="pt-4 border-t border-[#332b25] text-xs text-[#d6cab6] font-mono">
                 Chain ID 4663 · Native ETH Currency
               </div>
             </article>
@@ -168,7 +183,7 @@ function Studio() {
                   Fair-launch bonding-curve rail. Upload metadata to decentralized storage and build transaction payload directly in browser with Phantom or Solflare signing.
                 </p>
               </div>
-              <div className="pt-4 border-t border-stone-800 text-xs text-stone-400 font-mono">
+              <div className="pt-4 border-t border-[#332b25] text-xs text-[#d6cab6] font-mono">
                 Solana Mainnet-Beta & Devnet Rehearsal
               </div>
             </article>
@@ -192,10 +207,10 @@ function Studio() {
           <span className="brand-link text-lg py-1 px-2.5">
             kentir ✳
           </span>
-          <span>Non-custodial token launcher · Open architecture.</span>
+          <span>Non-custodial. Your wallet signs everything.</span>
         </div>
         <div>
-          <span>Your wallet approves every signature.</span>
+          <span>Robinhood Chain & Solana pump.fun Launchpad</span>
         </div>
       </footer>
     </>
