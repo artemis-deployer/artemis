@@ -116,6 +116,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
     if (chainId === null) return;
     setHood("working");
     try {
+      await ensureChain(chainId);
       const liq = await addLiquidity({
         chainId,
         account,
@@ -251,17 +252,21 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
         <dd>{DIRECT_SUPPLY.toLocaleString("en-US")} fixed · no mint</dd>
       </dl>
       {mainnet && <p>Real funds. Review the chain, amounts, and cost before signing.</p>}
-      {chainId !== null ? <WalletButton chainId={chainId} /> : <p role="alert">Unsupported chain.</p>}
-      <p role="status">Hood: {hood}</p>
-      {note && <p role="alert">{note}</p>}
-      {token && <p>Token: {token}</p>}
-      <button type="button" onClick={() => void launch()}>
-        Launch on Hood
-      </button>
-      {token && (hood === "token-done" || hood === "error") && (
-        <button type="button" onClick={() => void resumePool()}>
-          Resume pool funding
-        </button>
+      {!isPump && (
+        <>
+          {chainId !== null ? <WalletButton chainId={chainId} /> : <p role="alert">Unsupported chain.</p>}
+          <p role="status">Hood: {hood}</p>
+          {note && <p role="alert">{note}</p>}
+          {token && <p>Token: {token}</p>}
+          <button type="button" onClick={() => void launch()}>
+            Launch on Hood
+          </button>
+          {token && (hood === "token-done" || hood === "error") && (
+            <button type="button" onClick={() => void resumePool()}>
+              Resume pool funding
+            </button>
+          )}
+        </>
       )}
       {isPump && (
         <section aria-label="Pump.fun launch">

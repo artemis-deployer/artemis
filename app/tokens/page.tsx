@@ -45,15 +45,19 @@ export default function TokensPage() {
           {t.tx_hash && <p>Tx: {t.tx_hash}</p>}
         </article>
       ))}
-      {tokens.length === 0 &&
-        local.map((r, i) => (
-          <article key={`${r.hash}:${i}`}>
-            <h2>Local launch</h2>
-            <p>Chain {String(r.chainId)}</p>
-            {r.token && <p>Token: {r.token}</p>}
-            <p>Tx: {r.hash}</p>
-          </article>
-        ))}
+      {local.length > 0 && (
+        <>
+          <h2>Local launches</h2>
+          {local.map((r, i) => (
+            <article key={`${r.hash}:${i}`}>
+              <h2>Local launch</h2>
+              <p>Chain {String(r.chainId)}</p>
+              {r.token && <p>Token: {r.token}</p>}
+              <p>Tx: {r.hash}</p>
+            </article>
+          ))}
+        </>
+      )}
     </main>
   );
 }
