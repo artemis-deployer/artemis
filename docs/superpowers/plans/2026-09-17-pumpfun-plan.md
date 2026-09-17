@@ -306,7 +306,7 @@ In `components/ReviewDialog.tsx`:
 2. Track `provider`, `mint` (base58 string), `pump` state (`idle | working | built | sent | error`), `note`.
 3. Show this section only when `draft.route === "pumpfun"` and `String(draft.chainId).startsWith("solana")`.
 4. Flow `launchPump()`:
-   - devnet → build metadata + payload, stop before broadcast with note "Devnet rehearsal: transaction built, broadcast refused by design." State `built`.
+   - devnet → build metadata + payload + tx bytes via `buildCreateTx`, then stop before broadcast with note "Devnet rehearsal: transaction built (N bytes), broadcast refused by design." `signAndSend` stays unreachable on devnet. Offline build failure maps to `error`, never fake `built`.
    - mainnet → upload metadata → new `Keypair()` mint (memory only) → `buildCreateTx` → `signAndSend` with `mint.secretKey` → `confirmTx` → save receipt `{chainId, token: mintBase58, hash: sig}` → state `sent`.
    - Any throw → `mapPumpError` into note, state `error`.
 5. Resume: if a receipt exists with matching draft ticker and no pool, show "Resume: open the mint in explorer" linking `${explorer}/address/${token}` (pump.fun graduation is tracked on pump.fun itself; do not claim auto-detect).
