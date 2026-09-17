@@ -6,61 +6,243 @@
   --paper: #fff9f1;
   --card: #ffffff;
   --line: #eadfd2;
+  --blush: #fbe9e4;
   --accent: #b82535;
+  --accent-deep: #8f1b29;
   --accent-ink: #ffffff;
   --gold: #c99b48;
   --radius: 14px;
+  --font-display: "Rancho", "Comic Sans MS", cursive;
+  --font-body: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 * {
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background: var(--paper);
   color: var(--ink);
-  font-family: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   margin: 0;
   line-height: 1.5;
+  font-size: 16px;
 }
 
-main {
-  max-width: 1080px;
-  margin: 0 auto;
-  padding: 32px 20px 80px;
+/* ---------- top bar ---------- */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
 }
 
-main > h1 {
-  font-family: Georgia, "Palatino Linotype", serif;
-  font-size: clamp(40px, 6vw, 72px);
-  margin: 8px 0 4px;
-  letter-spacing: -0.02em;
-}
-
-main > h1 + p,
-span[role="status"] {
+.wordmark {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-family: var(--font-display);
+  font-size: 30px;
+  padding: 10px 22px;
+  text-decoration: none;
+  line-height: 1;
+}
+
+.wordmark.small {
+  font-size: 22px;
+  border-radius: 10px;
+}
+
+.topbar nav {
+  display: flex;
+  align-items: stretch;
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.topbar nav a {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 22px;
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-right: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.topbar nav a:hover {
+  background: var(--blush);
+}
+
+.powered {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 22px;
+  color: var(--muted);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+/* ---------- layout ---------- */
+
+main {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 0 20px 80px;
+}
+
+section {
+  margin-top: 28px;
+}
+
+.eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 10px;
+}
+
+.eyebrow.light {
+  color: var(--accent-ink);
+  opacity: 0.85;
+}
+
+h2 {
+  font-size: clamp(28px, 4vw, 44px);
+  line-height: 1.1;
+  margin: 0 0 10px;
+  letter-spacing: -0.01em;
+}
+
+h2 em {
+  font-family: var(--font-display);
+  font-style: normal;
+  font-weight: 400;
+  color: var(--accent);
+  font-size: 1.25em;
+}
+
+/* ---------- hero ---------- */
+
+.hero {
+  text-align: center;
+  padding-top: 36px;
+}
+
+.display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(84px, 16vw, 190px);
+  line-height: 0.95;
+  color: var(--accent);
+  margin: 0;
+}
+
+.tagline {
+  color: var(--muted);
+  margin: 6px 0 0;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 20px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.hero-side {
+  text-align: left;
+}
+
+.live-dot {
   color: var(--muted);
   font-size: 14px;
 }
 
-span[role="status"]::before {
+.live-dot span {
+  color: var(--accent);
+  font-size: 10px;
+}
+
+.live-card {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-radius: 6px;
+  padding: 34px 30px;
+  text-align: left;
+  transform: rotate(2deg);
+  box-shadow: 8px 10px 0 rgba(143, 27, 41, 0.15);
+  justify-self: end;
+  max-width: 300px;
+}
+
+.live-big {
+  font-family: var(--font-display);
+  font-size: 34px;
+  line-height: 1.15;
+  margin: 0 0 22px;
+}
+
+.btn-light {
+  display: inline-block;
+  color: var(--accent-ink);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  border-bottom: 2px solid var(--accent-ink);
+  padding-bottom: 3px;
+}
+
+/* ---------- chat + form cards ---------- */
+
+#studio > section[aria-label="Talk to Kentir"],
+#your-launch > section[aria-label="Your launch"] {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 22px;
+  margin-top: 20px;
+  box-shadow: 0 2px 0 var(--line);
+}
+
+#studio span[role="status"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 5px 14px;
+  background: var(--card);
+}
+
+#studio span[role="status"]::before {
   content: "";
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: var(--gold);
-}
-
-section {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 20px;
-  margin-top: 20px;
-  box-shadow: 0 1px 0 var(--line);
 }
 
 section[aria-label="Talk to Kentir"] div[aria-live] {
@@ -69,7 +251,7 @@ section[aria-label="Talk to Kentir"] div[aria-live] {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-bottom: 12px;
+  margin: 14px 0;
 }
 
 section[aria-label="Talk to Kentir"] div[aria-live] p {
@@ -78,39 +260,29 @@ section[aria-label="Talk to Kentir"] div[aria-live] p {
   border-radius: 12px;
   background: var(--paper);
   border: 1px solid var(--line);
-  max-width: 75%;
+  max-width: 78%;
 }
 
 section[aria-label="Talk to Kentir"] form {
   display: flex;
   gap: 10px;
   align-items: flex-end;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
 }
 
-section[aria-label="Talk to Kentir"] textarea {
+section[aria-label="Talk to Kentir"] form label {
   flex: 1;
 }
 
 section[aria-label="Talk to Kentir"] > div:last-child {
   display: flex;
   gap: 8px;
-  margin-top: 10px;
+  margin-top: 12px;
   flex-wrap: wrap;
-  background: none;
-  border: none;
-  padding: 0;
-  box-shadow: none;
-}
-
-div[aria-label="Character stage"] {
-  display: flex;
-  justify-content: center;
-}
-
-div[aria-label="Character stage"] canvas,
-div[aria-label="Character stage"] img {
-  border-radius: var(--radius);
-  max-width: 100%;
+  align-items: center;
+  color: var(--muted);
+  font-size: 14px;
 }
 
 section[aria-label="Your launch"] {
@@ -127,6 +299,129 @@ section[aria-label="Your launch"] > button {
   grid-column: 1 / -1;
   justify-self: start;
 }
+
+.section-head {
+  margin-top: 56px;
+}
+
+/* ---------- character ---------- */
+
+div[aria-label="Character stage"] {
+  display: flex;
+  justify-content: center;
+}
+
+div[aria-label="Character stage"] canvas,
+div[aria-label="Character stage"] img {
+  border-radius: var(--radius);
+  max-width: 100%;
+}
+
+/* ---------- steps / chains / risks / cta ---------- */
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.step {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+.step-n {
+  font-family: var(--font-display);
+  font-size: 30px;
+  color: var(--accent);
+}
+
+.step h3 {
+  margin: 6px 0 8px;
+  font-size: 18px;
+}
+
+.step p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.chain-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.chain-card {
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: var(--radius);
+  padding: 24px;
+}
+
+.chain-card .route {
+  color: var(--gold);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin: 0 0 10px;
+}
+
+.chain-card h3 {
+  margin: 0 0 8px;
+  font-size: 22px;
+}
+
+.chain-card p:last-child {
+  margin: 0;
+  opacity: 0.75;
+  font-size: 15px;
+}
+
+.risks {
+  background: var(--blush);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 24px;
+}
+
+.risks ul {
+  margin: 12px 0 0;
+  padding-left: 20px;
+  color: var(--muted);
+}
+
+.risks li + li {
+  margin-top: 6px;
+}
+
+.cta {
+  text-align: center;
+  padding: 40px 0 10px;
+}
+
+.cta h2 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(34px, 5vw, 56px);
+  color: var(--ink);
+}
+
+.cta-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+/* ---------- buttons / inputs ---------- */
 
 label {
   display: flex;
@@ -152,20 +447,28 @@ select {
 input:focus,
 textarea:focus,
 select:focus,
+a:focus-visible,
 button:focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: 1px;
+  outline-offset: 2px;
 }
 
-button {
+button, .btn-primary, .btn-ghost {
   font: inherit;
   font-weight: 600;
   cursor: pointer;
+  border-radius: 999px;
+  padding: 12px 26px;
+  text-decoration: none;
+  display: inline-block;
+  transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease;
+  min-height: 44px;
+}
+
+button {
   border: 1px solid var(--accent);
   background: var(--accent);
   color: var(--accent-ink);
-  border-radius: 999px;
-  padding: 10px 22px;
 }
 
 button:disabled {
@@ -173,19 +476,29 @@ button:disabled {
   cursor: not-allowed;
 }
 
-button[type="button"]:not(:disabled) {
-  background: var(--card);
-  color: var(--accent);
-}
-
+section[aria-label="Your launch"] > button:not(:disabled),
 section[aria-label="Talk to Kentir"] button[type="submit"],
-dialog button.dialog-primary {
+.btn-primary {
   background: var(--accent);
   color: var(--accent-ink);
+  border: 1px solid var(--accent);
+  box-shadow: 0 4px 0 var(--accent-deep);
+}
+
+section[aria-label="Your launch"] > button:not(:disabled):hover,
+section[aria-label="Talk to Kentir"] button[type="submit"]:hover,
+.btn-primary:hover {
+  transform: translateY(-1px);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
 }
 
 p[role="alert"] {
-  color: var(--accent);
+  color: var(--accent-deep);
   font-size: 14px;
   margin: 8px 0 0;
 }
@@ -194,6 +507,8 @@ p[role="status"] {
   color: var(--muted);
   font-size: 14px;
 }
+
+/* ---------- dialog ---------- */
 
 dialog {
   border: 1px solid var(--line);
@@ -231,7 +546,76 @@ dialog button {
   margin-right: 8px;
 }
 
-main > a {
+/* ---------- tokens page ---------- */
+
+main h1:first-child {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(40px, 6vw, 64px);
   color: var(--accent);
-  font-weight: 600;
+}
+
+main article {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-top: 14px;
+}
+
+/* ---------- footer ---------- */
+
+footer {
+  border-top: 1px solid var(--line);
+  padding: 22px 20px 40px;
+  max-width: 1160px;
+  margin: 40px auto 0;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 14px;
+  flex-wrap: wrap;
+}
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 860px) {
+  .powered {
+    display: none;
+  }
+
+  .hero-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-side {
+    text-align: center;
+    order: 2;
+  }
+
+  .live-card {
+    justify-self: center;
+    order: 3;
+    transform: rotate(0deg);
+  }
+
+  .topbar nav a {
+    padding: 0 14px;
+  }
+}
+
+/* ---------- motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
 }
