@@ -8,6 +8,8 @@
 
 **Tech Stack:** Next 16.3.4, React 19.2.8, Tailwind CSS v4 (@tailwindcss/postcss), TypeScript 5, vitest 4.1.11, three (character only), npm.
 
+**Execution order:** 1, 2, 3, 4, 6, 5 — Task 6 (CharacterStage) must land before Task 5 because the page composition build gate imports it.
+
 ## Global Constraints
 
 - Codebase language is English only — code, comments, docs, commit messages. Never Indonesian.
@@ -52,7 +54,7 @@ Later plans own: `lib/launcher-evm.ts` (Plan 2), `lib/launcher-solana.ts` (Plan 
 ### Task 1: Scaffold app shell
 
 **Files:**
-- Create: `package.json`, `tsconfig.json`, `next.config.ts`, `postcss.config.mjs`, `app/globals.css`, `app/layout.tsx`, `app/page.tsx` (placeholder heading only), `.env.example`, `.gitignore`
+- Create: `package.json`, `tsconfig.json`, `next.config.ts`, `postcss.config.mjs`, `eslint.config.mjs`, `app/globals.css`, `app/layout.tsx`, `app/page.tsx` (placeholder heading only), `.env.example`, `.gitignore`
 - Test: `npm run build` passes, `npm run lint` passes
 
 **Interfaces:**
@@ -138,7 +140,22 @@ const config = {
 export default config;
 ```
 
-- [ ] **Step 5: Write app/globals.css**
+- [ ] **Step 5: Write eslint.config.mjs**
+
+`eslint-config-next@16` is flat-native; do NOT use FlatCompat (`@eslint/eslintrc` crashes on its circular plugin objects). Write:
+
+```js
+import nextVitals from "eslint-config-next/core-web-vitals";
+import nextTs from "eslint-config-next/typescript";
+
+const config = [...nextVitals, ...nextTs, { ignores: [".next/", "next-env.d.ts"] }];
+
+export default config;
+```
+
+Expected: `npm run lint` exits 0. No extra eslint deps needed.
+
+- [ ] **Step 6: Write app/globals.css**
 
 ```css
 @import "tailwindcss";
@@ -155,7 +172,7 @@ body {
 }
 ```
 
-- [ ] **Step 6: Write app/layout.tsx**
+- [ ] **Step 7: Write app/layout.tsx**
 
 ```tsx
 import type { Metadata } from "next";
@@ -175,7 +192,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 }
 ```
 
-- [ ] **Step 7: Write app/page.tsx placeholder**
+- [ ] **Step 8: Write app/page.tsx placeholder**
 
 ```tsx
 export default function Home() {
@@ -188,7 +205,7 @@ export default function Home() {
 }
 ```
 
-- [ ] **Step 8: Write .env.example**
+- [ ] **Step 9: Write .env.example**
 
 ```text
 LLM_API_URL=https://token-plan-sgp.xiaomimimo.com/v1/chat/completions
@@ -197,7 +214,7 @@ LLM_MODEL=mimo-v2.5
 DATABASE_URL=
 ```
 
-- [ ] **Step 9: Write .gitignore**
+- [ ] **Step 10: Write .gitignore** (MERGE into existing file, do not overwrite — it already holds this content plus a `.superpowers/` line)
 
 ```text
 node_modules
@@ -206,10 +223,10 @@ node_modules
 *.log
 ```
 
-- [ ] **Step 10: Install and verify build**
+- [ ] **Step 11: Install and verify build**
 
 Run: `npm install`
-Expected: installs without errors
+Expected: installs without errors. Fallback: if pristine install fails inside the npm arborist (`edgesOut` null error with npm 11 + vitest 4), rerun once with `npm install --legacy-peer-deps` and note it in the report.
 
 Run: `npm run build`
 Expected: BUILD passes, route `/` listed
@@ -217,10 +234,10 @@ Expected: BUILD passes, route `/` listed
 Run: `npm run lint`
 Expected: no errors (warnings acceptable, fix if trivial)
 
-- [ ] **Step 11: Commit**
+- [ ] **Step 12: Commit**
 
 ```bash
-git add package.json tsconfig.json next.config.ts postcss.config.mjs app .env.example .gitignore
+git add package.json tsconfig.json next.config.ts postcss.config.mjs eslint.config.mjs app .env.example .gitignore
 git commit -m 'feat: scaffold Next.js studio shell'
 ```
 
@@ -560,6 +577,17 @@ describe("chat route", () => {
     const res = await chatPOST(req);
     expect(res.status).toBe(502);
   });
+
+  it("maps network failure to 502 chat_offline", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("down")));
+    const req = new Request("http://x/api/chat", {
+      method: "POST",
+      body: JSON.stringify({ messages: [{ role: "user", content: "hi" }] }),
+    });
+    const res = await chatPOST(req);
+    expect(res.status).toBe(502);
+    expect(((await res.json()) as { error: string }).error).toBe("chat_offline");
+  });
 });
 ```
 
@@ -626,17 +654,27 @@ export async function POST(req: Request) {
   }
   const trimmed = messages.slice(-20);
 
-  const upstream = await fetch(url, {
-    method: "POST",
-    headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
-    body: JSON.stringify({
-      model,
-      messages: [{ role: "system", content: SYSTEM_PROMPT }, ...trimmed],
-      temperature: 0.7,
-    }),
-  });
+  let upstream: Response;
+  try {
+    upstream = await fetch(url, {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
+      body: JSON.stringify({
+        model,
+        messages: [{ role: "system", content: SYSTEM_PROMPT }, ...trimmed],
+        temperature: 0.7,
+      }),
+    });
+  } catch {
+    return NextResponse.json({ error: "chat_offline" }, { status: 502 });
+  }
   if (!upstream.ok) return NextResponse.json({ error: "chat_offline" }, { status: 502 });
-  const data = (await upstream.json()) as { choices?: { message?: { content?: string } }[] };
+  let data: { choices?: { message?: { content?: string } }[] };
+  try {
+    data = (await upstream.json()) as { choices?: { message?: { content?: string } }[] };
+  } catch {
+    return NextResponse.json({ error: "chat_offline" }, { status: 502 });
+  }
   const reply = data.choices?.[0]?.message?.content ?? "";
   if (!reply) return NextResponse.json({ error: "chat_offline" }, { status: 502 });
   return NextResponse.json({ reply });
@@ -817,14 +855,17 @@ git commit -m 'feat: add draft context, chat UI, status badge'
 ```tsx
 "use client";
 
+import { useState } from "react";
 import { CHAINS } from "../lib/chains";
 import { validateDraft } from "../lib/draft";
 import { useDraft } from "./DraftContext";
 
 export default function LaunchForm({ onReview }: { onReview: () => void }) {
   const { draft, setDraft } = useDraft();
+  const [consent, setConsent] = useState(false);
   const errors = validateDraft(draft);
   const chain = CHAINS.find((c) => c.id === draft.chainId) ?? CHAINS[2];
+  const mainnet = !chain.testnet;
 
   return (
     <section aria-label="Your launch">
@@ -847,6 +888,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
           onChange={(e) => {
             const raw = e.target.value;
             setDraft({ ...draft, chainId: isNaN(Number(raw)) ? raw : Number(raw) });
+            setConsent(false);
           }}
         >
           {CHAINS.map((c) => (
@@ -865,12 +907,18 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
         Starting liquidity ({chain.currency})
         <input value={draft.liquidity} inputMode="decimal" onChange={(e) => setDraft({ ...draft, liquidity: e.target.value })} />
       </label>
+      {mainnet && (
+        <label>
+          <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
+          I reviewed the chain, token amounts, and real-money cost.
+        </label>
+      )}
       {errors.map((x) => (
         <p key={x} role="alert">
           {x}
         </p>
       ))}
-      <button type="button" disabled={errors.length > 0} onClick={onReview}>
+      <button type="button" disabled={errors.length > 0 || (mainnet && !consent)} onClick={onReview}>
         Review your launch
       </button>
     </section>
@@ -1047,8 +1095,11 @@ export default function CharacterStage() {
     let alive = true;
     let raf = 0;
     let renderer: { dispose: () => void } | null = null;
+    let geo: { dispose: () => void } | null = null;
+    let mat: { dispose: () => void } | null = null;
     const el = mount.current;
-    void import("three").then((THREE) => {
+    void import("three")
+      .then((THREE) => {
       if (!alive || !el.isConnected) return;
       const r = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer = r;
@@ -1057,10 +1108,11 @@ export default function CharacterStage() {
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
       camera.position.z = 4;
-      const mesh = new THREE.Mesh(
-        new THREE.IcosahedronGeometry(1.2, 1),
-        new THREE.MeshStandardMaterial({ color: 0xb82535, wireframe: true }),
-      );
+      const g = new THREE.IcosahedronGeometry(1.2, 1);
+      const m = new THREE.MeshStandardMaterial({ color: 0xb82535, wireframe: true });
+      geo = g;
+      mat = m;
+      const mesh = new THREE.Mesh(g, m);
       scene.add(mesh);
       scene.add(new THREE.AmbientLight(0xffffff, 1.2));
       const spin = () => {
@@ -1071,10 +1123,14 @@ export default function CharacterStage() {
       };
       spin();
       setReady(true);
-    });
+      })
+      .catch(() => {});
     return () => {
       alive = false;
       cancelAnimationFrame(raf);
+      el.replaceChildren();
+      geo?.dispose();
+      mat?.dispose();
       renderer?.dispose();
     };
   }, []);
