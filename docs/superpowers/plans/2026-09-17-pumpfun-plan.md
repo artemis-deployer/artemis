@@ -94,8 +94,7 @@ Expected: FAIL with "Cannot find module" for `../lib/launcher-solana`.
 - [ ] **Step 4: Write lib/launcher-solana.ts**
 
 ```ts
-import { Connection, Keypair, PublicKey, VersionedTransaction } from "@solana/web3.js";
-import bs58 from "./bs58.js";
+import { Connection, Keypair, VersionedTransaction } from "@solana/web3.js";
 
 export const PUMP_TRADE_URL = "https://pumpportal.fun/api/trade-local";
 export const PUMP_IPFS_URL = "https://pumpportal.fun/api/ipfs";
@@ -123,13 +122,25 @@ export async function uploadMetadata(meta: TokenMeta): Promise<string> {
     throw new Error("pump_offline");
   }
   if (!res.ok) throw new Error("pump_rejected: ipfs upload failed");
-  const data = (await res.json()) as { metadataUri?: string; metadata_uri?: string; uri?: string };
+  let data: { metadataUri?: string; metadata_uri?: string; uri?: string };
+  try {
+    data = (await res.json()) as { metadataUri?: string; metadata_uri?: string; uri?: string };
+  } catch {
+    throw new Error("pump_rejected: bad ipfs response");
+  }
   const uri = data.metadataUri ?? data.metadata_uri ?? data.uri;
   if (!uri) throw new Error("pump_rejected: no metadata uri");
   return uri;
 }
 
 export type TradePayload = Record<string, string | number>;
+
+function base64ToBytes(b64: string): Uint8Array {
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
 
 export function buildTradePayload(args: {
   publicKey: string;
@@ -167,7 +178,12 @@ export async function buildCreateTx(payload: TradePayload): Promise<VersionedTra
   }
   if (!res.ok) throw new Error("pump_rejected: trade-local failed");
   const b64 = (await res.text()).trim().replace(/^"|"$/g, "");
-  return VersionedTransaction.deserialize(Buffer.from(b64, "base64"));
+  if (!b64.length) throw new Error("pump_rejected: empty tx bytes");
+  try {
+    return VersionedTransaction.deserialize(base64ToBytes(b64));
+  } catch {
+    throw new Error("pump_rejected: bad tx bytes");
+  }
 }
 
 export type SolanaWallet = {
@@ -203,7 +219,7 @@ export function mapPumpError(e: unknown): string {
 }
 ```
 
-NOTE on `bs58` import: @solana/web3.js v1 does not export bs58. If `npm ls bs58` shows it as a transitive dep, keep a tiny local `lib/bs58.ts` wrapper instead of adding a dep. Prefer: check `node_modules/bs58` first; if present, `import bs58 from "bs58"` and add it to package.json deps explicitly with the installed version. If absent, `npm install bs58`. Either way the import must resolve at build time — adjust in this step and note the choice in the report. (The import above is illustrative; make it resolve.)
+Decided during Task 1: no bs58 usage exists in the lib, so no wrapper and no new dep. Do not add one.
 
 - [ ] **Step 5: Run tests to verify they pass**
 
@@ -237,22 +253,23 @@ git commit -m 'feat: add Solana pump.fun launcher library'
 
 import { useState } from "react";
 
-type Provider = {
+export type SolanaProvider = {
   publicKey: { toBase58(): string };
   connect(): Promise<unknown>;
+  signTransaction: <T>(tx: T) => Promise<T>;
 };
 
-function pickProvider(): Provider | null {
-  const w = window as unknown as { phantom?: { solana?: Provider }; solflare?: Provider; solana?: Provider };
+function pickProvider(): SolanaProvider | null {
+  const w = window as unknown as { phantom?: { solana?: SolanaProvider }; solflare?: SolanaProvider; solana?: SolanaProvider };
   const p = w.phantom?.solana ?? w.solflare ?? w.solana;
   return p && typeof p.connect === "function" ? p : null;
 }
 
-export function getSolanaProvider(): Provider | null {
+export function getSolanaProvider(): SolanaProvider | null {
   return pickProvider();
 }
 
-export default function SolanaButton({ onConnect }: { onConnect: (p: Provider) => void }) {
+export default function SolanaButton({ onConnect }: { onConnect: (p: SolanaProvider) => void }) {
   const [label, setLabel] = useState("Connect Solana wallet");
   const [error, setError] = useState("");
 
@@ -290,7 +307,7 @@ In `components/ReviewDialog.tsx`:
 2. Track `provider`, `mint` (base58 string), `pump` state (`idle | working | built | sent | error`), `note`.
 3. Show this section only when `draft.route === "pumpfun"` and `String(draft.chainId).startsWith("solana")`.
 4. Flow `launchPump()`:
-   - devnet → build metadata + payload, stop before broadcast with note "Devnet rehearsal: transaction built, broadcast refused by design." State `built`.
+   - devnet → build metadata + payload + tx bytes via `buildCreateTx`, then stop before broadcast with note "Devnet rehearsal: transaction built (N bytes), broadcast refused by design." `signAndSend` stays unreachable on devnet. Offline build failure maps to `error`, never fake `built`.
    - mainnet → upload metadata → new `Keypair()` mint (memory only) → `buildCreateTx` → `signAndSend` with `mint.secretKey` → `confirmTx` → save receipt `{chainId, token: mintBase58, hash: sig}` → state `sent`.
    - Any throw → `mapPumpError` into note, state `error`.
 5. Resume: if a receipt exists with matching draft ticker and no pool, show "Resume: open the mint in explorer" linking `${explorer}/address/${token}` (pump.fun graduation is tracked on pump.fun itself; do not claim auto-detect).
