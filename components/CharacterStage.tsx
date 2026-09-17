@@ -8,10 +8,12 @@ export default function CharacterStage() {
   const yaw = useRef(-0.18);
   const [ready, setReady] = useState(false);
   const [webgl, setWebgl] = useState(false);
+  const [probed, setProbed] = useState(false);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- mount-only WebGL probe; img fallback renders first to avoid hydration mismatch
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- mount-only probe; first render matches SSR (div) on both sides, img only after probe
     setWebgl(isWebGLAvailable());
+    setProbed(true);
   }, []);
 
   useEffect(() => {
@@ -64,7 +66,7 @@ export default function CharacterStage() {
     yaw.current += d;
   }
 
-  if (typeof window !== "undefined" && !webgl) {
+  if (probed && !webgl) {
     return <img src="/kentir.png" alt="Kentir character" />;
   }
 
