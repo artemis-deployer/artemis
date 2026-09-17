@@ -159,7 +159,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
           return mintBase58;
         }
       })();
-      buildTradePayload({
+      const payload = buildTradePayload({
         publicKey: payer,
         mint: mintBase58,
         name: meta.name,
@@ -167,8 +167,19 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
         uri: "devnet-rehearsal",
         amountSol,
       });
+      setPump("working");
+      setPumpNote("");
+      let size: number;
+      try {
+        const tx = await buildCreateTx(payload);
+        size = tx.serialize().length;
+      } catch (e: unknown) {
+        setPumpNote(mapPumpError(e));
+        setPump("error");
+        return;
+      }
       setMint(mintBase58);
-      setPumpNote("Devnet rehearsal: transaction built, broadcast refused by design.");
+      setPumpNote(`Devnet rehearsal: transaction built (${size} bytes), broadcast refused by design.`);
       setPump("built");
       return;
     }
