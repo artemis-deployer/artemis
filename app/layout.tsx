@@ -1,5 +1,9 @@
+import { DM_Sans, Rancho } from "next/font/google";
 import type { Metadata } from "next";
 import "./globals.css";
+
+const display = Rancho({ weight: "400", subsets: ["latin"], variable: "--font-display-next" });
+const bodyFont = DM_Sans({ weight: ["400", "500", "600", "700"], subsets: ["latin"], variable: "--font-body-next" });
 
 export const metadata: Metadata = {
   title: "Kentir — launch your coin",
@@ -8,15 +12,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Rancho&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    <html lang="en" className={`${display.variable} ${bodyFont.variable}`}>
       <body>{children}</body>
     </html>
   );

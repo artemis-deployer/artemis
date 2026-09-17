@@ -12,8 +12,8 @@
   --accent-ink: #ffffff;
   --gold: #c99b48;
   --radius: 14px;
-  --font-display: "Rancho", "Comic Sans MS", cursive;
-  --font-body: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: var(--font-display-next), "Comic Sans MS", cursive;
+  --font-body: var(--font-body-next), system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 * {
