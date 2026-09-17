@@ -2,11 +2,236 @@
 
 :root {
   --ink: #141210;
+  --muted: #6b6259;
   --paper: #fff9f1;
+  --card: #ffffff;
+  --line: #eadfd2;
   --accent: #b82535;
+  --accent-ink: #ffffff;
+  --gold: #c99b48;
+  --radius: 14px;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
   background: var(--paper);
   color: var(--ink);
+  font-family: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  margin: 0;
+  line-height: 1.5;
+}
+
+main {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 32px 20px 80px;
+}
+
+main > h1 {
+  font-family: Georgia, "Palatino Linotype", serif;
+  font-size: clamp(40px, 6vw, 72px);
+  margin: 8px 0 4px;
+  letter-spacing: -0.02em;
+}
+
+main > h1 + p,
+span[role="status"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+span[role="status"]::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--gold);
+}
+
+section {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-top: 20px;
+  box-shadow: 0 1px 0 var(--line);
+}
+
+section[aria-label="Talk to Kentir"] div[aria-live] {
+  max-height: 260px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+section[aria-label="Talk to Kentir"] div[aria-live] p {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  max-width: 75%;
+}
+
+section[aria-label="Talk to Kentir"] form {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+section[aria-label="Talk to Kentir"] textarea {
+  flex: 1;
+}
+
+section[aria-label="Talk to Kentir"] > div:last-child {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+  background: none;
+  border: none;
+  padding: 0;
+  box-shadow: none;
+}
+
+div[aria-label="Character stage"] {
+  display: flex;
+  justify-content: center;
+}
+
+div[aria-label="Character stage"] canvas,
+div[aria-label="Character stage"] img {
+  border-radius: var(--radius);
+  max-width: 100%;
+}
+
+section[aria-label="Your launch"] {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+section[aria-label="Your launch"] > p[role="alert"] {
+  grid-column: 1 / -1;
+}
+
+section[aria-label="Your launch"] > button {
+  grid-column: 1 / -1;
+  justify-self: start;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+input:not([type="checkbox"]),
+textarea,
+select {
+  font: inherit;
+  font-weight: 400;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--ink);
+  width: 100%;
+}
+
+input:focus,
+textarea:focus,
+select:focus,
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+button {
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-radius: 999px;
+  padding: 10px 22px;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+button[type="button"]:not(:disabled) {
+  background: var(--card);
+  color: var(--accent);
+}
+
+section[aria-label="Talk to Kentir"] button[type="submit"],
+dialog button.dialog-primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+p[role="alert"] {
+  color: var(--accent);
+  font-size: 14px;
+  margin: 8px 0 0;
+}
+
+p[role="status"] {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+dialog {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 24px;
+  max-width: min(560px, 92vw);
+  background: var(--card);
+  color: var(--ink);
+}
+
+dialog::backdrop {
+  background: rgba(20, 18, 16, 0.45);
+}
+
+dialog dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 16px;
+  margin: 16px 0;
+}
+
+dialog dt {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+dialog dd {
+  margin: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+dialog button {
+  margin-top: 12px;
+  margin-right: 8px;
+}
+
+main > a {
+  color: var(--accent);
+  font-weight: 600;
 }
