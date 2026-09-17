@@ -69,4 +69,15 @@ describe("chat route", () => {
     const res = await chatPOST(req);
     expect(res.status).toBe(502);
   });
+
+  it("maps network failure to 502 chat_offline", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("down")));
+    const req = new Request("http://x/api/chat", {
+      method: "POST",
+      body: JSON.stringify({ messages: [{ role: "user", content: "hi" }] }),
+    });
+    const res = await chatPOST(req);
+    expect(res.status).toBe(502);
+    expect(((await res.json()) as { error: string }).error).toBe("chat_offline");
+  });
 });

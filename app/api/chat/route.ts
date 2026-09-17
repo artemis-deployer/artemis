@@ -37,17 +37,27 @@ export async function POST(req: Request) {
   }
   const trimmed = messages.slice(-20);
 
-  const upstream = await fetch(url, {
-    method: "POST",
-    headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
-    body: JSON.stringify({
-      model,
-      messages: [{ role: "system", content: SYSTEM_PROMPT }, ...trimmed],
-      temperature: 0.7,
-    }),
-  });
+  let upstream: Response;
+  try {
+    upstream = await fetch(url, {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
+      body: JSON.stringify({
+        model,
+        messages: [{ role: "system", content: SYSTEM_PROMPT }, ...trimmed],
+        temperature: 0.7,
+      }),
+    });
+  } catch {
+    return NextResponse.json({ error: "chat_offline" }, { status: 502 });
+  }
   if (!upstream.ok) return NextResponse.json({ error: "chat_offline" }, { status: 502 });
-  const data = (await upstream.json()) as { choices?: { message?: { content?: string } }[] };
+  let data: { choices?: { message?: { content?: string } }[] };
+  try {
+    data = (await upstream.json()) as { choices?: { message?: { content?: string } }[] };
+  } catch {
+    return NextResponse.json({ error: "chat_offline" }, { status: 502 });
+  }
   const reply = data.choices?.[0]?.message?.content ?? "";
   if (!reply) return NextResponse.json({ error: "chat_offline" }, { status: 502 });
   return NextResponse.json({ reply });
