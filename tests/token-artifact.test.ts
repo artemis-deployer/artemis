@@ -7,12 +7,12 @@ describe("token artifact", () => {
   });
 
   it("exposes a constructor with name, symbol, supply", () => {
-    const ctor = (TOKEN_ABI as { type: string; inputs: { name: string }[] }[]).find((e) => e.type === "constructor");
+    const ctor = (TOKEN_ABI as unknown as { type: string; inputs: { name: string }[] }[]).find((e) => e.type === "constructor");
     expect(ctor?.inputs.map((i) => i.name)).toEqual(["n", "s", "supply"]);
   });
 
   it("exposes transfer, approve, transferFrom", () => {
-    const names = (TOKEN_ABI as { type: string; name: string }[]).filter((e) => e.type === "function").map((e) => e.name);
+    const names = (TOKEN_ABI as unknown as { type: string; name: string }[]).filter((e) => e.type === "function").map((e) => e.name);
     expect(names).toEqual(expect.arrayContaining(["transfer", "approve", "transferFrom", "balanceOf", "totalSupply"]));
   });
 
