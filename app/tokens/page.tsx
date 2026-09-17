@@ -35,7 +35,7 @@ export default function TokensPage() {
       {tokens.map((t) => (
         <article key={`${t.chain_id}:${t.address}`}>
           <h2>
-            {t.name || t.symbol || t.address.slice(0, 10)}
+            {t.name || t.symbol || (t.address ?? "").slice(0, 10)}
           </h2>
           <p>
             {t.symbol} · chain {t.chain_id}
