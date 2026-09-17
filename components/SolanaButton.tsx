@@ -22,7 +22,7 @@ export function getSolanaProvider(): SolanaProvider | null {
   return pickProvider();
 }
 
-export default function SolanaButton({ onConnect }: { onConnect: (p: SolanaProvider) => void }) {
+export default function SolanaButton({ onConnect }: { onConnect?: (p: SolanaProvider) => void }) {
   const [account, setAccount] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -40,7 +40,7 @@ export default function SolanaButton({ onConnect }: { onConnect: (p: SolanaProvi
       await p.connect();
       const b58 = p.publicKey.toBase58();
       setAccount(b58);
-      onConnect(p);
+      onConnect?.(p);
     } catch {
       setError("Wallet connection rejected.");
     } finally {

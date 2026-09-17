@@ -7,6 +7,7 @@ import LaunchForm from "../components/LaunchForm";
 import ReviewDialog from "../components/ReviewDialog";
 import StatusBadge from "../components/StatusBadge";
 import StudioChat from "../components/StudioChat";
+import TopbarWallet from "../components/TopbarWallet";
 import { CHAINS } from "../lib/chains";
 
 const STEPS = [
@@ -55,67 +56,78 @@ function Studio() {
           </a>
 
           <nav className="topbar-nav" aria-label="Main Navigation">
-            <a href="#meet">Meet Kentir</a>
+            <a href="#meet">Overview</a>
             <a href="#studio">Launch Studio</a>
             <a href="#how">How It Works</a>
+            <a href="#rails">Rails</a>
             <a href="/tokens">Showcase</a>
           </nav>
 
           <div className="topbar-actions">
             <StatusBadge />
+            <TopbarWallet />
           </div>
         </div>
       </header>
 
       <main id="top" className="page-container">
-        {/* Hero Section */}
+        {/* Clean Balanced Hero Section */}
         <section className="hero-section" id="meet" aria-label="Meet Kentir">
-          <div className="hero-header">
-            <p className="eyebrow">A little spark. A new beginning.</p>
-            <h1 className="hero-display">Kentir</h1>
-            <p className="hero-tagline">Liquidity you control. A community you run.</p>
-          </div>
-
-          <div className="hero-grid">
-            <div className="hero-intro">
-              <span className="eyebrow">Non-Custodial Launchpad</span>
-              <p>
-                From a little spark to an onchain community. Pair direct liquidity on Robinhood Chain or launch via pump.fun on Solana. No custody, zero platform fees.
+          <div className="hero-grid-balanced">
+            <div className="hero-main-content">
+              <span className="hero-eyebrow-pill">Non-Custodial Coin Launchpad</span>
+              <h1 className="hero-display">Kentir</h1>
+              <p className="hero-tagline">
+                Liquidity you control. A community token you own from your wallet.
               </p>
-              <div className="flex items-center gap-3 pt-2 flex-wrap">
+              <p className="hero-desc">
+                Deploy fixed-supply ERC20 tokens directly into Uniswap V2 on Robinhood Chain or launch bonding-curve tokens on Solana via pump.fun. Zero custody, zero platform fees, verified parameters.
+              </p>
+
+              <div className="hero-action-buttons">
                 <a className="btn-primary" href="#studio">
-                  Start Launch ↗
+                  Start Token Launch ↗
                 </a>
                 <a className="btn-secondary" href="/tokens">
-                  Browse Showcase
+                  Browse Token Showcase
                 </a>
+              </div>
+
+              {/* Technical Pillar Chips */}
+              <div className="hero-feature-chips">
+                <div className="feature-chip">
+                  <span className="feature-chip-title">999M Fixed Supply</span>
+                  <span className="feature-chip-desc">Zero mint · No taxes</span>
+                </div>
+                <div className="feature-chip">
+                  <span className="feature-chip-title">Uniswap V2 Pool</span>
+                  <span className="feature-chip-desc">Robinhood Chain (4663)</span>
+                </div>
+                <div className="feature-chip">
+                  <span className="feature-chip-title">Solana pump.fun</span>
+                  <span className="feature-chip-desc">PumpPortal integration</span>
+                </div>
+                <div className="feature-chip">
+                  <span className="feature-chip-title">100% Non-Custodial</span>
+                  <span className="feature-chip-desc">Client-side signatures</span>
+                </div>
               </div>
             </div>
 
-            <CharacterStage />
-
-            <aside className="note-card" aria-label="Talk invitation">
-              <p className="eyebrow light">Right here with you</p>
-              <p className="note-big">
-                A little idea?
-                <br />
-                Let&apos;s give it life.
-              </p>
-              <a className="btn-light" href="#studio">
-                Talk to Kentir ↗
-              </a>
-            </aside>
+            <div className="hero-stage-aside">
+              <CharacterStage />
+            </div>
           </div>
         </section>
 
         {/* Studio Workspace Section */}
         <section id="studio" className="studio-section" aria-label="Token Studio">
           <div className="studio-heading">
-            <p className="eyebrow">From a little conversation</p>
+            <p className="eyebrow">Interactive Launchpad Studio</p>
             <h2>
-              A new <em>beginning.</em>
+              Create & <em>Deploy</em>
             </h2>
-            <p>Your idea takes shape here. You stay in control of every detail.</p>
+            <p>Chat with Kentir AI Copilot or configure your token parameters directly.</p>
           </div>
 
           <div className="studio-grid">
@@ -134,10 +146,9 @@ function Studio() {
         {/* How It Works Section */}
         <section className="section-container" id="how" aria-label="How it works">
           <div className="section-head">
-            <p className="eyebrow">From an idea to an onchain token</p>
+            <p className="eyebrow">Architecture & Mechanism</p>
             <h2>
-              A little conversation.
-              <br />A launch you control.
+              From concept to <em>onchain liquidity.</em>
             </h2>
             <p>Every step is verifiable, transparent, and executed directly through your browser wallet.</p>
           </div>
@@ -154,11 +165,11 @@ function Studio() {
         </section>
 
         {/* Supported Rails Section */}
-        <section className="section-container" aria-label="Supported Rails">
+        <section className="section-container" id="rails" aria-label="Supported Rails">
           <div className="section-head">
-            <p className="eyebrow">Choose your token&apos;s home</p>
+            <p className="eyebrow">Blockchain Infrastructure</p>
             <h2>Two rails. Four networks.</h2>
-            <p>Deploy directly to decentralized exchanges with verified parameters.</p>
+            <p>Deploy directly to decentralized exchanges with verified contracts and transparent routing.</p>
           </div>
 
           <div className="chains-grid">
@@ -167,11 +178,12 @@ function Studio() {
                 <span className="chain-detail-tag">EVM Rail · Uniswap V2</span>
                 <h3>Robinhood Chain</h3>
                 <p>
-                  Two-step transparent execution: Deploy fixed-supply ERC20 contract, then fund liquidity pool via standard V2 router. Rehearse on testnet (Chain ID 46630) for free.
+                  Two-step transparent execution: Deploy fixed-supply ERC20 contract, then approve and fund DEX pool via standard V2 router. Rehearse on testnet (Chain ID 46630) for free before mainnet.
                 </p>
               </div>
-              <div className="pt-4 border-t border-[#332b25] text-xs text-[#d6cab6] font-mono">
-                Chain ID 4663 · Native ETH Currency
+              <div className="pt-4 border-t border-[#332b25] text-xs text-[#d6cab6] font-mono flex items-center justify-between">
+                <span>Chain ID 4663</span>
+                <span>Native Currency: ETH</span>
               </div>
             </article>
 
@@ -180,11 +192,12 @@ function Studio() {
                 <span className="chain-detail-tag">Solana Rail · PumpPortal</span>
                 <h3>pump.fun Integration</h3>
                 <p>
-                  Fair-launch bonding-curve rail. Upload metadata to decentralized storage and build transaction payload directly in browser with Phantom or Solflare signing.
+                  Fair-launch bonding-curve rail. Upload metadata to decentralized IPFS storage and build transaction payload directly in browser with Phantom or Solflare signing.
                 </p>
               </div>
-              <div className="pt-4 border-t border-[#332b25] text-xs text-[#d6cab6] font-mono">
-                Solana Mainnet-Beta & Devnet Rehearsal
+              <div className="pt-4 border-t border-[#332b25] text-xs text-[#d6cab6] font-mono flex items-center justify-between">
+                <span>Mainnet-Beta</span>
+                <span>Devnet Rehearsal Supported</span>
               </div>
             </article>
           </div>
@@ -192,7 +205,7 @@ function Studio() {
 
         {/* Honest Risks Section */}
         <section className="risks-box" aria-label="Honest risks">
-          <h3>Notice & Important Considerations</h3>
+          <h3>Notice & Security Considerations</h3>
           <ul className="risks-list">
             {RISKS.map((r) => (
               <li key={r}>{r}</li>
@@ -207,10 +220,10 @@ function Studio() {
           <span className="brand-link text-lg py-1 px-2.5">
             kentir ✳
           </span>
-          <span>Non-custodial. Your wallet signs everything.</span>
+          <span>Non-custodial token launcher · Sovereign liquidity.</span>
         </div>
         <div>
-          <span>Robinhood Chain & Solana pump.fun Launchpad</span>
+          <span>Your wallet approves every signature.</span>
         </div>
       </footer>
     </>

@@ -168,134 +168,162 @@ h1, h2, h3, h4 {
   padding: 0 20px 80px;
 }
 
-/* ---------- Hero Section (Iconic Luce 3-Column) ---------- */
+/* ---------- Hero Section (Executive Balanced Layout) ---------- */
 
 .hero-section {
-  padding: 48px 0 40px;
+  padding: 56px 0 44px;
   border-bottom: 1px solid var(--line);
-  text-align: center;
 }
 
-.hero-header {
-  margin-bottom: 24px;
+.hero-grid-balanced {
+  display: grid;
+  grid-template-columns: 1.25fr 0.75fr;
+  gap: 48px;
+  align-items: center;
+}
+
+.hero-main-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.hero-eyebrow-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  background: var(--canvas);
+  padding: 4px 12px;
+  border-radius: 6px;
+  margin-bottom: 16px;
 }
 
 .hero-display {
   font-family: var(--font-display);
   font-weight: 400;
-  font-size: clamp(80px, 14vw, 160px);
+  font-size: clamp(72px, 10vw, 130px);
   line-height: 0.9;
   color: var(--accent);
-  margin: 0 0 12px;
+  margin: 0 0 16px;
   letter-spacing: -0.03em;
 }
 
 .hero-tagline {
-  font-size: 20px;
+  font-size: 22px;
+  line-height: 1.35;
   color: var(--ink);
   font-weight: 600;
-  margin: 0;
+  margin: 0 0 12px;
+  max-width: 580px;
 }
 
-.hero-grid {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  gap: 32px;
-  align-items: center;
-  margin-top: 24px;
-}
-
-.hero-intro {
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 14px;
-}
-
-.hero-intro p {
-  color: var(--muted);
+.hero-desc {
   font-size: 15px;
   line-height: 1.6;
-  margin: 0;
-  max-width: 340px;
+  color: var(--muted);
+  max-width: 560px;
+  margin: 0 0 24px;
 }
 
-/* ---------- 3D Character Pedestal & Coin ---------- */
+.hero-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
 
-.character-pedestal {
+.hero-feature-chips {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 32px;
+  width: 100%;
+  max-width: 560px;
+}
+
+.feature-chip {
+  background: var(--canvas);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px 14px;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  gap: 2px;
+  text-align: left;
+}
+
+.feature-chip-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.feature-chip-desc {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.hero-stage-aside {
+  display: flex;
+  justify-content: center;
+}
+
+/* ---------- 3D Cryptographic Geometry Stage ---------- */
+
+.crypto-stage {
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
-  padding: 20px;
-  box-shadow: 4px 6px 0 rgba(20, 18, 16, 0.05);
+  padding: 24px;
+  box-shadow: 4px 6px 0 rgba(20, 18, 16, 0.04);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 320px;
 }
 
-.character-frame {
-  width: 300px;
-  height: 300px;
+.crypto-viewport {
+  width: 240px;
+  height: 240px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: grab;
   user-select: none;
-  position: relative;
 }
 
-.character-frame:active {
+.crypto-viewport:active {
   cursor: grabbing;
 }
 
-.character-img {
-  width: 260px;
-  height: 260px;
-  object-fit: contain;
-  border-radius: 12px;
-}
-
-.character-toolbar {
+.crypto-stage-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding-top: 14px;
   border-top: 1px solid var(--line);
-  gap: 8px;
-}
-
-.character-arrow-btn {
-  background: var(--canvas);
-  border: 1px solid var(--line);
-  padding: 5px 8px;
-  border-radius: 6px;
-  cursor: pointer;
-  color: var(--ink);
-  display: inline-flex;
-  align-items: center;
-  transition: all 0.15s ease;
-}
-
-.character-arrow-btn:hover {
-  border-color: var(--ink);
-}
-
-.character-hint {
+  padding-top: 12px;
   font-size: 11px;
   color: var(--muted);
-  font-weight: 500;
+  font-weight: 600;
 }
 
-.character-reset-btn {
+.crypto-reset-btn {
   background: var(--canvas);
   border: 1px solid var(--line);
   color: var(--ink);
   font-size: 11px;
   font-weight: 600;
-  padding: 5px 10px;
-  border-radius: 6px;
+  padding: 4px 8px;
+  border-radius: 4px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -303,50 +331,8 @@ h1, h2, h3, h4 {
   transition: all 0.15s ease;
 }
 
-.character-reset-btn:hover {
+.crypto-reset-btn:hover {
   border-color: var(--ink);
-}
-
-/* ---------- Tilted Red Note Card ---------- */
-
-.note-card {
-  background: var(--accent);
-  color: var(--accent-ink);
-  border-radius: 8px;
-  padding: 34px 28px;
-  text-align: left;
-  transform: rotate(2deg);
-  box-shadow: 6px 8px 0 rgba(143, 27, 41, 0.25);
-  justify-self: end;
-  max-width: 300px;
-  transition: transform 0.2s ease;
-}
-
-.note-card:hover {
-  transform: rotate(0deg) scale(1.02);
-}
-
-.note-big {
-  font-family: var(--font-display);
-  font-size: 32px;
-  line-height: 1.15;
-  margin: 0 0 20px;
-}
-
-.btn-light {
-  display: inline-block;
-  color: var(--accent-ink);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-decoration: none;
-  border-bottom: 2px solid var(--accent-ink);
-  padding-bottom: 2px;
-  transition: opacity 0.15s ease;
-}
-
-.btn-light:hover {
-  opacity: 0.85;
 }
 
 /* ---------- Studio Section ---------- */
