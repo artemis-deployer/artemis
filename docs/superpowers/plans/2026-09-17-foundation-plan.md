@@ -8,6 +8,8 @@
 
 **Tech Stack:** Next 16.3.4, React 19.2.8, Tailwind CSS v4 (@tailwindcss/postcss), TypeScript 5, vitest 4.1.11, three (character only), npm.
 
+**Execution order:** 1, 2, 3, 4, 6, 5 — Task 6 (CharacterStage) must land before Task 5 because the page composition build gate imports it.
+
 ## Global Constraints
 
 - Codebase language is English only — code, comments, docs, commit messages. Never Indonesian.
@@ -52,7 +54,7 @@ Later plans own: `lib/launcher-evm.ts` (Plan 2), `lib/launcher-solana.ts` (Plan 
 ### Task 1: Scaffold app shell
 
 **Files:**
-- Create: `package.json`, `tsconfig.json`, `next.config.ts`, `postcss.config.mjs`, `app/globals.css`, `app/layout.tsx`, `app/page.tsx` (placeholder heading only), `.env.example`, `.gitignore`
+- Create: `package.json`, `tsconfig.json`, `next.config.ts`, `postcss.config.mjs`, `eslint.config.mjs`, `app/globals.css`, `app/layout.tsx`, `app/page.tsx` (placeholder heading only), `.env.example`, `.gitignore`
 - Test: `npm run build` passes, `npm run lint` passes
 
 **Interfaces:**
@@ -138,7 +140,28 @@ const config = {
 export default config;
 ```
 
-- [ ] **Step 5: Write app/globals.css**
+- [ ] **Step 5: Write eslint.config.mjs**
+
+Run first: `npm install -D @eslint/eslintrc`
+Expected: installed (provides FlatCompat for the Next presets)
+
+```js
+import { FlatCompat } from "@eslint/eslintrc";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const compat = new FlatCompat({ baseDirectory: __dirname });
+
+const config = [
+  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  { ignores: [".next/", "next-env.d.ts"] },
+];
+
+export default config;
+```
+
+- [ ] **Step 6: Write app/globals.css**
 
 ```css
 @import "tailwindcss";
@@ -155,7 +178,7 @@ body {
 }
 ```
 
-- [ ] **Step 6: Write app/layout.tsx**
+- [ ] **Step 7: Write app/layout.tsx**
 
 ```tsx
 import type { Metadata } from "next";
@@ -175,7 +198,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 }
 ```
 
-- [ ] **Step 7: Write app/page.tsx placeholder**
+- [ ] **Step 8: Write app/page.tsx placeholder**
 
 ```tsx
 export default function Home() {
@@ -188,7 +211,7 @@ export default function Home() {
 }
 ```
 
-- [ ] **Step 8: Write .env.example**
+- [ ] **Step 9: Write .env.example**
 
 ```text
 LLM_API_URL=https://token-plan-sgp.xiaomimimo.com/v1/chat/completions
@@ -197,7 +220,7 @@ LLM_MODEL=mimo-v2.5
 DATABASE_URL=
 ```
 
-- [ ] **Step 9: Write .gitignore**
+- [ ] **Step 10: Write .gitignore** (MERGE into existing file, do not overwrite — it already holds this content plus a `.superpowers/` line)
 
 ```text
 node_modules
@@ -206,10 +229,10 @@ node_modules
 *.log
 ```
 
-- [ ] **Step 10: Install and verify build**
+- [ ] **Step 11: Install and verify build**
 
 Run: `npm install`
-Expected: installs without errors
+Expected: installs without errors. Fallback: if pristine install fails inside the npm arborist (`edgesOut` null error with npm 11 + vitest 4), rerun once with `npm install --legacy-peer-deps` and note it in the report.
 
 Run: `npm run build`
 Expected: BUILD passes, route `/` listed
@@ -217,10 +240,10 @@ Expected: BUILD passes, route `/` listed
 Run: `npm run lint`
 Expected: no errors (warnings acceptable, fix if trivial)
 
-- [ ] **Step 11: Commit**
+- [ ] **Step 12: Commit**
 
 ```bash
-git add package.json tsconfig.json next.config.ts postcss.config.mjs app .env.example .gitignore
+git add package.json tsconfig.json next.config.ts postcss.config.mjs eslint.config.mjs app .env.example .gitignore
 git commit -m 'feat: scaffold Next.js studio shell'
 ```
 
