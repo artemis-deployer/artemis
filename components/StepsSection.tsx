@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Cpu, Coins, Layers, KeyRound, Play, Pause, ArrowRight, Check, Terminal, ShieldCheck } from 'lucide-react';
+import { Cpu, Coins, Layers, KeyRound, Play, Pause, Check, Terminal, ShieldCheck } from 'lucide-react';
 import { DIRECT_SUPPLY } from '../lib/chains';
 import { HOOD_MAINNET } from '../lib/launcher-evm';
 
@@ -18,7 +18,7 @@ interface PresetPrompt {
 const PROMPT_PRESETS: PresetPrompt[] = [
   {
     id: 'agent',
-    tag: 'AUTONOMOUS AGENT',
+    tag: 'Autonomous Agent',
     prompt: 'Autonomous liquidity scout with deterministic trading triggers and community revenue split.',
     name: 'Agent Sovereign',
     symbol: '$AGNT',
@@ -27,7 +27,7 @@ const PROMPT_PRESETS: PresetPrompt[] = [
   },
   {
     id: 'meme',
-    tag: 'COMMUNITY LAUNCH',
+    tag: 'Community Launch',
     prompt: 'Fair launched viral community token with locked LP and zero team allocation.',
     name: 'Kentir Gold',
     symbol: '$KENTIR',
@@ -36,7 +36,7 @@ const PROMPT_PRESETS: PresetPrompt[] = [
   },
   {
     id: 'desci',
-    tag: 'RESEARCH DAO',
+    tag: 'Research DAO',
     prompt: 'Decentralized research collective funding open-source compute models.',
     name: 'OpenCompute',
     symbol: '$COMP',
@@ -44,6 +44,48 @@ const PROMPT_PRESETS: PresetPrompt[] = [
     curve: 'Dual-Rail Bonding'
   }
 ];
+
+const STAGES = [
+  {
+    id: 'synthesis',
+    roman: 'STAGE I',
+    shortTitle: 'Synthesis',
+    title: 'Prompt Synthesis',
+    badge: 'NATURAL LANGUAGE',
+    icon: Cpu,
+    desc: 'Copilot decomposes freeform ideas into cryptographically sound ERC20 / SPL launch specifications.'
+  },
+  {
+    id: 'tokenomics',
+    roman: 'STAGE II',
+    shortTitle: 'Genesis',
+    title: 'Genesis Mint',
+    badge: 'FIXED CAP',
+    icon: Coins,
+    desc: 'Supply is struck onchain in a single immutable genesis block without mint functions or admin keys.'
+  },
+  {
+    id: 'liquidity',
+    roman: 'STAGE III',
+    shortTitle: 'Settlement',
+    title: 'Pool Settlement',
+    badge: 'AUTOMATED AMM',
+    icon: Layers,
+    desc: 'Smart contracts atomicly pair initial tokens into Uniswap V2 on Robinhood Chain or pump.fun AMMs.'
+  },
+  {
+    id: 'runtime',
+    roman: 'STAGE IV',
+    shortTitle: 'Runtime',
+    title: 'Client Runtime',
+    badge: 'ZERO CUSTODY',
+    icon: KeyRound,
+    desc: 'Transactions are assembled client-side and dispatched directly through your connected browser wallet.'
+  }
+];
+
+const STAGE_DURATION_MS = 2500; // Snappy 2.5s per stage
+const TICK_MS = 25; // 40fps smooth animation
 
 export const StepsSection: React.FC = () => {
   const [activeStage, setActiveStage] = useState<number>(0);
@@ -63,70 +105,28 @@ export const StepsSection: React.FC = () => {
   const [isDryRunning, setIsDryRunning] = useState<boolean>(false);
   const [dryRunDone, setDryRunDone] = useState<boolean>(false);
 
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const progressRef = useRef<NodeJS.Timeout | null>(null);
-
-  const STAGES = [
-    {
-      id: 'synthesis',
-      title: 'Prompt Synthesis',
-      badge: 'NATURAL LANGUAGE',
-      icon: Cpu,
-      desc: 'Copilot decomposes freeform ideas into cryptographically sound ERC20 / SPL launch specifications.'
-    },
-    {
-      id: 'tokenomics',
-      title: 'Genesis Mint',
-      badge: 'FIXED CAP',
-      icon: Coins,
-      desc: 'Supply is struck onchain in a single immutable genesis block without mint functions or admin keys.'
-    },
-    {
-      id: 'liquidity',
-      title: 'Pool Settlement',
-      badge: 'AUTOMATED AMM',
-      icon: Layers,
-      desc: 'Smart contracts atomicly pair initial tokens into Uniswap V2 on Robinhood Chain or pump.fun AMMs.'
-    },
-    {
-      id: 'runtime',
-      title: 'Client Runtime',
-      badge: 'ZERO CUSTODY',
-      icon: KeyRound,
-      desc: 'Transactions are assembled client-side and dispatched directly through your connected browser wallet.'
-    }
-  ];
-
-  // Auto-play progress loop
+  // Strictly sequential auto-advance loop
   useEffect(() => {
-    if (!isPlaying) {
-      setProgress(0);
-      return;
-    }
+    if (!isPlaying) return;
 
-    const intervalMs = 50;
-    const totalDurationMs = 6000;
-    const increment = (intervalMs / totalDurationMs) * 100;
+    const progressStep = (TICK_MS / STAGE_DURATION_MS) * 100;
 
-    progressRef.current = setInterval(() => {
+    const interval = setInterval(() => {
       setProgress((prev) => {
-        if (prev >= 100) {
+        if (prev + progressStep >= 100) {
           setActiveStage((current) => (current + 1) % STAGES.length);
           return 0;
         }
-        return prev + increment;
+        return prev + progressStep;
       });
-    }, intervalMs);
+    }, TICK_MS);
 
-    return () => {
-      if (progressRef.current) clearInterval(progressRef.current);
-    };
-  }, [isPlaying, STAGES.length]);
+    return () => clearInterval(interval);
+  }, [isPlaying]);
 
   const handleStageSelect = (index: number) => {
     setActiveStage(index);
     setProgress(0);
-    setIsPlaying(false); // Pause on user deliberate interaction
   };
 
   const handleRunDryRun = () => {
@@ -135,7 +135,7 @@ export const StepsSection: React.FC = () => {
     setTimeout(() => {
       setIsDryRunning(false);
       setDryRunDone(true);
-    }, 600);
+    }, 500);
   };
 
   return (
@@ -156,72 +156,83 @@ export const StepsSection: React.FC = () => {
           <h2 className="font-unbounded text-2xl sm:text-4xl lg:text-[2.5rem] font-bold tracking-tight text-[#18191c] leading-[1.15]">
             From Spark to Onchain Liquidity.
           </h2>
-          <p className="mt-3 text-sm sm:text-base text-[#18191c]/70 max-w-xl leading-relaxed font-sans">
+          <p className="mt-3 text-sm sm:text-base text-[#18191c]/70 max-w-xl leading-relaxed font-sans text-center">
             Explore how Kentir automates deterministic token synthesis, contract compilation, liquidity deployment, and local key signing.
           </p>
         </div>
 
         {/* Interactive Lifecycle Console */}
-        <div className="w-full border border-[#18191c]/15 bg-white/80 backdrop-blur-md rounded-sm shadow-sm overflow-hidden">
+        <div className="w-full border border-[#18191c]/15 bg-white/90 backdrop-blur-md rounded-sm shadow-xs overflow-hidden">
           
-          {/* Stage Tab Rail (No repetitive 01 02 03 numbers) */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 border-b border-[#18191c]/10 bg-[#18191c]/[0.02]">
+          {/* Stage Tab Rail (Unified 4-stage sequential progress track) */}
+          <div className="grid grid-cols-4 border-b border-[#18191c]/10 bg-[#18191c]/[0.02]">
             {STAGES.map((stage, idx) => {
               const Icon = stage.icon;
               const isActive = activeStage === idx;
+              const isPassed = idx < activeStage;
+
               return (
                 <button
                   key={stage.id}
                   onClick={() => handleStageSelect(idx)}
-                  className={`text-left p-4 sm:p-5 relative transition-all duration-200 border-r last:border-r-0 border-[#18191c]/10 flex flex-col justify-between group ${
+                  className={`text-left p-3 sm:p-5 relative transition-all duration-200 border-r last:border-r-0 border-[#18191c]/10 flex flex-col justify-between group cursor-pointer ${
                     isActive
                       ? 'bg-white shadow-[inset_0_-2px_0_#18191c]'
                       : 'hover:bg-[#18191c]/[0.03] opacity-75 hover:opacity-100'
                   }`}
                 >
-                  <div className="flex items-center justify-between w-full mb-3">
-                    <span className={`p-2 rounded-[2px] transition-colors ${
-                      isActive ? 'bg-[#fae8a4] text-[#18191c]' : 'bg-[#18191c]/5 text-[#18191c]/60 group-hover:text-[#18191c]'
+                  <div className="flex items-center justify-between w-full mb-2 sm:mb-3">
+                    <span className={`p-1.5 sm:p-2 rounded-[2px] transition-colors ${
+                      isActive
+                        ? 'bg-[#fae8a4] text-[#18191c]'
+                        : 'bg-[#18191c]/5 text-[#18191c]/60 group-hover:text-[#18191c]'
                     }`}>
-                      <Icon className="w-4 h-4" />
+                      <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </span>
-                    <span className="font-mono text-[9px] uppercase tracking-wider text-[#18191c]/50 bg-[#18191c]/5 px-2 py-0.5 rounded-[2px]">
-                      {stage.badge}
+                    <span className="font-mono text-[9px] sm:text-[10px] tracking-wider text-[#18191c]/50 uppercase font-semibold">
+                      {stage.roman}
                     </span>
                   </div>
 
                   <div>
-                    <h3 className={`font-unbounded text-xs sm:text-sm font-bold tracking-tight transition-colors ${
+                    <h3 className={`font-unbounded text-xs sm:text-sm font-bold tracking-tight transition-colors line-clamp-1 ${
                       isActive ? 'text-[#18191c]' : 'text-[#18191c]/70'
                     }`}>
-                      {stage.title}
+                      <span className="sm:hidden">{stage.shortTitle}</span>
+                      <span className="hidden sm:inline">{stage.title}</span>
                     </h3>
                   </div>
 
-                  {/* Active animated progress indicator */}
-                  {isActive && isPlaying && (
-                    <div
-                      className="absolute bottom-0 left-0 h-[3px] bg-[#fae8a4] transition-all duration-75 ease-linear"
-                      style={{ width: `${progress}%` }}
-                    />
-                  )}
+                  {/* Connected Sequential Progress Bar at bottom of each tab */}
+                  <div className="absolute bottom-0 left-0 w-full h-[3px] bg-[#18191c]/10 overflow-hidden">
+                    {isActive ? (
+                      <div
+                        className="h-full bg-[#18191c] transition-all duration-75 ease-linear"
+                        style={{ width: `${progress}%` }}
+                      />
+                    ) : isPassed ? (
+                      <div className="h-full w-full bg-[#18191c]/40" />
+                    ) : (
+                      <div className="h-full w-0" />
+                    )}
+                  </div>
                 </button>
               );
             })}
           </div>
 
           {/* Active Stage Interactive Sandbox Workspace */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[420px]">
+          <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[440px]">
             
             {/* Left Control Column (Interactive Playground for selected stage) */}
-            <div className="lg:col-span-6 p-6 sm:p-8 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-[#18191c]/10">
+            <div className="lg:col-span-6 p-6 sm:p-8 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-[#18191c]/10 bg-white">
               <div>
                 <div className="flex items-center gap-2 mb-2 font-mono text-[11px] text-[#18191c]/60 uppercase tracking-widest">
                   <span className="w-2 h-2 rounded-full bg-[#18191c]/30" />
-                  <span>Interactive Stage Inspector</span>
+                  <span>{STAGES[activeStage].roman} · Stage Inspector</span>
                 </div>
                 
-                <h3 className="font-unbounded text-xl sm:text-2xl font-bold text-[#18191c] mb-3">
+                <h3 className="font-unbounded text-xl sm:text-2xl font-bold text-[#18191c] mb-2 leading-tight">
                   {STAGES[activeStage].title}
                 </h3>
                 
@@ -233,14 +244,14 @@ export const StepsSection: React.FC = () => {
                 {activeStage === 0 && (
                   <div className="space-y-4">
                     <span className="block font-mono text-[10px] uppercase tracking-wider text-[#18191c]/50 font-semibold">
-                      Select Sample Prompt Archetype:
+                      Click to Test Prompt Archetype:
                     </span>
                     <div className="flex flex-wrap gap-2">
                       {PROMPT_PRESETS.map((preset) => (
                         <button
                           key={preset.id}
                           onClick={() => setSelectedPreset(preset)}
-                          className={`text-xs px-3 py-1.5 rounded-[2px] font-mono transition-all border ${
+                          className={`text-xs px-3 py-1.5 rounded-[2px] font-mono transition-all border cursor-pointer ${
                             selectedPreset.id === preset.id
                               ? 'bg-[#18191c] text-[#fae8a4] border-[#18191c] shadow-xs'
                               : 'bg-white text-[#18191c]/80 border-[#18191c]/20 hover:border-[#18191c]/50'
@@ -251,7 +262,7 @@ export const StepsSection: React.FC = () => {
                       ))}
                     </div>
 
-                    <div className="p-3 bg-[#18191c]/5 rounded-[2px] border border-[#18191c]/10 text-xs font-sans italic text-[#18191c]/80">
+                    <div className="p-3 bg-[#18191c]/5 rounded-[2px] border border-[#18191c]/10 text-xs font-sans italic text-[#18191c]/80 leading-relaxed">
                       &quot;{selectedPreset.prompt}&quot;
                     </div>
                   </div>
@@ -260,12 +271,12 @@ export const StepsSection: React.FC = () => {
                 {activeStage === 1 && (
                   <div className="space-y-4">
                     <span className="block font-mono text-[10px] uppercase tracking-wider text-[#18191c]/50 font-semibold">
-                      Simulate Security & Backdoor Exploit Tests:
+                      Test Onchain Invariant Reverts:
                     </span>
                     <div className="flex flex-wrap gap-2">
                       <button
                         onClick={() => setAuditTest(auditTest === 'mint' ? 'idle' : 'mint')}
-                        className={`text-xs px-3 py-1.5 rounded-[2px] font-mono transition-all border ${
+                        className={`text-xs px-3 py-1.5 rounded-[2px] font-mono transition-all border cursor-pointer ${
                           auditTest === 'mint'
                             ? 'bg-[#18191c] text-red-300 border-[#18191c]'
                             : 'bg-white text-[#18191c]/80 border-[#18191c]/20 hover:border-[#18191c]/50'
@@ -275,7 +286,7 @@ export const StepsSection: React.FC = () => {
                       </button>
                       <button
                         onClick={() => setAuditTest(auditTest === 'owner' ? 'idle' : 'owner')}
-                        className={`text-xs px-3 py-1.5 rounded-[2px] font-mono transition-all border ${
+                        className={`text-xs px-3 py-1.5 rounded-[2px] font-mono transition-all border cursor-pointer ${
                           auditTest === 'owner'
                             ? 'bg-[#18191c] text-amber-200 border-[#18191c]'
                             : 'bg-white text-[#18191c]/80 border-[#18191c]/20 hover:border-[#18191c]/50'
@@ -285,7 +296,7 @@ export const StepsSection: React.FC = () => {
                       </button>
                     </div>
 
-                    <div className="p-3 bg-[#18191c]/5 rounded-[2px] border border-[#18191c]/10 text-xs font-mono space-y-1">
+                    <div className="p-3 bg-[#18191c]/5 rounded-[2px] border border-[#18191c]/10 text-xs font-mono space-y-1.5">
                       <div className="flex justify-between">
                         <span className="text-[#18191c]/60">Total Fixed Supply:</span>
                         <span className="font-bold text-[#18191c]">{DIRECT_SUPPLY.toLocaleString()} TOKENS</span>
@@ -305,36 +316,36 @@ export const StepsSection: React.FC = () => {
                 {activeStage === 2 && (
                   <div className="space-y-4">
                     <span className="block font-mono text-[10px] uppercase tracking-wider text-[#18191c]/50 font-semibold">
-                      Select Liquidity Rail Deployment:
+                      Select Liquidity Network:
                     </span>
                     <div className="grid grid-cols-2 gap-2">
                       <button
                         onClick={() => setActiveNetwork('robinhood')}
-                        className={`p-3 text-left rounded-[2px] border transition-all ${
+                        className={`p-3 text-left rounded-[2px] border transition-all cursor-pointer ${
                           activeNetwork === 'robinhood'
                             ? 'bg-[#18191c] text-[#fae8a4] border-[#18191c]'
                             : 'bg-white text-[#18191c]/80 border-[#18191c]/20 hover:border-[#18191c]/50'
                         }`}
                       >
                         <div className="font-bold font-unbounded text-xs">Robinhood Chain</div>
-                        <div className="text-[10px] font-mono opacity-70">Uniswap V2 Router</div>
+                        <div className="text-[10px] font-mono opacity-70 mt-0.5">Uniswap V2 Router</div>
                       </button>
                       <button
                         onClick={() => setActiveNetwork('solana')}
-                        className={`p-3 text-left rounded-[2px] border transition-all ${
+                        className={`p-3 text-left rounded-[2px] border transition-all cursor-pointer ${
                           activeNetwork === 'solana'
                             ? 'bg-[#18191c] text-[#fae8a4] border-[#18191c]'
                             : 'bg-white text-[#18191c]/80 border-[#18191c]/20 hover:border-[#18191c]/50'
                         }`}
                       >
-                        <div className="font-bold font-unbounded text-xs">Solana Network</div>
-                        <div className="text-[10px] font-mono opacity-70">pump.fun Fair Launch</div>
+                        <div className="font-bold font-unbounded text-xs">Solana Mainnet</div>
+                        <div className="text-[10px] font-mono opacity-70 mt-0.5">pump.fun AMM</div>
                       </button>
                     </div>
 
                     <div className="p-3 bg-[#18191c]/5 rounded-[2px] border border-[#18191c]/10 text-xs font-mono">
                       <span className="text-[#18191c]/60 block mb-1">Target Router Contract:</span>
-                      <span className="font-mono text-[#18191c] font-semibold select-all break-all">
+                      <span className="font-mono text-[#18191c] font-semibold select-all break-all text-[11px]">
                         {activeNetwork === 'robinhood' ? (HOOD_MAINNET.router ?? '0x89e5db8b5aa49aa85ac63f691524311aeb649eba') : '6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P'}
                       </span>
                     </div>
@@ -371,7 +382,7 @@ export const StepsSection: React.FC = () => {
                         <Check className="w-4 h-4 text-emerald-700 mt-0.5 shrink-0" />
                         <div>
                           <div className="font-bold">Signature Verified Locally (0 Server Exposure)</div>
-                          <div className="text-[11px] opacity-80 mt-0.5">Hash: 0x7f83b2...a891 | Nonce: 0 | Gas: ~0.00084 ETH</div>
+                          <div className="text-[11px] opacity-80 mt-0.5">Hash: 0x7f83b2...a891 · Nonce: 0 · Gas: ~0.00084 ETH</div>
                         </div>
                       </div>
                     )}
@@ -388,12 +399,12 @@ export const StepsSection: React.FC = () => {
                   {isPlaying ? (
                     <>
                       <Pause className="w-3.5 h-3.5" />
-                      <span>Pause Tour</span>
+                      <span>Pause Auto-Tour</span>
                     </>
                   ) : (
                     <>
                       <Play className="w-3.5 h-3.5" />
-                      <span>Resume Auto-Play Tour</span>
+                      <span>Resume Auto-Tour</span>
                     </>
                   )}
                 </button>
@@ -419,8 +430,8 @@ export const StepsSection: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Live Stage Terminal Outputs */}
-                <div className="space-y-2.5 text-xs text-white/85">
+                {/* Live Stage Terminal Outputs with Smooth State Transition */}
+                <div key={activeStage} className="space-y-2.5 text-xs text-white/85 transition-opacity duration-200">
                   {activeStage === 0 && (
                     <>
                       <div className="text-white/40">// NLP Extraction Vector:</div>
