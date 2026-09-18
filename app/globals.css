@@ -928,3 +928,13 @@ textarea:focus:not(:focus-visible) {
     display: none;
   }
 }
+
+.comparison-cue i {
+  animation: scrollCue 1.7s ease-in-out infinite;
+}
+
+@keyframes scrollCue {
+  50% {
+    transform: translateY(8px);
+  }
+}

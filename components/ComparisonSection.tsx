@@ -4,46 +4,52 @@ import React, { useEffect, useRef, useState } from 'react';
 
 export const ComparisonSection: React.FC = () => {
   const containerRef = useRef<HTMLElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
   const [split, setSplit] = useState(0);
   const [cardsProgress, setCardsProgress] = useState(0);
+  const [distance, setDistance] = useState(500);
+  const [riseVal, setRiseVal] = useState(250);
 
   useEffect(() => {
     const handleScroll = () => {
-      if (!containerRef.current) return;
+      if (!containerRef.current || !stageRef.current) return;
       const rect = containerRef.current.getBoundingClientRect();
       const vh = window.innerHeight;
-      const totalScrollable = rect.height - vh;
+      const stageHeight = stageRef.current.offsetHeight;
+      const totalScrollable = rect.height - stageHeight;
       if (totalScrollable <= 0) return;
 
-      const progress = Math.max(0, Math.min(1, -rect.top / totalScrollable));
+      // DarkpoolFi exact scroll progress formula
+      const isMobile = window.innerWidth <= 700;
+      const p = isMobile
+        ? Math.max(0, Math.min(1, (80 - rect.top) / (vh * 0.55)))
+        : Math.max(0, Math.min(1, (80 - rect.top) / totalScrollable));
 
-      // Title splits first (progress 0.05 to 0.55)
-      const s = Math.max(0, Math.min(1, (progress - 0.05) / 0.5));
-      // Cards rise up (progress 0.15 to 0.7)
-      const c = Math.max(0, Math.min(1, (progress - 0.15) / 0.55));
+      // Title splits first (progress 0.06 to 0.58)
+      const s = Math.max(0, Math.min(1, (p - 0.06) / 0.52));
+      // Cards rise up (progress 0.14 to 0.68)
+      const c = Math.max(0, Math.min(1, (p - 0.14) / 0.54));
+      // Cubic ease-out
       const ease = 1 - Math.pow(1 - c, 3);
+
+      const d = isMobile ? window.innerWidth * 0.65 : window.innerWidth * 0.48;
+      const r = (1 - ease) * Math.min(250, vh * 0.38);
 
       setSplit(s);
       setCardsProgress(ease);
+      setDistance(d);
+      setRiseVal(r);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleScroll, { passive: true });
     handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const [distance, setDistance] = useState(500);
-
-  useEffect(() => {
-    const updateDistance = () => {
-      setDistance(window.innerWidth <= 768 ? window.innerWidth * 0.45 : 550);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
     };
-    updateDistance();
-    window.addEventListener('resize', updateDistance);
-    return () => window.removeEventListener('resize', updateDistance);
   }, []);
 
-  const rise = (1 - cardsProgress) * 220;
   const scale = 0.88 + cardsProgress * 0.12;
 
   return (
@@ -52,145 +58,146 @@ export const ComparisonSection: React.FC = () => {
       id="visible-vs-sealed"
       data-theme="dark"
       className="comparison-story scroll-scene relative bg-[#121218] text-[#f5f3f7]"
-      style={{ height: '240vh' }}
+      style={{ height: '250svh', minHeight: '1700px' }}
     >
-      <div className="comparison-stage sticky top-20 h-[calc(100vh-80px)] min-h-[580px] flex flex-col justify-center items-center overflow-hidden px-[max(6.25vw,24px)]">
-        {/* Splitting Title */}
-        <h2 className="comparison-title font-sans absolute inset-0 flex items-center justify-center gap-4 text-4xl sm:text-5xl md:text-7xl font-light pointer-events-none z-10 select-none">
+      <div
+        ref={stageRef}
+        className="comparison-stage sticky top-20 h-[calc(100svh-80px)] min-h-[570px] flex flex-col justify-center items-center overflow-hidden px-[max(6.25vw,24px)]"
+      >
+        {/* Pinned Splitting Title from darkpoolfi.tech */}
+        <h2 className="comparison-title font-sans absolute inset-0 flex items-center justify-center gap-3.5 text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-light pointer-events-none z-10 select-none tracking-tight">
           <span
-            className="visible-word transition-transform duration-75"
+            className="visible-word transition-transform duration-75 will-change-transform"
             style={{
               transform: `translateX(-${split * distance}px)`,
-              opacity: 1 - split
+              opacity: Math.max(0, 1 - split)
             }}
           >
             Custodial
           </span>
-          <span className="opacity-30">vs</span>
           <span
-            className="sealed-word transition-transform duration-75 font-unbounded text-3xl sm:text-4xl md:text-6xl font-bold"
+            className="versus-word text-[#baacc6] font-normal transition-opacity duration-75"
+            style={{ opacity: Math.max(0, 1 - split * 1.5) }}
+          >
+            vs.
+          </span>
+          <span
+            className="sealed-word transition-transform duration-75 will-change-transform"
             style={{
               transform: `translateX(${split * distance}px)`,
-              opacity: 1 - split
+              opacity: Math.max(0, 1 - split)
             }}
           >
             Kentir
           </span>
         </h2>
 
-        {/* Rising Comparison Cards Grid */}
+        {/* Rising Comparison Cards Grid (900px matching darkpoolfi) */}
         <div
-          className="compare-grid w-full max-w-[1800px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 relative z-20"
+          className="compare-grid w-full max-w-[900px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-5 relative z-20 will-change-transform"
           style={{
             opacity: cardsProgress,
-            transform: `translateY(${rise}px) scale(${scale})`,
+            transform: `translateY(${riseVal}px) scale(${scale})`,
+            transformOrigin: '50% 60%',
             pointerEvents: cardsProgress > 0.4 ? 'auto' : 'none'
           }}
         >
           {/* Card 1: Custodial (Dark, Warning) */}
-          <article className="rounded-lg bg-[#18171f] border border-white/10 p-8 md:p-10 shadow-2xl">
-            <h3 className="text-xl md:text-2xl font-light text-white mb-2">
+          <article className="rounded bg-[#18171f] border border-white/10 p-7 md:p-8 shadow-2xl relative overflow-hidden text-[#f1eaf6]">
+            <h3 className="text-xl md:text-2xl font-light text-white mb-2 tracking-tight">
               The cost of custodial launchpads
             </h3>
-            <p className="text-sm text-white/60 mb-8 pb-6 border-b border-white/10 leading-relaxed">
+            <p className="text-sm text-white/60 mb-6 pb-6 border-b border-white/10 leading-relaxed">
               Your community token is trapped in someone else&apos;s smart contract infrastructure.
             </p>
 
-            <div className="space-y-6">
-              <div className="flex gap-4">
-                <span className="w-7 h-7 rounded-full border border-red-400/40 text-red-300 flex items-center justify-center text-sm flex-shrink-0">
+            <div className="space-y-5">
+              <div className="relative pl-11 pt-1">
+                <span className="absolute left-0 top-0 w-7 h-7 rounded-full border border-white/20 text-[#e4d9ec] flex items-center justify-center text-sm font-medium">
                   ×
                 </span>
-                <div>
-                  <h4 className="text-base font-medium text-white/90">Platform holds the keys</h4>
-                  <p className="text-xs text-white/60 leading-relaxed mt-1">
-                    Servers custody your liquidity, sign on your behalf, or lock contract ownership behind centralized databases.
-                  </p>
-                </div>
+                <h4 className="text-base font-normal text-white/95">Platform holds the keys</h4>
+                <p className="text-xs text-[#a99daf] leading-relaxed mt-1">
+                  Servers custody your liquidity, sign on your behalf, or lock contract ownership behind centralized databases.
+                </p>
               </div>
 
-              <div className="flex gap-4">
-                <span className="w-7 h-7 rounded-full border border-red-400/40 text-red-300 flex items-center justify-center text-sm flex-shrink-0">
+              <div className="relative pl-11 pt-1 border-t border-white/10 pt-5">
+                <span className="absolute left-0 top-5 w-7 h-7 rounded-full border border-white/20 text-[#e4d9ec] flex items-center justify-center text-sm font-medium">
                   ×
                 </span>
-                <div>
-                  <h4 className="text-base font-medium text-white/90">Hidden mint traps</h4>
-                  <p className="text-xs text-white/60 leading-relaxed mt-1">
-                    Contracts with mutable owner roles, pause mechanisms, or undisclosed mint privileges that dilute holders.
-                  </p>
-                </div>
+                <h4 className="text-base font-normal text-white/95">Hidden mint traps</h4>
+                <p className="text-xs text-[#a99daf] leading-relaxed mt-1">
+                  Contracts with mutable owner roles, pause mechanisms, or undisclosed mint privileges that dilute holders.
+                </p>
               </div>
 
-              <div className="flex gap-4">
-                <span className="w-7 h-7 rounded-full border border-red-400/40 text-red-300 flex items-center justify-center text-sm flex-shrink-0">
+              <div className="relative pl-11 pt-1 border-t border-white/10 pt-5">
+                <span className="absolute left-0 top-5 w-7 h-7 rounded-full border border-white/20 text-[#e4d9ec] flex items-center justify-center text-sm font-medium">
                   ×
                 </span>
-                <div>
-                  <h4 className="text-base font-medium text-white/90">Tolls and listing cuts</h4>
-                  <p className="text-xs text-white/60 leading-relaxed mt-1">
-                    Hefty creator tax, transaction fees, and arbitrary gatekeeping before your coin can reach open DEX liquidity.
-                  </p>
-                </div>
+                <h4 className="text-base font-normal text-white/95">Tolls and listing cuts</h4>
+                <p className="text-xs text-[#a99daf] leading-relaxed mt-1">
+                  Hefty creator tax, transaction fees, and arbitrary gatekeeping before your coin can reach open DEX liquidity.
+                </p>
               </div>
             </div>
           </article>
 
-          {/* Card 2: Kentir (Lavender, Success) */}
-          <article className="rounded-lg bg-[#e4cef7] text-[#21172d] p-8 md:p-10 shadow-2xl">
-            <h3 className="text-xl md:text-2xl font-light text-[#21172d] mb-2">
+          {/* Card 2: Kentir (Lavender, Success) with darkpoolfi decorative notches */}
+          <article className="rounded bg-[#e4cef7] text-[#21172d] p-7 md:p-8 shadow-2xl relative overflow-hidden border border-[#e4cef7]">
+            {/* Subtle decorative geometry accents from darkpoolfi */}
+            <div className="absolute top-0 left-0 w-12 h-7 bg-[#cfa9e9]/40 pointer-events-none" />
+            <div className="absolute bottom-[15%] right-0 w-4 h-20 bg-[#cfa9e9]/40 pointer-events-none" />
+
+            <h3 className="text-xl md:text-2xl font-light text-[#21172d] mb-2 tracking-tight">
               Sovereign launch with Kentir
             </h3>
-            <p className="text-sm text-[#21172d]/70 mb-8 pb-6 border-b border-[#21172d]/15 leading-relaxed">
+            <p className="text-sm text-[#21172d]/70 mb-6 pb-6 border-b border-[#21172d]/15 leading-relaxed">
               Every parameter is immutable and executed directly through your personal Web3 wallet.
             </p>
 
-            <div className="space-y-6">
-              <div className="flex gap-4">
-                <span className="w-7 h-7 rounded-full border border-[#21172d]/30 text-[#21172d] flex items-center justify-center text-sm flex-shrink-0 font-bold">
+            <div className="space-y-5">
+              <div className="relative pl-11 pt-1">
+                <span className="absolute left-0 top-0 w-7 h-7 rounded-full border border-[#21172d]/30 text-[#21172d] flex items-center justify-center text-xs font-bold">
                   ✓
                 </span>
-                <div>
-                  <h4 className="text-base font-semibold text-[#21172d]">100% Non-Custodial</h4>
-                  <p className="text-xs text-[#21172d]/80 leading-relaxed mt-1">
-                    Private keys never leave your browser. MetaMask, Phantom, and Solflare sign every deployment call directly.
-                  </p>
-                </div>
+                <h4 className="text-base font-semibold text-[#21172d]">100% Non-Custodial</h4>
+                <p className="text-xs text-[#766080] leading-relaxed mt-1">
+                  Private keys never leave your browser. MetaMask, Phantom, and Solflare sign every deployment call directly.
+                </p>
               </div>
 
-              <div className="flex gap-4">
-                <span className="w-7 h-7 rounded-full border border-[#21172d]/30 text-[#21172d] flex items-center justify-center text-sm flex-shrink-0 font-bold">
+              <div className="relative pl-11 pt-1 border-t border-[#21172d]/15 pt-5">
+                <span className="absolute left-0 top-5 w-7 h-7 rounded-full border border-[#21172d]/30 text-[#21172d] flex items-center justify-center text-xs font-bold">
                   ✓
                 </span>
-                <div>
-                  <h4 className="text-base font-semibold text-[#21172d]">Fixed 999M Supply</h4>
-                  <p className="text-xs text-[#21172d]/80 leading-relaxed mt-1">
-                    Minted once in deployment. No mint functions, no administrative owner privileges, no transfer taxes.
-                  </p>
-                </div>
+                <h4 className="text-base font-semibold text-[#21172d]">Fixed 999M Supply</h4>
+                <p className="text-xs text-[#766080] leading-relaxed mt-1">
+                  Minted once in deployment. No mint functions, no administrative owner privileges, no transfer taxes.
+                </p>
               </div>
 
-              <div className="flex gap-4">
-                <span className="w-7 h-7 rounded-full border border-[#21172d]/30 text-[#21172d] flex items-center justify-center text-sm flex-shrink-0 font-bold">
+              <div className="relative pl-11 pt-1 border-t border-[#21172d]/15 pt-5">
+                <span className="absolute left-0 top-5 w-7 h-7 rounded-full border border-[#21172d]/30 text-[#21172d] flex items-center justify-center text-xs font-bold">
                   ✓
                 </span>
-                <div>
-                  <h4 className="text-base font-semibold text-[#21172d]">$0 Platform Fees</h4>
-                  <p className="text-xs text-[#21172d]/80 leading-relaxed mt-1">
-                    Zero cuts, zero protocol taxes. You pay standard network gas and whatever liquidity you choose to fund.
-                  </p>
-                </div>
+                <h4 className="text-base font-semibold text-[#21172d]">$0 Platform Fees</h4>
+                <p className="text-xs text-[#766080] leading-relaxed mt-1">
+                  Zero cuts, zero protocol taxes. You pay standard network gas and whatever liquidity you choose to fund.
+                </p>
               </div>
             </div>
           </article>
         </div>
 
-        {/* Scroll prompt cue */}
+        {/* Scroll prompt cue from darkpoolfi */}
         <div
-          className="absolute bottom-6 flex flex-col items-center gap-2 text-xs tracking-[0.2em] uppercase text-white/50 select-none transition-opacity duration-300"
+          className="comparison-cue absolute bottom-8 flex flex-col items-center gap-2 text-[10px] tracking-[0.14em] uppercase text-[#887997] select-none transition-opacity duration-300 pointer-events-none"
           style={{ opacity: Math.max(0, 1 - split * 2) }}
         >
           <span>SCROLL TO SEE THE DIFFERENCE</span>
-          <span className="text-lg animate-bounce">↓</span>
+          <i className="not-italic text-2xl text-white/70">↓</i>
         </div>
       </div>
     </section>
