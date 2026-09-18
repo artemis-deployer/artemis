@@ -1,139 +1,512 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Cpu, Coins, Layers, KeyRound, Play, Pause, ArrowRight, Check, Terminal, ShieldCheck } from 'lucide-react';
+import { DIRECT_SUPPLY } from '../lib/chains';
+import { HOOD_MAINNET } from '../lib/launcher-evm';
 
-const steps = [
+interface PresetPrompt {
+  id: string;
+  tag: string;
+  prompt: string;
+  name: string;
+  symbol: string;
+  supply: string;
+  curve: string;
+}
+
+const PROMPT_PRESETS: PresetPrompt[] = [
   {
-    num: '01',
-    label: 'PROMPT SYNTHESIS',
-    badge: 'COPILOT_V1',
-    title: 'Draft with Copilot',
-    desc: 'Describe your community token or concept in natural language. Kentir extracts name, symbol, supply, and liquidity allocation into a clean review draft.',
-    terminal: [
-      '> kentir.parse("sovereign coin $KENTIR")',
-      '[OK] symbol: $KENTIR | supply: 999M'
-    ],
-    accent: 'hover:bg-[#ece4d4]/30'
+    id: 'agent',
+    tag: 'AUTONOMOUS AGENT',
+    prompt: 'Autonomous liquidity scout with deterministic trading triggers and community revenue split.',
+    name: 'Agent Sovereign',
+    symbol: '$AGNT',
+    supply: '999,000,000',
+    curve: 'Linear AMM Pair'
   },
   {
-    num: '02',
-    label: 'GENESIS TOKENOMICS',
-    badge: 'IMMUTABLE',
-    title: 'Fixed 999M Supply',
-    desc: 'Total supply is minted once at inception. There is no mint function, no administrative backdoor keys, and zero platform transfer tax.',
-    terminal: [
-      '> token.deploy(supply: 999000000)',
-      '[LOCKED] ownership: renounced'
-    ],
-    accent: 'hover:bg-[#fae8a4]/20'
+    id: 'meme',
+    tag: 'COMMUNITY LAUNCH',
+    prompt: 'Fair launched viral community token with locked LP and zero team allocation.',
+    name: 'Kentir Gold',
+    symbol: '$KENTIR',
+    supply: '999,000,000',
+    curve: 'Uniswap V2 Pool'
   },
   {
-    num: '03',
-    label: 'LIQUIDITY SETTLEMENT',
-    badge: 'DUAL_RAILS',
-    title: 'Pair Onchain Liquidity',
-    desc: 'Deploy initial supply directly into Uniswap V2 on Robinhood Chain or fair-launch bonding curves on Solana pump.fun.',
-    terminal: [
-      '> router.createPair(0x89e5…9eba)',
-      '[ACTIVE] autonomous pool live'
-    ],
-    accent: 'hover:bg-[#cadcf0]/30'
-  },
-  {
-    num: '04',
-    label: 'CLIENT RUNTIME',
-    badge: 'NON_CUSTODIAL',
-    title: 'Sign from Wallet',
-    desc: 'Review gas estimates and sign the deployment transaction in MetaMask, Phantom, or Rabby. Private keys never touch any server.',
-    terminal: [
-      '> wallet.signTransaction(localKey)',
-      '[BROADCAST] tx confirmed onchain'
-    ],
-    accent: 'hover:bg-[#ece4d4]/30'
+    id: 'desci',
+    tag: 'RESEARCH DAO',
+    prompt: 'Decentralized research collective funding open-source compute models.',
+    name: 'OpenCompute',
+    symbol: '$COMP',
+    supply: '999,000,000',
+    curve: 'Dual-Rail Bonding'
   }
 ];
 
 export const StepsSection: React.FC = () => {
+  const [activeStage, setActiveStage] = useState<number>(0);
+  const [isPlaying, setIsPlaying] = useState<boolean>(true);
+  const [progress, setProgress] = useState<number>(0);
+  
+  // Interactive State for Stage 0 (Prompt Synthesis)
+  const [selectedPreset, setSelectedPreset] = useState<PresetPrompt>(PROMPT_PRESETS[0]);
+  
+  // Interactive State for Stage 1 (Genesis Tokenomics)
+  const [auditTest, setAuditTest] = useState<'idle' | 'mint' | 'owner'>('idle');
+  
+  // Interactive State for Stage 2 (Liquidity Settlement)
+  const [activeNetwork, setActiveNetwork] = useState<'robinhood' | 'solana'>('robinhood');
+  
+  // Interactive State for Stage 3 (Client Runtime)
+  const [isDryRunning, setIsDryRunning] = useState<boolean>(false);
+  const [dryRunDone, setDryRunDone] = useState<boolean>(false);
+
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const progressRef = useRef<NodeJS.Timeout | null>(null);
+
+  const STAGES = [
+    {
+      id: 'synthesis',
+      title: 'Prompt Synthesis',
+      badge: 'NATURAL LANGUAGE',
+      icon: Cpu,
+      desc: 'Copilot decomposes freeform ideas into cryptographically sound ERC20 / SPL launch specifications.'
+    },
+    {
+      id: 'tokenomics',
+      title: 'Genesis Mint',
+      badge: 'FIXED CAP',
+      icon: Coins,
+      desc: 'Supply is struck onchain in a single immutable genesis block without mint functions or admin keys.'
+    },
+    {
+      id: 'liquidity',
+      title: 'Pool Settlement',
+      badge: 'AUTOMATED AMM',
+      icon: Layers,
+      desc: 'Smart contracts atomicly pair initial tokens into Uniswap V2 on Robinhood Chain or pump.fun AMMs.'
+    },
+    {
+      id: 'runtime',
+      title: 'Client Runtime',
+      badge: 'ZERO CUSTODY',
+      icon: KeyRound,
+      desc: 'Transactions are assembled client-side and dispatched directly through your connected browser wallet.'
+    }
+  ];
+
+  // Auto-play progress loop
+  useEffect(() => {
+    if (!isPlaying) {
+      setProgress(0);
+      return;
+    }
+
+    const intervalMs = 50;
+    const totalDurationMs = 6000;
+    const increment = (intervalMs / totalDurationMs) * 100;
+
+    progressRef.current = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          setActiveStage((current) => (current + 1) % STAGES.length);
+          return 0;
+        }
+        return prev + increment;
+      });
+    }, intervalMs);
+
+    return () => {
+      if (progressRef.current) clearInterval(progressRef.current);
+    };
+  }, [isPlaying, STAGES.length]);
+
+  const handleStageSelect = (index: number) => {
+    setActiveStage(index);
+    setProgress(0);
+    setIsPlaying(false); // Pause on user deliberate interaction
+  };
+
+  const handleRunDryRun = () => {
+    setIsDryRunning(true);
+    setDryRunDone(false);
+    setTimeout(() => {
+      setIsDryRunning(false);
+      setDryRunDone(true);
+    }, 600);
+  };
+
   return (
     <section
       id="how-it-works"
       data-theme="light"
       className="steps-section py-20 sm:py-24 px-[max(6.25vw,24px)] bg-[#f8f6f0] text-[#18191c] overflow-hidden w-full border-t border-[#18191c]/10"
     >
-      <div className="max-w-[1400px] mx-auto w-full">
+      <div className="max-w-[1360px] mx-auto w-full">
+        
         {/* Section Header */}
-        <div className="mb-14 text-center flex flex-col items-center">
+        <div className="mb-12 text-center flex flex-col items-center">
           <div className="inline-flex items-center justify-center gap-2 font-mono text-[11px] tracking-[0.2em] uppercase text-[#18191c]/55 mb-3 border-b border-[#18191c]/15 pb-1">
-            <span>// EXECUTION_PIPELINE</span>
+            <span>PROTOCOL LIFECYCLE</span>
             <span className="text-[#18191c]/25">/</span>
-            <span>END-TO-END WORKFLOW</span>
+            <span>END-TO-END PIPELINE</span>
           </div>
-          <h2 className="font-unbounded text-2xl sm:text-4xl lg:text-[2.6rem] font-bold tracking-tight text-[#18191c] leading-[1.12]">
-            Four Steps from Spark to Pool.
+          <h2 className="font-unbounded text-2xl sm:text-4xl lg:text-[2.5rem] font-bold tracking-tight text-[#18191c] leading-[1.15]">
+            From Spark to Onchain Liquidity.
           </h2>
-          <p className="mt-4 text-sm sm:text-base text-[#18191c]/70 max-w-lg leading-relaxed font-sans">
-            From conversational prompt to verified DEX pair completely under your cryptographic ownership.
+          <p className="mt-3 text-sm sm:text-base text-[#18191c]/70 max-w-xl leading-relaxed font-sans">
+            Explore how Kentir automates deterministic token synthesis, contract compilation, liquidity deployment, and local key signing.
           </p>
         </div>
 
-        {/* Unified Architectural Execution Console (Diverged from DarkpoolFi staggered cards) */}
-        <div className="w-full border border-[#18191c]/15 bg-white/70 backdrop-blur-sm rounded-sm shadow-xs overflow-hidden">
+        {/* Interactive Lifecycle Console */}
+        <div className="w-full border border-[#18191c]/15 bg-white/80 backdrop-blur-md rounded-sm shadow-sm overflow-hidden">
           
-          {/* Top Sequential Progress Header */}
-          <div className="hidden lg:grid grid-cols-4 border-b border-[#18191c]/10 font-mono text-[11px] uppercase tracking-wider text-[#18191c]/60 bg-[#18191c]/[0.02]">
-            <div className="px-6 py-3 border-r border-[#18191c]/10 flex items-center justify-between">
-              <span className="font-bold text-[#18191c]">01 // STEP ONE</span>
-              <span className="text-[#18191c]/30">››</span>
-            </div>
-            <div className="px-6 py-3 border-r border-[#18191c]/10 flex items-center justify-between">
-              <span className="font-bold text-[#18191c]">02 // STEP TWO</span>
-              <span className="text-[#18191c]/30">››</span>
-            </div>
-            <div className="px-6 py-3 border-r border-[#18191c]/10 flex items-center justify-between">
-              <span className="font-bold text-[#18191c]">03 // STEP THREE</span>
-              <span className="text-[#18191c]/30">››</span>
-            </div>
-            <div className="px-6 py-3 flex items-center justify-between">
-              <span className="font-bold text-[#18191c]">04 // STEP FOUR</span>
-              <span className="text-[#18191c]/30">✓</span>
-            </div>
-          </div>
-
-          {/* 4 Connected Architectural Bays */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-[#18191c]/10">
-            {steps.map((step) => (
-              <div
-                key={step.num}
-                className={`p-6 sm:p-8 flex flex-col justify-between transition-colors duration-200 ${step.accent} group relative`}
-              >
-                <div>
-                  {/* Bay Metadata Bar */}
-                  <div className="flex items-center justify-between font-mono text-[11px] mb-6">
-                    <span className="font-bold tracking-widest text-[#18191c] text-xs">
-                      {step.num} // {step.label}
+          {/* Stage Tab Rail (No repetitive 01 02 03 numbers) */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 border-b border-[#18191c]/10 bg-[#18191c]/[0.02]">
+            {STAGES.map((stage, idx) => {
+              const Icon = stage.icon;
+              const isActive = activeStage === idx;
+              return (
+                <button
+                  key={stage.id}
+                  onClick={() => handleStageSelect(idx)}
+                  className={`text-left p-4 sm:p-5 relative transition-all duration-200 border-r last:border-r-0 border-[#18191c]/10 flex flex-col justify-between group ${
+                    isActive
+                      ? 'bg-white shadow-[inset_0_-2px_0_#18191c]'
+                      : 'hover:bg-[#18191c]/[0.03] opacity-75 hover:opacity-100'
+                  }`}
+                >
+                  <div className="flex items-center justify-between w-full mb-3">
+                    <span className={`p-2 rounded-[2px] transition-colors ${
+                      isActive ? 'bg-[#fae8a4] text-[#18191c]' : 'bg-[#18191c]/5 text-[#18191c]/60 group-hover:text-[#18191c]'
+                    }`}>
+                      <Icon className="w-4 h-4" />
                     </span>
-                    <span className="border border-[#18191c]/20 bg-white/80 px-2 py-0.5 rounded-[2px] text-[10px] text-[#18191c]/70 font-semibold tracking-tight">
-                      {step.badge}
+                    <span className="font-mono text-[9px] uppercase tracking-wider text-[#18191c]/50 bg-[#18191c]/5 px-2 py-0.5 rounded-[2px]">
+                      {stage.badge}
                     </span>
                   </div>
 
-                  {/* Title & Description */}
-                  <h3 className="font-unbounded text-base sm:text-lg font-bold text-[#18191c] tracking-tight mb-3 leading-snug">
-                    {step.title}
-                  </h3>
+                  <div>
+                    <h3 className={`font-unbounded text-xs sm:text-sm font-bold tracking-tight transition-colors ${
+                      isActive ? 'text-[#18191c]' : 'text-[#18191c]/70'
+                    }`}>
+                      {stage.title}
+                    </h3>
+                  </div>
 
-                  <p className="text-xs sm:text-[13px] text-[#18191c]/75 leading-relaxed mb-6 font-sans">
-                    {step.desc}
-                  </p>
+                  {/* Active animated progress indicator */}
+                  {isActive && isPlaying && (
+                    <div
+                      className="absolute bottom-0 left-0 h-[3px] bg-[#fae8a4] transition-all duration-75 ease-linear"
+                      style={{ width: `${progress}%` }}
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Active Stage Interactive Sandbox Workspace */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[420px]">
+            
+            {/* Left Control Column (Interactive Playground for selected stage) */}
+            <div className="lg:col-span-6 p-6 sm:p-8 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-[#18191c]/10">
+              <div>
+                <div className="flex items-center gap-2 mb-2 font-mono text-[11px] text-[#18191c]/60 uppercase tracking-widest">
+                  <span className="w-2 h-2 rounded-full bg-[#18191c]/30" />
+                  <span>Interactive Stage Inspector</span>
                 </div>
+                
+                <h3 className="font-unbounded text-xl sm:text-2xl font-bold text-[#18191c] mb-3">
+                  {STAGES[activeStage].title}
+                </h3>
+                
+                <p className="text-xs sm:text-sm text-[#18191c]/75 leading-relaxed font-sans mb-6">
+                  {STAGES[activeStage].desc}
+                </p>
 
-                {/* Micro Terminal Execution Receipt */}
-                <div className="mt-4 pt-3 border-t border-[#18191c]/10 font-mono text-[11px] bg-[#18191c]/5 p-3 rounded-[2px] border border-[#18191c]/5 space-y-1 text-[#18191c]/80">
-                  <div className="truncate font-semibold text-[#18191c]">{step.terminal[0]}</div>
-                  <div className="truncate text-[10px] text-[#18191c]/60">{step.terminal[1]}</div>
+                {/* Stage-Specific Interactive Controls */}
+                {activeStage === 0 && (
+                  <div className="space-y-4">
+                    <span className="block font-mono text-[10px] uppercase tracking-wider text-[#18191c]/50 font-semibold">
+                      Select Sample Prompt Archetype:
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {PROMPT_PRESETS.map((preset) => (
+                        <button
+                          key={preset.id}
+                          onClick={() => setSelectedPreset(preset)}
+                          className={`text-xs px-3 py-1.5 rounded-[2px] font-mono transition-all border ${
+                            selectedPreset.id === preset.id
+                              ? 'bg-[#18191c] text-[#fae8a4] border-[#18191c] shadow-xs'
+                              : 'bg-white text-[#18191c]/80 border-[#18191c]/20 hover:border-[#18191c]/50'
+                          }`}
+                        >
+                          {preset.tag}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="p-3 bg-[#18191c]/5 rounded-[2px] border border-[#18191c]/10 text-xs font-sans italic text-[#18191c]/80">
+                      &quot;{selectedPreset.prompt}&quot;
+                    </div>
+                  </div>
+                )}
+
+                {activeStage === 1 && (
+                  <div className="space-y-4">
+                    <span className="block font-mono text-[10px] uppercase tracking-wider text-[#18191c]/50 font-semibold">
+                      Simulate Security & Backdoor Exploit Tests:
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => setAuditTest(auditTest === 'mint' ? 'idle' : 'mint')}
+                        className={`text-xs px-3 py-1.5 rounded-[2px] font-mono transition-all border ${
+                          auditTest === 'mint'
+                            ? 'bg-[#18191c] text-red-300 border-[#18191c]'
+                            : 'bg-white text-[#18191c]/80 border-[#18191c]/20 hover:border-[#18191c]/50'
+                        }`}
+                      >
+                        ⚡ Test Arbitrary Mint()
+                      </button>
+                      <button
+                        onClick={() => setAuditTest(auditTest === 'owner' ? 'idle' : 'owner')}
+                        className={`text-xs px-3 py-1.5 rounded-[2px] font-mono transition-all border ${
+                          auditTest === 'owner'
+                            ? 'bg-[#18191c] text-amber-200 border-[#18191c]'
+                            : 'bg-white text-[#18191c]/80 border-[#18191c]/20 hover:border-[#18191c]/50'
+                        }`}
+                      >
+                        🛡️ Test Owner Backdoor
+                      </button>
+                    </div>
+
+                    <div className="p-3 bg-[#18191c]/5 rounded-[2px] border border-[#18191c]/10 text-xs font-mono space-y-1">
+                      <div className="flex justify-between">
+                        <span className="text-[#18191c]/60">Total Fixed Supply:</span>
+                        <span className="font-bold text-[#18191c]">{DIRECT_SUPPLY.toLocaleString()} TOKENS</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#18191c]/60">Mint Authority:</span>
+                        <span className="font-bold text-emerald-700">RENOUNCED AT GENESIS</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#18191c]/60">Platform Tax:</span>
+                        <span className="font-bold text-emerald-700">0.00% (IMMUTABLE)</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeStage === 2 && (
+                  <div className="space-y-4">
+                    <span className="block font-mono text-[10px] uppercase tracking-wider text-[#18191c]/50 font-semibold">
+                      Select Liquidity Rail Deployment:
+                    </span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => setActiveNetwork('robinhood')}
+                        className={`p-3 text-left rounded-[2px] border transition-all ${
+                          activeNetwork === 'robinhood'
+                            ? 'bg-[#18191c] text-[#fae8a4] border-[#18191c]'
+                            : 'bg-white text-[#18191c]/80 border-[#18191c]/20 hover:border-[#18191c]/50'
+                        }`}
+                      >
+                        <div className="font-bold font-unbounded text-xs">Robinhood Chain</div>
+                        <div className="text-[10px] font-mono opacity-70">Uniswap V2 Router</div>
+                      </button>
+                      <button
+                        onClick={() => setActiveNetwork('solana')}
+                        className={`p-3 text-left rounded-[2px] border transition-all ${
+                          activeNetwork === 'solana'
+                            ? 'bg-[#18191c] text-[#fae8a4] border-[#18191c]'
+                            : 'bg-white text-[#18191c]/80 border-[#18191c]/20 hover:border-[#18191c]/50'
+                        }`}
+                      >
+                        <div className="font-bold font-unbounded text-xs">Solana Network</div>
+                        <div className="text-[10px] font-mono opacity-70">pump.fun Fair Launch</div>
+                      </button>
+                    </div>
+
+                    <div className="p-3 bg-[#18191c]/5 rounded-[2px] border border-[#18191c]/10 text-xs font-mono">
+                      <span className="text-[#18191c]/60 block mb-1">Target Router Contract:</span>
+                      <span className="font-mono text-[#18191c] font-semibold select-all break-all">
+                        {activeNetwork === 'robinhood' ? (HOOD_MAINNET.router ?? '0x89e5db8b5aa49aa85ac63f691524311aeb649eba') : '6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P'}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {activeStage === 3 && (
+                  <div className="space-y-4">
+                    <span className="block font-mono text-[10px] uppercase tracking-wider text-[#18191c]/50 font-semibold">
+                      Client-Side Cryptographic Execution:
+                    </span>
+                    <div>
+                      <button
+                        onClick={handleRunDryRun}
+                        disabled={isDryRunning}
+                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#18191c] text-[#fae8a4] font-mono text-xs font-semibold rounded-[2px] hover:bg-[#18191c]/90 transition-colors cursor-pointer"
+                      >
+                        {isDryRunning ? (
+                          <>
+                            <div className="w-3 h-3 border-2 border-[#fae8a4] border-t-transparent rounded-full animate-spin" />
+                            Simulating RPC Broadcast...
+                          </>
+                        ) : (
+                          <>
+                            <ShieldCheck className="w-4 h-4 text-[#fae8a4]" />
+                            Simulate Client-Side Dry Run
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    {dryRunDone && (
+                      <div className="p-3 bg-emerald-50 border border-emerald-300/60 rounded-[2px] text-xs font-mono text-emerald-900 flex items-start gap-2">
+                        <Check className="w-4 h-4 text-emerald-700 mt-0.5 shrink-0" />
+                        <div>
+                          <div className="font-bold">Signature Verified Locally (0 Server Exposure)</div>
+                          <div className="text-[11px] opacity-80 mt-0.5">Hash: 0x7f83b2...a891 | Nonce: 0 | Gas: ~0.00084 ETH</div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Console Footer Play/Pause Controller */}
+              <div className="mt-8 pt-4 border-t border-[#18191c]/10 flex items-center justify-between text-xs font-mono text-[#18191c]/60">
+                <button
+                  onClick={() => setIsPlaying(!isPlaying)}
+                  className="inline-flex items-center gap-2 hover:text-[#18191c] transition-colors cursor-pointer"
+                >
+                  {isPlaying ? (
+                    <>
+                      <Pause className="w-3.5 h-3.5" />
+                      <span>Pause Tour</span>
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-3.5 h-3.5" />
+                      <span>Resume Auto-Play Tour</span>
+                    </>
+                  )}
+                </button>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-[11px]">Subsystem Ready</span>
                 </div>
               </div>
-            ))}
+            </div>
+
+            {/* Right Output Column (Live Reactive Terminal & Receipt Monitor) */}
+            <div className="lg:col-span-6 bg-[#131416] text-[#f8f6f0] p-6 sm:p-8 font-mono flex flex-col justify-between">
+              <div>
+                {/* Terminal Header */}
+                <div className="flex items-center justify-between pb-3 mb-4 border-b border-white/10 text-[11px] text-white/50">
+                  <div className="flex items-center gap-2">
+                    <Terminal className="w-3.5 h-3.5 text-[#fae8a4]" />
+                    <span className="tracking-wider uppercase">Runtime Telemetry</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                    <span className="text-[10px] text-white/60">LIVE STREAM</span>
+                  </div>
+                </div>
+
+                {/* Live Stage Terminal Outputs */}
+                <div className="space-y-2.5 text-xs text-white/85">
+                  {activeStage === 0 && (
+                    <>
+                      <div className="text-white/40">// NLP Extraction Vector:</div>
+                      <div className="text-[#fae8a4]">&gt; copilot.parseNaturalPrompt(input)</div>
+                      <div className="pl-3 border-l border-white/15 py-1 space-y-1 text-white/70">
+                        <div>name: <span className="text-white font-semibold">&quot;{selectedPreset.name}&quot;</span></div>
+                        <div>symbol: <span className="text-[#cadcf0] font-semibold">{selectedPreset.symbol}</span></div>
+                        <div>target_supply: <span className="text-white">{selectedPreset.supply}</span></div>
+                        <div>curve_model: <span className="text-white">{selectedPreset.curve}</span></div>
+                      </div>
+                      <div className="text-emerald-400 text-[11px] mt-2 flex items-center gap-1.5">
+                        <Check className="w-3 h-3" />
+                        <span>Parameters compiled into immutable genesis payload</span>
+                      </div>
+                    </>
+                  )}
+
+                  {activeStage === 1 && (
+                    <>
+                      <div className="text-white/40">// Smart Contract Bytecode Integrity:</div>
+                      <div className="text-[#fae8a4]">&gt; solc.verifyBytecode(ERC20Sovereign.sol)</div>
+                      <div className="pl-3 border-l border-white/15 py-1 space-y-1 text-white/70">
+                        <div>constructor_supply: <span className="text-white">999,000,000 * 10^18</span></div>
+                        <div>ownership_status: <span className="text-white">address(0) [RENOUNCED]</span></div>
+                        <div>mint_selector: <span className="text-emerald-400">0x00000000 (NOT IMPLEMENTED)</span></div>
+                      </div>
+
+                      {auditTest === 'mint' && (
+                        <div className="mt-3 p-2 bg-red-950/60 border border-red-500/30 rounded-[2px] text-red-300 text-[11px]">
+                          [SECURITY CHECK] execute: mint(to, 1000000)<br />
+                          ↳ REVERT: 0x4e487b71 (Function signature does not exist)
+                        </div>
+                      )}
+
+                      {auditTest === 'owner' && (
+                        <div className="mt-3 p-2 bg-amber-950/60 border border-amber-500/30 rounded-[2px] text-amber-200 text-[11px]">
+                          [SECURITY CHECK] execute: setTaxFee(0.05)<br />
+                          ↳ REVERT: Caller is not owner. Owner is address(0).
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {activeStage === 2 && (
+                    <>
+                      <div className="text-white/40">// Liquidity Settlement Routing:</div>
+                      <div className="text-[#fae8a4]">
+                        &gt; {activeNetwork === 'robinhood' ? 'UniswapV2Factory.createPair()' : 'pump.fun.initializeAMM()'}
+                      </div>
+                      <div className="pl-3 border-l border-white/15 py-1 space-y-1 text-white/70 text-[11px]">
+                        <div>chain: <span className="text-white font-semibold">{activeNetwork === 'robinhood' ? 'Robinhood EVM' : 'Solana Mainnet'}</span></div>
+                        <div>router: <span className="text-[#cadcf0]">{activeNetwork === 'robinhood' ? (HOOD_MAINNET.router?.slice(0, 18) ?? '0x89e5db8b5aa49aa') + '...' : 'pump...4M5u'}</span></div>
+                        <div>lp_destination: <span className="text-emerald-400">0x000000000000000000000000000000000000dead</span></div>
+                        <div>rugpull_prevention: <span className="text-white">LIQUIDITY LOCKED FOREVER</span></div>
+                      </div>
+                    </>
+                  )}
+
+                  {activeStage === 3 && (
+                    <>
+                      <div className="text-white/40">// Local Cryptographic Signing:</div>
+                      <div className="text-[#fae8a4]">&gt; window.ethereum.request(&#123; method: &apos;eth_sendRawTransaction&apos; &#125;)</div>
+                      <div className="pl-3 border-l border-white/15 py-1 space-y-1 text-white/70 text-[11px]">
+                        <div>client_provider: <span className="text-white">Injected Web3 Wallet</span></div>
+                        <div>key_isolation: <span className="text-emerald-400">100% Non-Custodial</span></div>
+                        <div>server_data_transit: <span className="text-white">0 bytes (Zero Private Keys Stored)</span></div>
+                      </div>
+                      <div className="text-white/50 text-[10px] mt-2">
+                        Signed with ECDSA secp256k1 locally on user hardware.
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Terminal Bottom Telemetry Status */}
+              <div className="mt-8 pt-3 border-t border-white/10 flex items-center justify-between text-[10px] text-white/40">
+                <div className="flex items-center gap-2">
+                  <span>GAS: &lt; 0.001 ETH</span>
+                  <span>·</span>
+                  <span>CONFIRMATION: INSTANT</span>
+                </div>
+                <div>KENTIR_KERNEL_V1</div>
+              </div>
+            </div>
+
           </div>
         </div>
 
@@ -150,6 +523,7 @@ export const StepsSection: React.FC = () => {
             </div>
           </div>
         </div>
+
       </div>
     </section>
   );
