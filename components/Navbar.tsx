@@ -65,7 +65,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenMenu }) => {
           <span className="hamburger" aria-hidden="true">
             <i />
             <i />
-            <i />
           </span>
         </button>
       </div>
