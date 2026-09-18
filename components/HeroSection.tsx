@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import { CHAINS, DIRECT_SUPPLY } from '../lib/chains';
 import { HOOD_MAINNET } from '../lib/launcher-evm';
 import { FloatingPixels } from './FloatingPixels';
 import { TransitionLink } from './PageTransition';
@@ -35,11 +36,11 @@ export const HeroSection: React.FC<HeroSectionProps> = () => {
             type="button"
             onClick={handleCopy}
             className="inline-flex cursor-pointer items-center gap-1.5 text-white/70 transition-colors hover:text-[#fae8a4]"
-            title="Click to copy Uniswap V2 router address"
+            title="Click to copy Uniswap V2 router address on Robinhood Chain"
           >
-            <span className="text-white/40">ROUTER:</span>
+            <span className="text-white/40">HOOD V2 ROUTER:</span>
             <span className="font-mono text-[#fae8a4]">
-              {copied ? 'COPIED TO CLIPBOARD' : routerAddress ? `${routerAddress.slice(0, 8)}…${routerAddress.slice(-6)}` : 'ROUTER'}
+              {copied ? 'COPIED TO CLIPBOARD' : routerAddress ? `${routerAddress.slice(0, 6)}…${routerAddress.slice(-4)}` : 'UNAVAILABLE'}
             </span>
             <span className="text-[11px] text-white/40">⎘</span>
           </button>
@@ -75,24 +76,24 @@ export const HeroSection: React.FC<HeroSectionProps> = () => {
           </TransitionLink>
         </div>
 
-        {/* Open Telemetry Strip (Minimalist open horizontal rule, no box wrapper) */}
+        {/* Open Telemetry Strip (Mapped directly to codebase constants) */}
         <div className="mt-20 w-full max-w-4xl border-t border-white/10 pt-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center sm:text-left font-mono">
             <div>
               <span className="block text-[11px] uppercase tracking-wider text-white/40">Fixed Supply</span>
-              <strong className="mt-1 block text-base sm:text-lg font-bold tracking-tight text-[#f8f6f0]">999,000,000</strong>
+              <strong className="mt-1 block text-base sm:text-lg font-bold tracking-tight text-[#f8f6f0]">{DIRECT_SUPPLY.toLocaleString('en-US')}</strong>
             </div>
             <div>
               <span className="block text-[11px] uppercase tracking-wider text-white/40">Platform Cut</span>
-              <strong className="mt-1 block text-base sm:text-lg font-bold tracking-tight text-[#fae8a4]">0% Toll-Free</strong>
+              <strong className="mt-1 block text-base sm:text-lg font-bold tracking-tight text-[#fae8a4]">0% Zero Toll</strong>
             </div>
             <div>
-              <span className="block text-[11px] uppercase tracking-wider text-white/40">Dual Rails</span>
-              <strong className="mt-1 block text-base sm:text-lg font-bold tracking-tight text-[#cadcf0]">Hood V2 + Solana</strong>
+              <span className="block text-[11px] uppercase tracking-wider text-white/40">Environments</span>
+              <strong className="mt-1 block text-base sm:text-lg font-bold tracking-tight text-[#cadcf0]">{CHAINS.length} Chains Live</strong>
             </div>
             <div>
-              <span className="block text-[11px] uppercase tracking-wider text-white/40">Keypair Custody</span>
-              <strong className="mt-1 block text-base sm:text-lg font-bold tracking-tight text-[#f8f6f0]">Self-Sovereign</strong>
+              <span className="block text-[11px] uppercase tracking-wider text-white/40">Key Custody</span>
+              <strong className="mt-1 block text-base sm:text-lg font-bold tracking-tight text-[#f8f6f0]">Client Sovereign</strong>
             </div>
           </div>
         </div>
