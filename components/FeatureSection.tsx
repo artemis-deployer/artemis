@@ -9,7 +9,6 @@ const features = [
     rail: 'CHAIN SPEC',
     title: 'FIXED 999M SUPPLY',
     theme: 'bg-[#fae8a4]',
-    accent: '#fae8a4',
     img: '/assets/orbital.png',
     alt: 'Faceted orbital sphere with neon rings',
     desc: 'Supply is strictly minted once at contract deployment. No mint functions, no administrative backdoor keys.',
@@ -21,7 +20,6 @@ const features = [
     rail: 'ROBINHOOD CHAIN',
     title: 'ROBINHOOD V2 POOLS',
     theme: 'bg-[#ece4d4]',
-    accent: '#ece4d4',
     img: '/assets/pyramids.png',
     alt: 'Pastel geometric pyramids and prisms',
     desc: 'Deploy fixed-supply tokens directly into Uniswap V2 liquidity pairs with verified contract bytecode.',
@@ -33,7 +31,6 @@ const features = [
     rail: 'SOLANA MAINNET',
     title: 'SOLANA PUMP.FUN',
     theme: 'bg-[#cadcf0]',
-    accent: '#cadcf0',
     img: '/assets/walkways.png',
     alt: 'Suspended architectural walkways in nebula space',
     desc: 'Fair-launch bonding curve rail via PumpPortal. IPFS metadata and transaction bytes built locally in-browser.',
@@ -45,7 +42,6 @@ const features = [
     rail: 'CLIENT RUNTIME',
     title: 'CLIENT-SIDE SIGNATURES',
     theme: 'bg-[#fae8a4]',
-    accent: '#fae8a4',
     img: '/assets/terrain.png',
     alt: 'Floating crystalline terrain and monoliths',
     desc: 'Every transaction is signed from your personal wallet. The server never touches private keys or custody.',
@@ -57,7 +53,6 @@ const features = [
     rail: 'PLATFORM PROTOCOL',
     title: 'ZERO PLATFORM FEES',
     theme: 'bg-[#ece4d4]',
-    accent: '#ece4d4',
     img: '/assets/orbital.png',
     alt: 'Faceted orbital geometry',
     desc: '$0 platform cut. You pay standard network gas and your paired liquidity deposit only.',
@@ -69,7 +64,6 @@ const features = [
     rail: 'STUDIO ENGINE',
     title: 'AI COPILOT DRAFTING',
     theme: 'bg-[#cadcf0]',
-    accent: '#cadcf0',
     img: '/assets/walkways.png',
     alt: 'Floating platforms in cosmos',
     desc: 'Brainstorm concepts and tokenize communities via natural language. Parameters populate your review draft automatically.',
@@ -96,44 +90,41 @@ export const FeatureSection: React.FC = () => {
       data-theme="light"
       className="feature-section py-20 sm:py-24 bg-[#f8f6f0] text-[#18191c] overflow-hidden border-t border-[#18191c]/10"
     >
-      {/* Header with Telemetry Metadata and Arrow Controls */}
-      <div className="max-w-[1400px] mx-auto px-[max(6.25vw,24px)] mb-12">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="max-w-2xl text-left">
-            <div className="inline-flex items-center gap-2 font-mono text-[11px] tracking-[0.2em] uppercase text-[#18191c]/55 mb-3 border-b border-[#18191c]/15 pb-1">
-              <span>// PROTOCOL_SPEC</span>
-              <span className="text-[#18191c]/25">/</span>
-              <span>CORE CAPABILITIES</span>
-            </div>
-            <h2 className="font-unbounded text-2xl sm:text-4xl lg:text-[2.6rem] font-bold tracking-tight leading-[1.12] text-[#18191c]">
-              Everything You Need for<br />
-              <span className="text-[#18191c]/50 font-light">Autonomous Token Launches</span>
-            </h2>
-          </div>
+      {/* Centered Header with Telemetry Metadata and Arrow Controls */}
+      <div className="max-w-[1400px] mx-auto px-[max(6.25vw,24px)] mb-12 text-center flex flex-col items-center">
+        <div className="inline-flex items-center justify-center gap-2 font-mono text-[11px] tracking-[0.2em] uppercase text-[#18191c]/55 mb-3 border-b border-[#18191c]/15 pb-1">
+          <span>// PROTOCOL_SPEC</span>
+          <span className="text-[#18191c]/25">/</span>
+          <span>CORE CAPABILITIES</span>
+        </div>
 
-          {/* Controls: Spec Index + Smooth Nudge Buttons */}
-          <div className="flex items-center gap-3 self-start md:self-end font-mono text-xs">
-            <span className="hidden sm:inline-block px-3 py-1.5 border border-[#18191c]/15 bg-white/60 text-[#18191c]/70 rounded-sm">
-              06 MODULES ACTIVE
-            </span>
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => scroll('left')}
-                className="w-10 h-10 border border-[#18191c]/20 bg-white/80 hover:bg-[#18191c] hover:text-[#f8f6f0] transition-colors flex items-center justify-center rounded-sm font-bold text-sm cursor-pointer shadow-xs"
-                aria-label="Previous feature"
-              >
-                ←
-              </button>
-              <button
-                type="button"
-                onClick={() => scroll('right')}
-                className="w-10 h-10 border border-[#18191c]/20 bg-white/80 hover:bg-[#18191c] hover:text-[#f8f6f0] transition-colors flex items-center justify-center rounded-sm font-bold text-sm cursor-pointer shadow-xs"
-                aria-label="Next feature"
-              >
-                →
-              </button>
-            </div>
+        <h2 className="font-unbounded text-2xl sm:text-4xl lg:text-[2.6rem] font-bold tracking-tight leading-[1.12] text-[#18191c] max-w-3xl">
+          Everything You Need for<br />
+          <span className="text-[#18191c]/50 font-light">Autonomous Token Launches</span>
+        </h2>
+
+        {/* Centered Controls: Spec Index + Smooth Nudge Buttons */}
+        <div className="mt-8 flex items-center justify-center gap-3 font-mono text-xs">
+          <span className="hidden sm:inline-block px-3 py-1.5 border border-[#18191c]/15 bg-white/60 text-[#18191c]/70 rounded-sm">
+            06 MODULES ACTIVE
+          </span>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => scroll('left')}
+              className="w-10 h-10 border border-[#18191c]/20 bg-white/80 hover:bg-[#18191c] hover:text-[#f8f6f0] transition-colors flex items-center justify-center rounded-sm font-bold text-sm cursor-pointer shadow-xs"
+              aria-label="Previous feature"
+            >
+              ←
+            </button>
+            <button
+              type="button"
+              onClick={() => scroll('right')}
+              className="w-10 h-10 border border-[#18191c]/20 bg-white/80 hover:bg-[#18191c] hover:text-[#f8f6f0] transition-colors flex items-center justify-center rounded-sm font-bold text-sm cursor-pointer shadow-xs"
+              aria-label="Next feature"
+            >
+              →
+            </button>
           </div>
         </div>
       </div>
@@ -149,18 +140,18 @@ export const FeatureSection: React.FC = () => {
           {[...features, ...features].map((card, idx) => (
             <article
               key={idx}
-              className={`feature ${card.theme} w-[310px] sm:w-[350px] p-5 sm:p-6 text-left flex flex-col justify-between rounded-sm border border-[#18191c]/15 shadow-xs hover:-translate-y-1.5 hover:shadow-md transition-all duration-300 relative group`}
+              className={`feature ${card.theme} w-[310px] sm:w-[350px] p-5 sm:p-6 text-left flex flex-col justify-between rounded-sm border border-[#18191c]/15 shadow-xs hover:-translate-y-1.5 hover:shadow-md transition-all duration-300 relative group flex-shrink-0`}
             >
               {/* Top Technical Metadata Header */}
-              <div className="flex items-center justify-between border-b border-[#18191c]/15 pb-3 mb-4 font-mono text-[11px]">
+              <div className="flex items-center justify-between border-b border-[#18191c]/15 pb-2.5 mb-3.5 font-mono text-[11px]">
                 <span className="font-bold tracking-wider text-[#18191c]">{card.index} // {card.rail}</span>
                 <span className="border border-[#18191c]/20 bg-black/5 px-2 py-0.5 rounded-[2px] tracking-tight uppercase text-[#18191c]/70 text-[10px]">
                   {card.badge}
                 </span>
               </div>
 
-              {/* Framed Visual Asset Window */}
-              <div className="w-full aspect-[4/3] rounded-sm overflow-hidden border border-[#18191c]/10 bg-black/5 flex items-center justify-center relative mb-4">
+              {/* Framed Visual Asset Window - Strictly Identical Dimensions */}
+              <div className="w-full h-48 sm:h-52 rounded-sm overflow-hidden border border-[#18191c]/10 bg-black/5 flex items-center justify-center relative mb-4 flex-shrink-0">
                 <img
                   src={card.img}
                   alt={card.alt}
@@ -170,9 +161,9 @@ export const FeatureSection: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/15 to-transparent pointer-events-none" />
               </div>
 
-              {/* Title & Description */}
-              <div>
-                <h3 className="font-unbounded text-base sm:text-lg font-bold tracking-tight text-[#18191c] mb-2">
+              {/* Title & Description - Capped at Maximum 2 Lines */}
+              <div className="flex-1 flex flex-col justify-start">
+                <h3 className="font-unbounded text-base sm:text-lg font-bold tracking-tight text-[#18191c] mb-2 line-clamp-2 min-h-[2.75rem] sm:min-h-[3.25rem] flex items-center leading-snug">
                   {card.title}
                 </h3>
                 <p className="text-xs sm:text-[13px] text-[#18191c]/75 leading-relaxed">
