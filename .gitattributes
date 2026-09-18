@@ -1,0 +1,4 @@
+# Deterministic contract builds: solc metadata hashes source bytes,
+# so the contract and its generated artifact must always be LF.
+contracts/*.sol text eol=lf
+lib/token-artifact.ts text eol=lf

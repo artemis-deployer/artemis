@@ -11,6 +11,7 @@ import {
   type WalletClient,
 } from "viem";
 import { TOKEN_ABI, TOKEN_BYTECODE } from "./token-artifact";
+import { getActiveEvmProvider } from "./wallets";
 
 export type HoodConfig = {
   id: 4663 | 46630;
@@ -70,6 +71,8 @@ function hoodChain(cfg: HoodConfig) {
 }
 
 function ethProvider() {
+  const chosen = getActiveEvmProvider();
+  if (chosen) return chosen;
   const w = window as unknown as { ethereum?: unknown };
   if (!w.ethereum) throw new Error("no_wallet");
   return w.ethereum;

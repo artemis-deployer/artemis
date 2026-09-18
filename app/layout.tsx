@@ -1,19 +1,28 @@
-import { DM_Sans, Rancho } from "next/font/google";
 import type { Metadata } from "next";
 import "./globals.css";
 
-const display = Rancho({ weight: "400", subsets: ["latin"], variable: "--font-display-next" });
-const bodyFont = DM_Sans({ weight: ["400", "500", "600", "700"], subsets: ["latin"], variable: "--font-body-next" });
-
 export const metadata: Metadata = {
-  title: "Kentir — launch your coin",
-  description: "Chat an idea into a token draft, then launch it from your own wallet.",
+  title: "Kentir — Autonomous Non-Custodial Token Launchpad",
+  description: "Deploy fixed-supply tokens directly into Robinhood Chain Uniswap V2 pools or Solana pump.fun. 100% non-custodial, zero platform fees.",
+  icons: {
+    icon: "/assets/logo.png",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${display.variable} ${bodyFont.variable}`}>
-      <body>{children}</body>
+    <html lang="en" className="dark">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700&family=Unbounded:wght@600;800&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className="bg-[#121218] text-[#f5f3f7] antialiased selection:bg-[#e4cef7] selection:text-[#17131f] font-sans">
+        {children}
+      </body>
     </html>
   );
 }

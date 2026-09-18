@@ -42,4 +42,11 @@ describe("validateDraft", () => {
       "liquidity is required",
     );
   });
+
+  it("rejects pooled above fixed direct supply", () => {
+    expect(validateDraft({ ticker: "X", route: "direct", pooled: "999000001", liquidity: "1" })).toContain(
+      "pooled exceeds fixed supply",
+    );
+    expect(validateDraft({ ticker: "X", route: "direct", pooled: "999000000", liquidity: "1" })).toEqual([]);
+  });
 });

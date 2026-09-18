@@ -1,3 +1,5 @@
+import { DIRECT_SUPPLY } from "./chains";
+
 export type Draft = {
   name: string;
   ticker: string;
@@ -42,6 +44,8 @@ export function validateDraft(d: Partial<Draft>): string[] {
   if (!pump && (d.pooled === undefined || d.pooled === "")) errors.push("pooled is required");
   else if (d.pooled !== undefined && d.pooled !== "" && !(Number(d.pooled) > 0))
     errors.push("pooled must be a positive number");
+  else if (!pump && d.pooled !== undefined && d.pooled !== "" && Number(d.pooled) > DIRECT_SUPPLY)
+    errors.push("pooled exceeds fixed supply");
   if (d.liquidity === undefined || d.liquidity === "") errors.push("liquidity is required");
   else if (!(Number(d.liquidity) > 0)) errors.push("liquidity must be a positive number");
   return errors;

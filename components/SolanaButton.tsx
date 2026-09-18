@@ -1,6 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import {
+  clearWallet,
+  detectSolana,
+  getActiveSolanaProvider,
+  loadWallet,
+  type SolanaWalletId,
+} from "../lib/wallets";
+import WalletModal from "./WalletModal";
 
 export type SolanaProvider = {
   publicKey: { toBase58(): string };
@@ -8,50 +16,54 @@ export type SolanaProvider = {
   signTransaction: <T>(tx: T) => Promise<T>;
 };
 
-function pickProvider(): SolanaProvider | null {
-  const w = window as unknown as {
-    phantom?: { solana?: SolanaProvider };
-    solflare?: SolanaProvider;
-    solana?: SolanaProvider;
-  };
-  const p = w.phantom?.solana ?? w.solflare ?? w.solana;
-  return p && typeof p.connect === "function" ? p : null;
-}
-
 export function getSolanaProvider(): SolanaProvider | null {
-  return pickProvider();
+  return getActiveSolanaProvider() as SolanaProvider | null;
 }
 
 export default function SolanaButton({ onConnect }: { onConnect?: (p: SolanaProvider) => void }) {
   const [account, setAccount] = useState<string | null>(null);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [modal, setModal] = useState(false);
 
-  async function connect() {
-    setError("");
-    setLoading(true);
-    const p = pickProvider();
-    if (!p) {
-      setError("Please install Phantom or Solflare wallet extension first.");
-      setLoading(false);
+  const refresh = useCallback(() => {
+    const stored = loadWallet();
+    if (!stored || stored.kind !== "solana") {
+      setAccount(null);
       return;
     }
+    const p = detectSolana(stored.id as SolanaWalletId);
     try {
-      await p.connect();
-      const b58 = p.publicKey.toBase58();
-      setAccount(b58);
-      onConnect?.(p);
+      setAccount(p ? p.publicKey.toBase58() : stored.address);
     } catch {
-      setError("Wallet connection rejected.");
-    } finally {
-      setLoading(false);
+      setAccount(stored.address);
     }
+    if (p && onConnect) onConnect(p as unknown as SolanaProvider);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- onConnect is a stable-ish dialog callback
+  }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- mount-only hydrate from wallet extension
+    refresh();
+  }, [refresh]);
+
+  function disconnect() {
+    clearWallet();
+    setAccount(null);
   }
 
   if (account) {
     return (
-      <div className="inline-flex items-center gap-2 bg-[var(--canvas)] border border-[var(--line)] text-[var(--ink)] px-3 py-1.5 rounded text-xs font-semibold">
-        <span>Connected: {account.slice(0, 4)}…{account.slice(-4)}</span>
+      <div className="inline-flex items-center gap-1.5">
+        <div className="inline-flex items-center gap-2 rounded border border-white/20 bg-white/5 px-3 py-1.5 text-xs font-mono text-white/90">
+          <span>Connected: {account.slice(0, 4)}…{account.slice(-4)}</span>
+        </div>
+        <button
+          type="button"
+          onClick={disconnect}
+          title="Disconnect wallet"
+          className="cursor-pointer rounded border border-white/20 bg-white/5 px-2 py-1.5 text-xs font-semibold text-white/60 hover:border-white/40 hover:text-white"
+        >
+          ×
+        </button>
       </div>
     );
   }
@@ -60,17 +72,12 @@ export default function SolanaButton({ onConnect }: { onConnect?: (p: SolanaProv
     <div className="flex flex-col gap-2">
       <button
         type="button"
-        onClick={() => void connect()}
-        disabled={loading}
-        className="btn-secondary w-full justify-center"
+        onClick={() => setModal(true)}
+        className="inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5 rounded border border-white/20 bg-white/5 px-3.5 py-1.5 text-xs font-semibold whitespace-nowrap text-white transition-all hover:border-white/40 hover:bg-white/10"
       >
-        <span>{loading ? "Connecting Solana…" : "Connect Solana Wallet"}</span>
+        <span>Connect Solana</span>
       </button>
-      {error && (
-        <p role="alert" className="text-xs text-[var(--accent)] font-medium">
-          {error}
-        </p>
-      )}
+      <WalletModal kind="solana" open={modal} onClose={() => setModal(false)} onConnected={refresh} />
     </div>
   );
 }

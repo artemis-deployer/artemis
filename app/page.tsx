@@ -1,239 +1,113 @@
 "use client";
 
-import { useRef } from "react";
-import CharacterStage from "../components/CharacterStage";
-import { DraftProvider, useDraft } from "../components/DraftContext";
-import LaunchForm from "../components/LaunchForm";
-import ReviewDialog from "../components/ReviewDialog";
-import StatusBadge from "../components/StatusBadge";
-import StudioChat from "../components/StudioChat";
-import TopbarWallet from "../components/TopbarWallet";
-import { CHAINS } from "../lib/chains";
+import React, { useState } from 'react';
+import { DraftProvider } from '../components/DraftContext';
+import { ArrivalPreloader } from '../components/ArrivalPreloader';
+import { InkTrail } from '../components/InkTrail';
+import { Navbar } from '../components/Navbar';
+import { NavigationDialog } from '../components/NavigationDialog';
+import { SoonModal } from '../components/SoonModal';
+import { HeroSection } from '../components/HeroSection';
+import { IntroSection } from '../components/IntroSection';
+import { FeatureSection } from '../components/FeatureSection';
+import { StudioSection } from '../components/StudioSection';
+import { WorksSection } from '../components/WorksSection';
+import { StepsSection } from '../components/StepsSection';
+import { TechnologySection } from '../components/TechnologySection';
+import { AudiencesSection } from '../components/AudiencesSection';
+import { ComparisonSection } from '../components/ComparisonSection';
+import { ExecutionSection } from '../components/ExecutionSection';
+import { TransparencySection } from '../components/TransparencySection';
+import { Footer } from '../components/Footer';
+import { useMotion } from '../hooks/useMotion';
 
-const STEPS = [
-  {
-    n: "01",
-    title: "Draft your token idea",
-    body: "Tell Kentir Copilot your concept, ticker, or community name. The assistant formats your launch draft while keeping you in full control of every parameter.",
-  },
-  {
-    n: "02",
-    title: "Fixed supply, zero minting",
-    body: "Launches start with a strictly unalterable supply (999,000,000 for direct pools). No hidden mint functions, no administrative owner privileges, no transfer taxes.",
-  },
-  {
-    n: "03",
-    title: "Sovereign liquidity pairing",
-    body: "Allocate how many tokens go directly into the DEX liquidity pool and pair them with ETH or SOL. The pool ratio determines the public market opening price.",
-  },
-  {
-    n: "04",
-    title: "Sign from your own wallet",
-    body: "Review gas estimates and sign transactions directly via your web3 wallet (MetaMask, Phantom, Solflare). Kentir is non-custodial and never touches private keys.",
-  },
-];
+function MainApp() {
+  useMotion();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [soonFeature, setSoonFeature] = useState<string | null>(null);
 
-const RISKS = [
-  "Staging software, unaudited smart contracts. Rehearse thoroughly on testnets first.",
-  "Direct liquidity pool tokens are unlocked and sovereignly managed by the creator.",
-  "Funding a pool establishes an onchain trading pair but guarantees no trading volume or buyers.",
-  "Mainnet broadcasts require real funds for network gas and paired liquidity.",
-];
+  const handleOpenSoon = (feature: string) => {
+    setSoonFeature(feature);
+  };
 
-function Studio() {
-  const { draft } = useDraft();
-  const ref = useRef<HTMLDialogElement>(null);
-  const chain = CHAINS.find((c) => c.id === draft.chainId) ?? CHAINS[2];
+  const handleCloseSoon = () => {
+    setSoonFeature(null);
+  };
 
   return (
-    <>
-      {/* Topbar Header */}
-      <header className="topbar-wrapper">
-        <div className="topbar-container">
-          <a className="brand-link" href="#top">
-            <span>kentir</span>
-            <span className="brand-star" aria-hidden="true">✳</span>
-          </a>
+    <div className="relative min-h-screen bg-[#121218] text-[#f5f3f7] selection:bg-[#e4cef7] selection:text-[#17131f] font-sans">
+      {/* Editorial Arrival Redaction Splash */}
+      <ArrivalPreloader />
 
-          <nav className="topbar-nav" aria-label="Main Navigation">
-            <a href="#meet">Overview</a>
-            <a href="#studio">Launch Studio</a>
-            <a href="#how">How It Works</a>
-            <a href="#rails">Rails</a>
-            <a href="/tokens">Showcase</a>
-          </nav>
+      {/* Interactive Cursor Ink Trail */}
+      <InkTrail />
 
-          <div className="topbar-actions">
-            <StatusBadge />
-            <TopbarWallet />
-          </div>
-        </div>
-      </header>
+      {/* Top Floating Navbar with Theme Transition */}
+      <Navbar
+        onOpenMenu={() => setIsMenuOpen(true)}
+        onOpenSoon={handleOpenSoon}
+      />
 
-      <main id="top" className="page-container">
-        {/* Clean Balanced Hero Section */}
-        <section className="hero-section" id="meet" aria-label="Meet Kentir">
-          <div className="hero-grid-balanced">
-            <div className="hero-main-content">
-              <span className="hero-eyebrow-pill">Non-Custodial Coin Launchpad</span>
-              <h1 className="hero-display">Kentir</h1>
-              <p className="hero-tagline">
-                Liquidity you control. A community token you own from your wallet.
-              </p>
-              <p className="hero-desc">
-                Deploy fixed-supply ERC20 tokens directly into Uniswap V2 on Robinhood Chain or launch bonding-curve tokens on Solana via pump.fun. Zero custody, zero platform fees, verified parameters.
-              </p>
+      {/* Fullscreen Explore Navigation Dialog with 3D Art Preview */}
+      <NavigationDialog
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        onOpenSoon={handleOpenSoon}
+      />
 
-              <div className="hero-action-buttons">
-                <a className="btn-primary" href="#studio">
-                  Start Token Launch ↗
-                </a>
-                <a className="btn-secondary" href="/tokens">
-                  Browse Token Showcase
-                </a>
-              </div>
+      {/* Coming Soon Feature Modal */}
+      <SoonModal
+        isOpen={soonFeature !== null}
+        feature={soonFeature || ''}
+        onClose={handleCloseSoon}
+      />
 
-              {/* Technical Pillar Chips */}
-              <div className="hero-feature-chips">
-                <div className="feature-chip">
-                  <span className="feature-chip-title">999M Fixed Supply</span>
-                  <span className="feature-chip-desc">Zero mint · No taxes</span>
-                </div>
-                <div className="feature-chip">
-                  <span className="feature-chip-title">Uniswap V2 Pool</span>
-                  <span className="feature-chip-desc">Robinhood Chain (4663)</span>
-                </div>
-                <div className="feature-chip">
-                  <span className="feature-chip-title">Solana pump.fun</span>
-                  <span className="feature-chip-desc">PumpPortal integration</span>
-                </div>
-                <div className="feature-chip">
-                  <span className="feature-chip-title">100% Non-Custodial</span>
-                  <span className="feature-chip-desc">Client-side signatures</span>
-                </div>
-              </div>
-            </div>
+      {/* Main Landing Page Content */}
+      <main id="main">
+        {/* 1. Hero Section */}
+        <HeroSection onOpenSoon={handleOpenSoon} />
 
-            <div className="hero-stage-aside">
-              <CharacterStage />
-            </div>
-          </div>
-        </section>
+        {/* 2. Intro Section with 3D Blocky Grid & Scrubbed Reading Opacity */}
+        <IntroSection onOpenSoon={handleOpenSoon} />
 
-        {/* Studio Workspace Section */}
-        <section id="studio" className="studio-section" aria-label="Token Studio">
-          <div className="studio-heading">
-            <p className="eyebrow">Interactive Launchpad Studio</p>
-            <h2>
-              Create & <em>Deploy</em>
-            </h2>
-            <p>Chat with Kentir AI Copilot or configure your token parameters directly.</p>
-          </div>
+        {/* 3. Protocol Features Infinite Marquee */}
+        <FeatureSection />
 
-          <div className="studio-grid">
-            <StudioChat />
-            <div>
-              <LaunchForm
-                onReview={() => {
-                  ref.current?.showModal();
-                }}
-              />
-              <ReviewDialog ref={ref} draft={draft} mainnet={!chain.testnet} />
-            </div>
-          </div>
-        </section>
+        {/* 4. Interactive Launch Studio (Copilot & Manual Drafts) */}
+        <StudioSection />
 
-        {/* How It Works Section */}
-        <section className="section-container" id="how" aria-label="How it works">
-          <div className="section-head">
-            <p className="eyebrow">Architecture & Mechanism</p>
-            <h2>
-              From concept to <em>onchain liquidity.</em>
-            </h2>
-            <p>Every step is verifiable, transparent, and executed directly through your browser wallet.</p>
-          </div>
+        {/* 5. How It Works - Sticky Stacking Card Deck */}
+        <WorksSection onOpenSoon={handleOpenSoon} />
 
-          <div className="steps-grid">
-            {STEPS.map((s) => (
-              <article key={s.n} className="step-card">
-                <span className="step-number">{s.n}</span>
-                <h3>{s.title}</h3>
-                <p>{s.body}</p>
-              </article>
-            ))}
-          </div>
-        </section>
+        {/* 6. Four Steps with Mechanical Rolling Digit Reels & Principle Ticker */}
+        <StepsSection />
 
-        {/* Supported Rails Section */}
-        <section className="section-container" id="rails" aria-label="Supported Rails">
-          <div className="section-head">
-            <p className="eyebrow">Blockchain Infrastructure</p>
-            <h2>Two rails. Four networks.</h2>
-            <p>Deploy directly to decentralized exchanges with verified contracts and transparent routing.</p>
-          </div>
+        {/* 7. Technology & Window Mechanics Geometric Cards */}
+        <TechnologySection />
 
-          <div className="chains-grid">
-            <article className="chain-detail-card">
-              <div>
-                <span className="chain-detail-tag">EVM Rail · Uniswap V2</span>
-                <h3>Robinhood Chain</h3>
-                <p>
-                  Two-step transparent execution: Deploy fixed-supply ERC20 contract, then approve and fund DEX pool via standard V2 router. Rehearse on testnet (Chain ID 46630) for free before mainnet.
-                </p>
-              </div>
-              <div className="pt-4 border-t border-[#332b25] text-xs text-[#d6cab6] font-mono flex items-center justify-between">
-                <span>Chain ID 4663</span>
-                <span>Native Currency: ETH</span>
-              </div>
-            </article>
+        {/* 8. Audiences Carousel Slider */}
+        <AudiencesSection />
 
-            <article className="chain-detail-card">
-              <div>
-                <span className="chain-detail-tag">Solana Rail · PumpPortal</span>
-                <h3>pump.fun Integration</h3>
-                <p>
-                  Fair-launch bonding-curve rail. Upload metadata to decentralized IPFS storage and build transaction payload directly in browser with Phantom or Solflare signing.
-                </p>
-              </div>
-              <div className="pt-4 border-t border-[#332b25] text-xs text-[#d6cab6] font-mono flex items-center justify-between">
-                <span>Mainnet-Beta</span>
-                <span>Devnet Rehearsal Supported</span>
-              </div>
-            </article>
-          </div>
-        </section>
+        {/* 9. Pinned Scroll Comparison Scene (Custodial vs. Kentir) */}
+        <ComparisonSection />
 
-        {/* Honest Risks Section */}
-        <section className="risks-box" aria-label="Honest risks">
-          <h3>Notice & Security Considerations</h3>
-          <ul className="risks-list">
-            {RISKS.map((r) => (
-              <li key={r}>{r}</li>
-            ))}
-          </ul>
-        </section>
+        {/* 10. Execution Rails Toggle & Cards */}
+        <ExecutionSection onOpenSoon={handleOpenSoon} />
+
+        {/* 11. Transparency & Disclosures Accordion */}
+        <TransparencySection onOpenSoon={handleOpenSoon} />
       </main>
 
-      {/* Footer */}
-      <footer className="footer-section">
-        <div className="flex items-center gap-3">
-          <span className="brand-link text-lg py-1 px-2.5">
-            kentir ✳
-          </span>
-          <span>Non-custodial token launcher · Sovereign liquidity.</span>
-        </div>
-        <div>
-          <span>Your wallet approves every signature.</span>
-        </div>
-      </footer>
-    </>
+      {/* 12. Footer with Huge Watermark & Pixels */}
+      <Footer onOpenSoon={handleOpenSoon} />
+    </div>
   );
 }
 
 export default function Home() {
   return (
     <DraftProvider>
-      <Studio />
+      <MainApp />
     </DraftProvider>
   );
 }

@@ -74,44 +74,52 @@ export default function StudioChat() {
   }
 
   return (
-    <section className="chat-card" aria-label="Talk to Kentir">
-      <div className="chat-card-header">
-        <div className="chat-card-header-title">
+    <section className="flex h-[640px] flex-col overflow-hidden rounded-xl border border-white/10 bg-[#14131b] shadow-2xl max-sm:h-[560px]" aria-label="Talk to Kentir">
+      <div className="flex items-center justify-between border-b border-white/10 bg-[#18171f] px-5 py-3.5">
+        <div className="text-xs font-bold tracking-[0.08em] text-white uppercase font-mono">
           <span>Kentir Copilot</span>
         </div>
-        <span className="text-xs text-[var(--muted)]">Draft fills as you chat</span>
+        <span className="text-xs text-white/50">Draft fills as you chat</span>
       </div>
 
-      <div className="chat-history" aria-live="polite" ref={logRef}>
+      <div className="flex flex-1 flex-col gap-3.5 overflow-y-auto p-5" aria-live="polite" ref={logRef}>
         {log.map((l, i) => (
           <div
             key={i}
             data-role={l.role}
-            className={`chat-bubble ${l.role === "user" ? "chat-bubble-user" : "chat-bubble-assistant"}`}
+            className={`max-w-[86%] rounded-lg px-4 py-3 text-sm leading-relaxed break-words ${
+              l.role === "user"
+                ? "self-end bg-[#e4cef7] text-[#17131f] shadow-md font-medium"
+                : "self-start border border-white/10 bg-[#1b1924] text-[#f5f3f7]"
+            }`}
           >
-            <span className="chat-bubble-author">
+            <span
+              className={`mb-1 block text-[11px] font-bold tracking-[0.06em] uppercase font-mono ${
+                l.role === "user" ? "text-[#17131f]/70" : "text-[#b9e2f8]"
+              }`}
+            >
               {l.role === "user" ? "You" : "Kentir"}
             </span>
-            <p className="m-0 whitespace-pre-wrap leading-relaxed">{l.content}</p>
+            <p className="m-0 leading-relaxed whitespace-pre-wrap">{l.content}</p>
           </div>
         ))}
 
         {busy && (
-          <div className="chat-bubble chat-bubble-assistant text-xs text-[var(--muted)]">
+          <div className="self-start rounded-lg border border-white/10 bg-[#1b1924] px-4 py-3 text-xs text-white/60">
             <span>Thinking…</span>
           </div>
         )}
       </div>
 
-      <div className="chat-suggestions">
-        <span className="text-xs text-[var(--muted)] font-semibold uppercase tracking-wider">
+      <div className="flex items-center gap-2 overflow-x-auto border-t border-white/10 bg-[#18171f] px-5 py-2.5">
+        <span className="text-xs font-semibold tracking-wider text-white/40 uppercase font-mono">
           Suggestions:
         </span>
         {SUGGESTIONS.map((s) => (
           <button
             key={s}
             type="button"
-            className="suggestion-chip"
+            className="min-h-9 shrink-0 cursor-pointer rounded border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-medium whitespace-nowrap text-white/80 transition-all hover:border-white/30 hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
             disabled={busy}
             onClick={() => void send(s)}
           >
@@ -121,20 +129,20 @@ export default function StudioChat() {
       </div>
 
       <form
-        className="chat-input-form"
+        className="flex flex-col gap-2.5 border-t border-white/10 bg-[#14131b] px-5 py-4"
         onSubmit={(e) => {
           e.preventDefault();
           void send(input);
         }}
       >
-        <div className="chat-input-wrapper">
+        <div className="flex items-end gap-2.5">
           <textarea
             id="chat-input"
             rows={2}
             maxLength={1000}
             value={input}
             placeholder="Type your coin idea..."
-            className="chat-textarea"
+            className="max-h-[110px] min-h-12 flex-1 resize-none rounded-lg border border-white/15 bg-[#18171f] px-3.5 py-2.5 font-[inherit] text-sm leading-snug text-white placeholder-white/30 focus:border-[#e4cef7] focus:bg-[#1b1924]"
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
@@ -146,14 +154,14 @@ export default function StudioChat() {
           <button
             type="submit"
             disabled={busy || !input.trim()}
-            className="chat-send-btn"
+            className="inline-flex h-12 cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-[#e4cef7] px-5 text-[13px] font-bold whitespace-nowrap text-[#17131f] transition-all hover:bg-[#f1d2e8] disabled:cursor-not-allowed disabled:border disabled:border-white/10 disabled:bg-white/5 disabled:text-white/30"
             aria-label="Send message"
           >
             <SendHorizonal size={16} />
             <span>Send</span>
           </button>
         </div>
-        <div className="flex items-center justify-between text-xs text-[var(--muted)]">
+        <div className="flex items-center justify-between text-xs text-white/40">
           <span>Enter to send · Shift+Enter for new line</span>
           <span>{input.length}/1000</span>
         </div>

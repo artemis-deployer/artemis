@@ -244,38 +244,38 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
   }
 
   return (
-    <dialog ref={ref} aria-label="Review your launch">
-      <div className="dialog-inner">
-        <div className="dialog-header">
+    <dialog ref={ref} aria-label="Review your launch" className="m-auto max-w-[min(540px,94vw)] overflow-hidden rounded-xl border border-white/15 bg-[#18171f] p-0 text-white shadow-2xl">
+      <div className="flex flex-col gap-4 p-6 max-sm:p-[18px]">
+        <div className="flex items-center justify-between border-b border-white/10 pb-3.5">
           <div>
-            <h3>Review Launch Parameters</h3>
-            <p className="text-xs text-[var(--muted)] m-0">Confirm details before submitting signatures</p>
+            <h3 className="m-0 text-[19px] font-bold font-unbounded text-white">Review Launch Parameters</h3>
+            <p className="m-0 text-xs text-white/50">Confirm details before submitting signatures</p>
           </div>
           <form method="dialog">
-            <button value="close" className="btn-ghost p-1" aria-label="Close dialog">
+            <button value="close" className="inline-flex cursor-pointer items-center gap-1.5 rounded-md p-1 text-[13px] font-semibold text-white/60 no-underline hover:bg-white/10 hover:text-white" aria-label="Close dialog">
               <X size={18} />
             </button>
           </form>
         </div>
 
-        <dl className="dialog-summary-list">
-          <dt>Network:</dt>
-          <dd>{chainObj?.name ?? String(draft.chainId)}</dd>
-          <dt>Token Name:</dt>
-          <dd>{draft.name || draft.ticker || "-"}</dd>
-          <dt>Ticker Symbol:</dt>
-          <dd className="font-mono uppercase font-bold">{draft.ticker}</dd>
-          <dt>Pool Tokens:</dt>
-          <dd className="font-mono">{draft.pooled}</dd>
-          <dt>Initial Liquidity:</dt>
-          <dd className="font-mono">{draft.liquidity} {chainObj?.currency}</dd>
-          <dt>Supply Rule:</dt>
-          <dd className="font-mono">{(isPump ? 1000000000 : DIRECT_SUPPLY).toLocaleString("en-US")} (Fixed · No Mint)</dd>
+        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 rounded-lg border border-white/10 bg-[#131219] p-3.5 text-[13px]">
+          <dt className="font-medium text-white/50">Network:</dt>
+          <dd className="m-0 text-right font-semibold break-all text-white">{chainObj?.name ?? String(draft.chainId)}</dd>
+          <dt className="font-medium text-white/50">Token Name:</dt>
+          <dd className="m-0 text-right font-semibold break-all text-white">{draft.name || draft.ticker || "-"}</dd>
+          <dt className="font-medium text-white/50">Ticker Symbol:</dt>
+          <dd className="m-0 text-right font-mono font-bold break-all text-[#e4cef7] uppercase">{draft.ticker}</dd>
+          <dt className="font-medium text-white/50">Pool Tokens:</dt>
+          <dd className="m-0 text-right font-mono font-semibold break-all text-white">{draft.pooled}</dd>
+          <dt className="font-medium text-white/50">Initial Liquidity:</dt>
+          <dd className="m-0 text-right font-mono font-semibold break-all text-white">{draft.liquidity} {chainObj?.currency}</dd>
+          <dt className="font-medium text-white/50">Supply Rule:</dt>
+          <dd className="m-0 text-right font-mono font-semibold break-all text-[#b9e2f8]">{(isPump ? 1000000000 : DIRECT_SUPPLY).toLocaleString("en-US")} (Fixed · No Mint)</dd>
         </dl>
 
         {mainnet && (
-          <p className="text-xs text-[var(--muted)] m-0 p-2 bg-[var(--canvas)] border border-[var(--line)] rounded">
-            <strong>Mainnet Deployment:</strong> Wallet signatures will execute live blockchain transactions and spend real tokens for gas and initial pool liquidity.
+          <p className="m-0 rounded border border-white/10 bg-[#131219] p-2.5 text-xs text-white/60">
+            <strong className="text-white">Mainnet Deployment:</strong> Wallet signatures will execute live blockchain transactions and spend real tokens for gas and initial pool liquidity.
           </p>
         )}
 
@@ -285,29 +285,29 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
             {chainId !== null ? (
               <WalletButton chainId={chainId} />
             ) : (
-              <p role="alert" className="text-xs text-[var(--accent)] font-medium">
+              <p role="alert" className="text-xs font-medium text-red-400">
                 Unsupported chain.
               </p>
             )}
 
-            <p role="status" className="text-xs font-mono text-[var(--muted)] m-0">
+            <p role="status" className="m-0 font-mono text-xs text-white/50">
               State: {hood}
             </p>
 
             {note && (
-              <p role="alert" className="text-xs text-[var(--accent)] font-medium m-0">
+              <p role="alert" className="m-0 text-xs font-medium text-red-400">
                 {note}
               </p>
             )}
 
             {token && (
-              <p className="text-xs text-[var(--ink)] font-mono m-0 flex items-center gap-1">
-                <span>Token:</span>
+              <p className="m-0 flex items-center gap-1 font-mono text-xs text-white">
+                <span className="text-white/50">Token:</span>
                 <a
                   href={`${explorer}/address/${token}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="underline inline-flex items-center gap-0.5"
+                  className="underline text-[#b9e2f8] inline-flex items-center gap-0.5"
                 >
                   <span>{token.slice(0, 10)}…{token.slice(-8)}</span>
                   <ExternalLink size={11} />
@@ -319,7 +319,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
               type="button"
               disabled={hood === "working"}
               onClick={() => void launch()}
-              className="btn-primary w-full justify-center"
+              className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-[#e4cef7] px-6 py-3 text-sm font-bold text-[#17131f] transition-all hover:bg-[#f1d2e8] disabled:cursor-not-allowed disabled:border disabled:border-white/10 disabled:bg-white/5 disabled:text-white/30"
             >
               {hood === "working" ? "Deploying & Funding…" : "Confirm & Launch on Hood"}
             </button>
@@ -328,7 +328,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
               <button
                 type="button"
                 onClick={() => void resumePool()}
-                className="btn-secondary w-full justify-center"
+                className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-white/10"
               >
                 Resume Pool Funding (Step 2)
               </button>
@@ -341,24 +341,24 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
           <div className="flex flex-col gap-3 pt-2" aria-label="Pump.fun launch">
             <SolanaButton onConnect={setProvider} />
 
-            <p role="status" className="text-xs font-mono text-[var(--muted)] m-0">
+            <p role="status" className="m-0 font-mono text-xs text-white/50">
               State: {pump}
             </p>
 
             {pumpNote && (
-              <p role="alert" className="text-xs text-[var(--accent)] font-medium m-0">
+              <p role="alert" className="m-0 text-xs font-medium text-red-400">
                 {pumpNote}
               </p>
             )}
 
             {mint && (
-              <p className="text-xs text-[var(--ink)] font-mono m-0 flex items-center gap-1">
-                <span>Mint:</span>
+              <p className="m-0 flex items-center gap-1 font-mono text-xs text-white">
+                <span className="text-white/50">Mint:</span>
                 <a
                   href={`https://solscan.io/token/${mint}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="underline inline-flex items-center gap-0.5"
+                  className="underline text-[#b9e2f8] inline-flex items-center gap-0.5"
                 >
                   <span>{mint.slice(0, 10)}…{mint.slice(-8)}</span>
                   <ExternalLink size={11} />
@@ -370,19 +370,19 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
               type="button"
               disabled={pump === "working"}
               onClick={() => void launchPump()}
-              className="btn-primary w-full justify-center"
+              className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-[#e4cef7] px-6 py-3 text-sm font-bold text-[#17131f] transition-all hover:bg-[#f1d2e8] disabled:cursor-not-allowed disabled:border disabled:border-white/10 disabled:bg-white/5 disabled:text-white/30"
             >
               {pump === "working" ? "Building Transaction…" : "Confirm & Launch on Solana"}
             </button>
 
             {resume?.token && (
-              <p className="text-xs text-[var(--muted)] font-mono m-0">
+              <p className="m-0 font-mono text-xs text-white/50">
                 <span>Resume prior launch: </span>
                 <a
                   href={`${explorer}/address/${resume.token}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="underline"
+                  className="underline text-[#b9e2f8]"
                 >
                   {resume.token.slice(0, 8)}…
                 </a>
@@ -391,8 +391,8 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
           </div>
         )}
 
-        <form method="dialog" className="pt-2 border-t border-[var(--line)] flex justify-end">
-          <button value="close" className="btn-ghost">
+        <form method="dialog" className="flex justify-end border-t border-white/10 pt-2">
+          <button value="close" className="inline-flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-2 text-[13px] font-semibold text-white/60 no-underline hover:bg-white/10 hover:text-white">
             Back to editing
           </button>
         </form>
