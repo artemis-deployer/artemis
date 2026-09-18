@@ -1,19 +1,43 @@
 "use client";
 
-import React, { useRef, useState } from 'react';
-import { useDraft } from './DraftContext';
+import React, { useEffect, useRef, useState } from 'react';
+import { findNewCompletion, resetLaunchAmounts, useDraft } from './DraftContext';
 import LaunchForm from './LaunchForm';
 import ReviewDialog from './ReviewDialog';
 import StudioChat from './StudioChat';
 import { CHAINS } from '../lib/chains';
 import { validateDraft } from '../lib/draft';
+import { listReceipts } from '../lib/receipts';
 
 export const StudioSection: React.FC = () => {
-  const { draft } = useDraft();
+  const { draft, setDraft, consent } = useDraft();
   const ref = useRef<HTMLDialogElement>(null);
+  const openedAt = useRef<{ at: number; ticker: string } | null>(null);
   const [tab, setTab] = useState<'copilot' | 'manual'>('copilot');
   const chain = CHAINS.find((c) => c.id === draft.chainId) ?? CHAINS[2];
+  const mainnet = !chain.testnet;
   const errors = validateDraft(draft);
+  const gated = errors.length > 0 || (mainnet && !consent);
+
+  function openReview() {
+    openedAt.current = { at: Date.now(), ticker: draft.ticker };
+    ref.current?.showModal();
+  }
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const onClose = () => {
+      const m = openedAt.current;
+      if (!m) return;
+      // A receipt saved while open = launch completed: drop amounts, keep identity.
+      if (findNewCompletion(m.at, m.ticker, listReceipts())) {
+        setDraft((prev) => resetLaunchAmounts(prev));
+      }
+    };
+    el.addEventListener('close', onClose);
+    return () => el.removeEventListener('close', onClose);
+  }, [setDraft]);
 
   return (
     <section
@@ -77,10 +101,8 @@ export const StudioSection: React.FC = () => {
             <div className="mt-8 flex flex-col items-center gap-3">
               <button
                 type="button"
-                disabled={errors.length > 0}
-                onClick={() => {
-                  ref.current?.showModal();
-                }}
+                disabled={gated}
+                onClick={openReview}
                 className="dp-button min-w-[240px] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0"
               >
                 <span>REVIEW LAUNCH CONFIG</span>
@@ -96,9 +118,7 @@ export const StudioSection: React.FC = () => {
         </div>
         <div hidden={tab !== 'manual'}>
           <LaunchForm
-            onReview={() => {
-              ref.current?.showModal();
-            }}
+            onReview={openReview}
           />
         </div>
 

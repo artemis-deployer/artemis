@@ -20,4 +20,11 @@ describe("token artifact", () => {
     expect(TOKEN_BYTECODE.startsWith("0x6080")).toBe(true);
     expect(TOKEN_BYTECODE.length).toBeGreaterThan(1000);
   });
+
+  it("emits Transfer and Approval events (mint + allowance standard)", () => {
+    const events = (TOKEN_ABI as unknown as { type: string; name: string }[])
+      .filter((e) => e.type === "event")
+      .map((e) => e.name);
+    expect(events).toEqual(expect.arrayContaining(["Transfer", "Approval"]));
+  });
 });

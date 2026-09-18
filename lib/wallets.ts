@@ -142,6 +142,10 @@ export function withTimeout<T>(p: Promise<T>, ms = 12000): Promise<T> {
 
 const STORE_KEY = "kentir.wallet.v1";
 
+// ponytail: id allowlists shared by loadWallet validation
+const EVM_IDS: ReadonlySet<string> = new Set(EVM_WALLETS.map((w) => w.id));
+const SOL_IDS: ReadonlySet<string> = new Set(SOLANA_WALLETS.map((w) => w.id));
+
 type StoredWallet = { kind: WalletKind; id: string; address: string };
 
 function store(): Storage | null {
@@ -157,7 +161,12 @@ export function loadWallet(): StoredWallet | null {
     const raw = store()?.getItem(STORE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as StoredWallet;
-    if (parsed && (parsed.kind === "evm" || parsed.kind === "solana") && typeof parsed.address === "string") {
+    if (!parsed || typeof parsed !== "object") return null;
+    // Poisoned storage must never yield an unusable id/address (see SolanaButton fallback).
+    if (parsed.kind === "evm" && EVM_IDS.has(parsed.id) && isEvmAddress(parsed.address)) {
+      return parsed;
+    }
+    if (parsed.kind === "solana" && SOL_IDS.has(parsed.id) && isSolanaAddress(parsed.address)) {
       return parsed;
     }
     return null;
@@ -289,6 +298,7 @@ export async function getSolanaBalance(address: string, rpc = "https://api.mainn
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "getBalance", params: [address] }),
+      signal: AbortSignal.timeout(8000),
     });
     if (!res.ok) return null;
     const data = (await res.json()) as { result?: { value?: number } };

@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { ArrowRight, ImagePlus, X } from "lucide-react";
 import { CHAINS, DIRECT_SUPPLY } from "../lib/chains";
 import { validateDraft } from "../lib/draft";
-import { useDraft } from "./DraftContext";
+import { isSafeImageSrc, useDraft } from "./DraftContext";
 
 /** Downscale an image file to a small data URL (max 512px, JPEG). */
 function fileToDataUrl(file: File): Promise<string> {
@@ -34,11 +34,13 @@ function fileToDataUrl(file: File): Promise<string> {
 }
 
 export default function LaunchForm({ onReview }: { onReview: () => void }) {
-  const { draft, setDraft } = useDraft();
-  const [consent, setConsent] = useState(false);
+  const { draft, setDraft, consent, setConsent } = useDraft();
   const [imageError, setImageError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
-  const errors = validateDraft(draft);
+  const imageOk = isSafeImageSrc(draft.image);
+  const errors = imageOk
+    ? validateDraft(draft)
+    : [...validateDraft(draft), "image is invalid: upload a PNG/JPEG or use an https URL"];
   const chain = CHAINS.find((c) => c.id === draft.chainId) ?? CHAINS[2];
   const mainnet = !chain.testnet;
 
@@ -69,7 +71,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
       {/* Live Token Stamp Preview */}
       <div className="flex items-center justify-between gap-3 rounded-lg border border-white/15 bg-[#1a1b1f] px-[18px] py-3.5 max-sm:flex-wrap">
         <div className="flex items-baseline gap-2">
-          {draft.image && (
+          {draft.image && imageOk && (
             /* eslint-disable-next-line @next/next/no-img-element -- local data-URL preview, never remote */
             <img src={draft.image} alt="" aria-hidden="true" className="h-7 w-7 self-center rounded-full border border-white/15 object-cover" />
           )}

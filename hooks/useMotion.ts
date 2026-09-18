@@ -72,6 +72,7 @@ export function useMotion() {
     };
 
     let checkPendingTimer: ReturnType<typeof setTimeout> | null = null;
+    let failsafeTimer: ReturnType<typeof setTimeout> | null = null;
     if (document.body.classList.contains('arrival-pending')) {
       const checkPending = () => {
         if (!document.body.classList.contains('arrival-pending')) {
@@ -82,7 +83,7 @@ export function useMotion() {
       };
       checkPendingTimer = setTimeout(checkPending, 60);
       // Failsafe in case arrival-pending takes too long
-      setTimeout(() => {
+      failsafeTimer = setTimeout(() => {
         if (checkPendingTimer) clearTimeout(checkPendingTimer);
         startObserving();
       }, 2000);
@@ -93,6 +94,7 @@ export function useMotion() {
     // 3. Scroll listener for intro section reading scrub
     const intro = document.querySelector<HTMLElement>('.intro');
     let scheduled = false;
+    let rafId = 0;
 
     const clamp = (v: number, min = 0, max = 1) => Math.max(min, Math.min(max, v));
 
@@ -113,7 +115,7 @@ export function useMotion() {
     const onScroll = () => {
       if (!scheduled) {
         scheduled = true;
-        requestAnimationFrame(render);
+        rafId = requestAnimationFrame(render);
       }
     };
 
@@ -123,6 +125,8 @@ export function useMotion() {
 
     return () => {
       if (checkPendingTimer) clearTimeout(checkPendingTimer);
+      if (failsafeTimer) clearTimeout(failsafeTimer);
+      cancelAnimationFrame(rafId);
       observer.disconnect();
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', render);

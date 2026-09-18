@@ -19,4 +19,16 @@ describe("classifyAddress", () => {
     expect(classifyAddress("")).toBeNull();
     expect(classifyAddress("0OIl1111111111111111111111111111111111")).toBeNull();
   });
+
+  it("rejects wrong-length EVM and Solana addresses", () => {
+    expect(classifyAddress("0x097716e767df17605627def0030110f8ee559ec")).toBeNull(); // 39 hex
+    expect(classifyAddress("0x097716e767df17605627def0030110f8ee559ec44")).toBeNull(); // 41 hex
+    expect(classifyAddress("0x")).toBeNull();
+    expect(classifyAddress("9bVt7TN2D6PD9y3B5G6g3Mxfh22TLaw")).toBeNull(); // 31 chars
+    expect(classifyAddress("9bVt7TN2D6PD9y3B5G6g3Mxfh22TLawkKSJQpPTRhxmXY")).toBeNull(); // 45 chars
+  });
+
+  it("accepts uppercase EVM hex", () => {
+    expect(classifyAddress("0x097716E767DF17605627DEF0030110F8EE559EC4")).toBe("evm");
+  });
 });

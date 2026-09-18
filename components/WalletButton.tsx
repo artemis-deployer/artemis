@@ -44,6 +44,7 @@ export default function WalletButton({ chainId }: { chainId: 4663 | 46630 }) {
     if (addr) {
       const provider = detectEvm(stored.id as EvmWalletId);
       setBalance(provider ? await getEvmBalance(provider, addr) : null);
+      setError("");
     } else {
       setBalance(null);
     }
@@ -60,11 +61,19 @@ export default function WalletButton({ chainId }: { chainId: 4663 | 46630 }) {
     const provider = detectEvm(stored.id as EvmWalletId);
     const onAccounts = (accs: never[]) => {
       const list = accs as unknown as string[];
-      if (list.length === 0) {
+      const next = list[0] ?? "";
+      if (list.length === 0 || !/^0x[0-9a-fA-F]{40}$/.test(next)) {
         clearWallet();
         setAccount(null);
+        setBalance(null);
       } else {
-        setAccount(list[0] as Address);
+        setAccount(next as Address);
+        // Balance belongs to the previous account until refetched.
+        void (async () => {
+          const id = (loadWallet()?.id ?? stored.id) as EvmWalletId;
+          const p = detectEvm(id);
+          setBalance(p ? await getEvmBalance(p, next) : null);
+        })();
       }
     };
     const onChain = () => {
@@ -84,7 +93,8 @@ export default function WalletButton({ chainId }: { chainId: 4663 | 46630 }) {
         // already gone
       }
     };
-  }, [refresh]);
+    // account: resubscribe when the stored wallet changes (stale provider otherwise)
+  }, [refresh, account]);
 
   function disconnect() {
     clearWallet();

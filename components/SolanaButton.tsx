@@ -9,7 +9,7 @@ import {
   loadWallet,
   type SolanaWalletId,
 } from "../lib/wallets";
-import { DEVNET_RPC } from "../lib/launcher-solana";
+import { MAINNET_RPC } from "../lib/launcher-solana";
 import WalletModal from "./WalletModal";
 
 export type SolanaProvider = {
@@ -53,7 +53,8 @@ export default function SolanaButton({
     }
     setAccount(addr);
     if (p && onConnect) onConnect(p as unknown as SolanaProvider);
-    setBalance((await getSolanaBalance(addr)) ?? (rpc === DEVNET_RPC ? await getSolanaBalance(addr, DEVNET_RPC) : null));
+    // Query the active network only: mainnet-first fallback shows the wrong balance on devnet.
+    setBalance(await getSolanaBalance(addr, rpc ?? MAINNET_RPC));
     // eslint-disable-next-line react-hooks/exhaustive-deps -- onConnect is a stable-ish dialog callback
   }, [rpc]);
 

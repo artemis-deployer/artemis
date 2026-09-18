@@ -50,7 +50,7 @@ contract KentirLauncher {
     token = address(t);
 
     require(t.approve(router, pooled), "approve");
-    (, , liquidity) = IV2Router(router).addLiquidityETH{value: msg.value}(
+    (uint usedTokens, uint usedEth, uint liq) = IV2Router(router).addLiquidityETH{value: msg.value}(
       token,
       pooled,
       pooled,
@@ -58,11 +58,14 @@ contract KentirLauncher {
       msg.sender,
       deadline
     );
+    liquidity = liq;
 
-    uint left = supply - pooled;
-    if (left > 0) {
-      require(t.transfer(msg.sender, left), "payout");
+    // Sweep full remainder: equals supply - pooled on the happy path, and
+    // leaves no dust locked if a router ever pulls less than desired.
+    uint bal = t.balanceOf(address(this));
+    if (bal > 0) {
+      require(t.transfer(msg.sender, bal), "payout");
     }
-    emit Launched(token, msg.sender, pooled, msg.value, liquidity);
+    emit Launched(token, msg.sender, usedTokens, usedEth, liquidity);
   }
 }

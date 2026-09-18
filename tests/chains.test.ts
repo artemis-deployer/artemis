@@ -19,4 +19,18 @@ describe("chains", () => {
     expect(DIRECT_SUPPLY).toBe(999000000);
     expect(CHAINS.length).toBe(4);
   });
+
+  it("returns undefined for blank, padded, or fractional ids", () => {
+    expect(getChain("")).toBeUndefined();
+    expect(getChain(" 4663 ")).toBeUndefined();
+    expect(getChain("4663.0")).toBeUndefined();
+    expect(getChain(4663.5)).toBeUndefined();
+  });
+
+  it("labels every chain with a currency and https explorer", () => {
+    for (const c of CHAINS) {
+      expect(c.currency.length).toBeGreaterThan(0);
+      expect(c.explorer).toMatch(/^https:\/\//);
+    }
+  });
 });
