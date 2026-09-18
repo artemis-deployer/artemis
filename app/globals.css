@@ -685,6 +685,7 @@ details[open] summary::after {
   display: inline-block;
   position: relative;
   white-space: nowrap;
+  clip-path: inset(0);
 }
 
 .bar-heading.motion-entered .heading-word {
@@ -734,12 +735,6 @@ details[open] summary::after {
     opacity: 1;
     translate: 0 0;
   }
-}
-
-/* Pause heading animations while preloader is active */
-.arrival-pending main .heading-word,
-.arrival-pending main .heading-word::after {
-  animation-play-state: paused !important;
 }
 
 /* Intro Section Word Scrub & Background Shift */

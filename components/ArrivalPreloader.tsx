@@ -25,9 +25,25 @@ export const ArrivalPreloader: React.FC = () => {
       setStage('hidden');
     }, 2300);
 
+    // Absolute failsafe: guarantees body is released and preloader hidden even if delayed
+    const failsafe = setTimeout(() => {
+      document.body.classList.remove('arrival-pending');
+      setStage('hidden');
+    }, 3200);
+
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) {
+        document.body.classList.remove('arrival-pending');
+        setStage('hidden');
+      }
+    };
+    window.addEventListener('pageshow', onPageShow);
+
     return () => {
       clearTimeout(timer1);
       clearTimeout(timer2);
+      clearTimeout(failsafe);
+      window.removeEventListener('pageshow', onPageShow);
       document.body.classList.remove('arrival-pending');
     };
   }, []);

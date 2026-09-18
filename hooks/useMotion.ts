@@ -60,14 +60,35 @@ export function useMotion() {
       { threshold: 0.12, rootMargin: '0px 0px -24px 0px' }
     );
 
-    targets.forEach((e, i) => {
-      if (!e.classList.contains('motion-target')) {
-        e.classList.add('motion-target');
-        const stagger = (e.parentElement ? Array.from(e.parentElement.children).indexOf(e) % 4 : i % 4) * 85;
-        e.style.setProperty('--stagger', `${stagger}ms`);
-      }
-      observer.observe(e);
-    });
+    const startObserving = () => {
+      targets.forEach((e, i) => {
+        if (!e.classList.contains('motion-target')) {
+          e.classList.add('motion-target');
+          const stagger = (e.parentElement ? Array.from(e.parentElement.children).indexOf(e) % 4 : i % 4) * 85;
+          e.style.setProperty('--stagger', `${stagger}ms`);
+        }
+        observer.observe(e);
+      });
+    };
+
+    let checkPendingTimer: ReturnType<typeof setTimeout> | null = null;
+    if (document.body.classList.contains('arrival-pending')) {
+      const checkPending = () => {
+        if (!document.body.classList.contains('arrival-pending')) {
+          startObserving();
+        } else {
+          checkPendingTimer = setTimeout(checkPending, 60);
+        }
+      };
+      checkPendingTimer = setTimeout(checkPending, 60);
+      // Failsafe in case arrival-pending takes too long
+      setTimeout(() => {
+        if (checkPendingTimer) clearTimeout(checkPendingTimer);
+        startObserving();
+      }, 2000);
+    } else {
+      startObserving();
+    }
 
     // 3. Scroll listener for intro section reading scrub
     const intro = document.querySelector<HTMLElement>('.intro');
@@ -101,6 +122,7 @@ export function useMotion() {
     render();
 
     return () => {
+      if (checkPendingTimer) clearTimeout(checkPendingTimer);
       observer.disconnect();
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', render);
