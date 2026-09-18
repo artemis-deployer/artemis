@@ -32,7 +32,17 @@ export const ComparisonSection: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const distance = typeof window !== 'undefined' ? (window.innerWidth <= 768 ? window.innerWidth * 0.45 : 550) : 500;
+  const [distance, setDistance] = useState(500);
+
+  useEffect(() => {
+    const updateDistance = () => {
+      setDistance(window.innerWidth <= 768 ? window.innerWidth * 0.45 : 550);
+    };
+    updateDistance();
+    window.addEventListener('resize', updateDistance);
+    return () => window.removeEventListener('resize', updateDistance);
+  }, []);
+
   const rise = (1 - cardsProgress) * 220;
   const scale = 0.88 + cardsProgress * 0.12;
 

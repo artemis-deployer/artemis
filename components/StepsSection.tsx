@@ -70,13 +70,12 @@ export const StepsSection: React.FC = () => {
             const digit0 = parseInt(step.num[0], 10);
             const digit1 = parseInt(step.num[1], 10);
 
+            const stairOffsets = ['lg:translate-y-0', 'lg:translate-y-8', 'lg:translate-y-16', 'lg:translate-y-24'];
+
             return (
               <article
                 key={step.num}
-                className={`${step.theme} p-8 min-h-[350px] rounded flex flex-col justify-between shadow-sm transition-transform duration-500 hover:-translate-y-2`}
-                style={{
-                  transform: typeof window !== 'undefined' && window.innerWidth > 1024 ? `translateY(${idx * 32}px)` : 'none'
-                }}
+                className={`${step.theme} ${stairOffsets[idx] ?? ''} p-8 min-h-[350px] rounded flex flex-col justify-between shadow-sm transition-transform duration-500 hover:-translate-y-2`}
               >
                 <h3 className="text-xs font-bold uppercase tracking-widest text-[#17131f]">
                   {step.title}
