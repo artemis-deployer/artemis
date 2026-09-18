@@ -11,9 +11,11 @@ import {
   connectWallet,
   deployToken,
   ensureChain,
+  ETH_MIN_BPS,
   getHoodConfig,
   launchOneTx,
   toTokenUnits,
+  TX_DEADLINE_SECS,
   validateRouter,
 } from "../lib/launcher-evm";
 import {
@@ -26,6 +28,7 @@ import {
   mapPumpError,
   signAndSend,
   uploadMetadata,
+  validateTxBytes,
 } from "../lib/launcher-solana";
 import { listReceipts, saveReceipt } from "../lib/receipts";
 import { submitShowcase } from "../lib/showcase";
@@ -167,7 +170,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       meta = buildMetadata({
         name: draft.name || draft.ticker,
         symbol: draft.ticker,
-        description: draft.ticker,
+        description: draft.name ? `${draft.name} (${draft.ticker}) community token` : `${draft.ticker} community token`,
         image: draft.image,
       });
     } catch (e: unknown) {
@@ -191,17 +194,28 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       }
       const payer = (() => {
         try {
-          return provider?.publicKey.toBase58() ?? getSolanaProvider()?.publicKey.toBase58() ?? mintBase58;
+          return provider?.publicKey.toBase58() ?? getSolanaProvider()?.publicKey.toBase58() ?? null;
         } catch {
-          return mintBase58;
+          return null;
         }
       })();
+      if (!payer) {
+        setPumpNote("Connect a Solana wallet first.");
+        setPump("error");
+        return;
+      }
+      let uri = "devnet-rehearsal";
+      try {
+        uri = await uploadMetadata(meta);
+      } catch {
+        uri = "devnet-rehearsal";
+      }
       const payload = buildTradePayload({
         publicKey: payer,
         mint: mintBase58,
         name: meta.name,
         symbol: meta.symbol,
-        uri: "devnet-rehearsal",
+        uri,
         amountSol,
       });
       setPump("working");
@@ -209,6 +223,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       let size: number;
       try {
         const tx = await buildCreateTx(payload);
+        validateTxBytes(tx);
         size = tx.serialize().length;
       } catch (e: unknown) {
         setPumpNote(mapPumpError(e));
@@ -296,6 +311,12 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
           <dt className="font-medium text-white/50">Supply Rule:</dt>
           <dd className="m-0 text-right font-mono font-semibold break-all text-[#b9e2f8]">{(isPump ? 1000000000 : DIRECT_SUPPLY).toLocaleString("en-US")} (Fixed · No Mint)</dd>
         </dl>
+
+        {!isPump && (
+          <p className="m-0 rounded border border-white/10 bg-[#131219] p-2.5 text-xs text-white/60">
+            Protection: {100 - ETH_MIN_BPS / 100}% ETH slippage · {TX_DEADLINE_SECS / 60}-min deadline. Token minimum is exact.
+          </p>
+        )}
 
         {mainnet && (
           <p className="m-0 rounded border border-white/10 bg-[#131219] p-2.5 text-xs text-white/60">

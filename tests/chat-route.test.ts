@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET as statusGET } from "../app/api/status/route";
-import { POST as chatPOST } from "../app/api/chat/route";
+import { POST as chatPOST, SYSTEM_PROMPT } from "../app/api/chat/route";
 
 describe("status route", () => {
   it("reports unconfigured when env is missing", async () => {
@@ -46,11 +46,63 @@ describe("chat route", () => {
     expect(res.status).toBe(400);
   });
 
+  it("uses strict output contract in system prompt", () => {
+    expect(SYSTEM_PROMPT).toContain("80");
+    expect(SYSTEM_PROMPT).toContain("```json");
+    expect(SYSTEM_PROMPT).toContain("LAST");
+    expect(SYSTEM_PROMPT).toContain("ONE");
+    expect(SYSTEM_PROMPT).toContain("ticker");
+    expect(SYSTEM_PROMPT).toContain("uppercase");
+    expect(SYSTEM_PROMPT).toContain("12");
+    expect(SYSTEM_PROMPT).toContain("pooled");
+    expect(SYSTEM_PROMPT).toContain("liquidity");
+    expect(SYSTEM_PROMPT).toContain("direct");
+    expect(SYSTEM_PROMPT).toContain("pumpfun");
+    expect(SYSTEM_PROMPT).toContain("999000000");
+    expect(SYSTEM_PROMPT).toContain("1000000000");
+    expect(SYSTEM_PROMPT).toContain("private keys");
+    expect(SYSTEM_PROMPT).toContain("sign transactions");
+    expect(SYSTEM_PROMPT).toContain("User:");
+  });
+
+  it("sends low temperature and token cap upstream", async () => {
+    let sentBody: { temperature?: number; max_tokens?: number } = {};
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(async (_url: string, init: { body?: string }) => {
+        sentBody = JSON.parse(init.body ?? "{}") as { temperature?: number; max_tokens?: number };
+        return {
+          ok: true,
+          json: async () => ({
+            choices: [
+              {
+                message: {
+                  content:
+                    'Nice idea!\n```json\n{"name":"Arts Club","ticker":"ARTS","pooled":"500000","liquidity":"1.5","route":"direct"}\n```',
+                },
+              },
+            ],
+          }),
+        };
+      }),
+    );
+    const req = new Request("http://x/api/chat", {
+      method: "POST",
+      body: JSON.stringify({ messages: [{ role: "user", content: "make a coin" }] }),
+    });
+    await chatPOST(req);
+    expect(sentBody.temperature).toBe(0.2);
+    expect(sentBody.max_tokens).toBe(500);
+  });
+
   it("proxies to upstream and returns reply", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ choices: [{ message: { content: "hi {\"ticker\":\"X\"}" } }] }),
-    }));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ choices: [{ message: { content: "hi {\"ticker\":\"X\"}" } }] }),
+      }),
+    );
     const req = new Request("http://x/api/chat", {
       method: "POST",
       body: JSON.stringify({ messages: [{ role: "user", content: "make a coin" }] }),
@@ -58,6 +110,94 @@ describe("chat route", () => {
     const res = await chatPOST(req);
     expect(res.status).toBe(200);
     expect(((await res.json()) as { reply: string }).reply).toContain("hi");
+  });
+
+  it("extracts draft from last fenced block", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          choices: [
+            {
+              message: {
+                content: [
+                  "Short take here.",
+                  "```json",
+                  '{"name":"Old","ticker":"OLD","pooled":"1","liquidity":"1","route":"direct"}',
+                  "```",
+                  "Refined pick:",
+                  "```json",
+                  '{"name":"Arts Club","ticker":"ARTS","pooled":"500000","liquidity":"1.5","route":"direct"}',
+                  "```",
+                ].join("\n"),
+              },
+            },
+          ],
+        }),
+      }),
+    );
+    const req = new Request("http://x/api/chat", {
+      method: "POST",
+      body: JSON.stringify({ messages: [{ role: "user", content: "make a coin" }] }),
+    });
+    const res = await chatPOST(req);
+    expect(res.status).toBe(200);
+    const json = (await res.json()) as {
+      reply: string;
+      draft: { ticker: string; route: string } | null;
+      draftErrors: string[];
+    };
+    expect(json.draft).toMatchObject({ ticker: "ARTS", route: "direct" });
+    expect(json.draftErrors).toEqual([]);
+  });
+
+  it("returns draft null with errors on invalid JSON", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          choices: [{ message: { content: "Almost!\n```json\n{\"ticker\":\n```" } }],
+        }),
+      }),
+    );
+    const req = new Request("http://x/api/chat", {
+      method: "POST",
+      body: JSON.stringify({ messages: [{ role: "user", content: "make a coin" }] }),
+    });
+    const res = await chatPOST(req);
+    expect(res.status).toBe(200);
+    const json = (await res.json()) as { draft: unknown; draftErrors: string[] };
+    expect(json.draft).toBeNull();
+    expect(json.draftErrors.length).toBeGreaterThan(0);
+  });
+
+  it("returns draft null with errors on invalid draft values", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          choices: [
+            {
+              message: {
+                content:
+                  'Bad values\n```json\n{"name":"X","ticker":"bad-ticker!!","pooled":"-5","liquidity":"abc","route":"nope"}\n```',
+              },
+            },
+          ],
+        }),
+      }),
+    );
+    const req = new Request("http://x/api/chat", {
+      method: "POST",
+      body: JSON.stringify({ messages: [{ role: "user", content: "make a coin" }] }),
+    });
+    const res = await chatPOST(req);
+    const json = (await res.json()) as { draft: unknown; draftErrors: string[] };
+    expect(json.draft).toBeNull();
+    expect(json.draftErrors.length).toBeGreaterThan(0);
   });
 
   it("maps upstream failure to 502", async () => {
@@ -79,5 +219,18 @@ describe("chat route", () => {
     const res = await chatPOST(req);
     expect(res.status).toBe(502);
     expect(((await res.json()) as { error: string }).error).toBe("chat_offline");
+  });
+
+  it("preserves offline behavior with no draft field", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("down")));
+    const req = new Request("http://x/api/chat", {
+      method: "POST",
+      body: JSON.stringify({ messages: [{ role: "user", content: "hi" }] }),
+    });
+    const res = await chatPOST(req);
+    expect(res.status).toBe(502);
+    const json = (await res.json()) as { error: string; draft?: unknown };
+    expect(json.error).toBe("chat_offline");
+    expect(json.draft).toBeUndefined();
   });
 });

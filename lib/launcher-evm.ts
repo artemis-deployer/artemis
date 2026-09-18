@@ -26,6 +26,13 @@ export type HoodConfig = {
   launcher: Address | null;
 };
 
+export const ETH_MIN_BPS = 9800;
+export const TX_DEADLINE_SECS = 600;
+
+export function calcEthMin(ethAmount: bigint): bigint {
+  return (ethAmount * BigInt(ETH_MIN_BPS)) / 10000n;
+}
+
 export const HOOD_MAINNET: HoodConfig = {
   id: 4663,
   name: "Robinhood Chain",
@@ -181,12 +188,12 @@ export async function addLiquidity(args: {
   await pub.waitForTransactionReceipt({ hash: approveHash }).then((r) => {
     if (r.status === "reverted") throw new Error("tx_failed");
   });
-  const deadline = BigInt(Math.floor(Date.now() / 1000) + 20 * 60);
+  const deadline = BigInt(Math.floor(Date.now() / 1000) + TX_DEADLINE_SECS);
   const hash = await wallet.writeContract({
     address: cfg.router,
     abi: ROUTER_ABI,
     functionName: "addLiquidityETH",
-    args: [args.token, args.tokenAmount, args.tokenAmount, args.ethAmount, args.account, deadline],
+    args: [args.token, args.tokenAmount, args.tokenAmount, calcEthMin(args.ethAmount), args.account, deadline],
     value: args.ethAmount,
     account: args.account as unknown as Account,
     chain: hoodChain(cfg),
@@ -216,12 +223,12 @@ export async function launchOneTx(args: {
   await validateRouter(cfg);
   const wallet: WalletClient = createWalletClient({ chain: hoodChain(cfg), transport: custom(ethProvider() as never) });
   const pub = publicClientFor(cfg);
-  const deadline = BigInt(Math.floor(Date.now() / 1000) + 20 * 60);
+  const deadline = BigInt(Math.floor(Date.now() / 1000) + TX_DEADLINE_SECS);
   const hash = await wallet.writeContract({
     address: cfg.launcher,
     abi: LAUNCHER_ABI,
     functionName: "launch",
-    args: [args.name || args.ticker, args.ticker, args.supply, args.pooled, 0n, deadline],
+    args: [args.name || args.ticker, args.ticker, args.supply, args.pooled, calcEthMin(args.ethAmount), deadline],
     value: args.ethAmount,
     account: args.account as unknown as Account,
     chain: hoodChain(cfg),

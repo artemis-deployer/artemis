@@ -331,3 +331,22 @@ Run: `npm test` — Expected: PASS
 git add components/SolanaButton.tsx components/ReviewDialog.tsx
 git commit -m 'feat: add pump.fun launch wiring'
 ```
+
+---
+
+## 2026-09-18 Optimization addendum (implemented)
+
+- `lib/launcher-solana.ts`: named constants `PUMP_SLIPPAGE`, `PUMP_PRIORITY_FEE`,
+  `PUMP_POOL`, `PUMP_FEE_SOL` (display only); one retry on network throw for
+  `uploadMetadata`/`buildCreateTx`; new `inspectTxSize()` and
+  `validateTxBytes()` guards.
+- `components/ReviewDialog.tsx`: devnet uploads real metadata (falls back to
+  `devnet-rehearsal` label only when IPFS is unreachable), requires a connected
+  Solana wallet instead of falling back to the mint address, validates built
+  bytes before reporting size. Metadata description is a real sentence instead
+  of the bare ticker.
+- `app/api/chat/route.ts` + `components/StudioChat.tsx`: strict Mimo prompt
+  (prose max ~80 words + one trailing fenced JSON block, one few-shot example,
+  temperature 0.2, max_tokens 500); server extracts and validates the draft and
+  returns `{reply, draft, draftErrors}`; client prefers the server draft with
+  regex fallback.

@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { getHoodConfig, HOOD_MAINNET, HOOD_TESTNET, launchOneTx, toTokenUnits } from "../lib/launcher-evm";
+import {
+  calcEthMin,
+  ETH_MIN_BPS,
+  getHoodConfig,
+  HOOD_MAINNET,
+  HOOD_TESTNET,
+  launchOneTx,
+  toTokenUnits,
+  TX_DEADLINE_SECS,
+} from "../lib/launcher-evm";
 
 describe("hood config", () => {
   it("pins mainnet router, factory, weth", () => {
@@ -27,6 +36,21 @@ describe("toTokenUnits", () => {
     expect(() => toTokenUnits("")).toThrow();
     expect(() => toTokenUnits("abc")).toThrow();
     expect(() => toTokenUnits("-5")).toThrow();
+  });
+});
+
+describe("eth min slippage", () => {
+  it("pins slippage and deadline constants", () => {
+    expect(ETH_MIN_BPS).toBe(9800);
+    expect(TX_DEADLINE_SECS).toBe(600);
+  });
+
+  it("applies 2 percent tolerance to 1 ETH", () => {
+    expect(calcEthMin(1000000000000000000n)).toBe(980000000000000000n);
+  });
+
+  it("maps zero to zero", () => {
+    expect(calcEthMin(0n)).toBe(0n);
   });
 });
 

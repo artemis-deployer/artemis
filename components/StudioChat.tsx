@@ -107,9 +107,11 @@ export default function StudioChat() {
         return;
       }
 
-      const json = (await res.json()) as { reply?: string; error?: string };
+      const json = (await res.json()) as { reply?: string; error?: string; draft?: Partial<Draft> | null };
       const reply = json.reply || OFFLINE_LINE;
-      const patch = parseDraftReply(reply);
+      const serverDraft = json.draft && typeof json.draft === "object" ? json.draft : null;
+      const patch =
+        serverDraft && Object.keys(serverDraft).length > 0 ? serverDraft : parseDraftReply(reply);
       const hasPatch = Object.keys(patch).length > 0;
       const shown = displayOf(reply, hasPatch);
       const at = next.length;
