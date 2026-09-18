@@ -84,13 +84,11 @@ const STAGES = [
   }
 ];
 
-const STAGE_DURATION_MS = 2500; // Snappy 2.5s per stage
-const TICK_MS = 25; // 40fps smooth animation
+const STAGE_DURATION_MS = 3800; // Readable, natural pace (3.8s per stage)
 
 export const StepsSection: React.FC = () => {
   const [activeStage, setActiveStage] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
-  const [progress, setProgress] = useState<number>(0);
   
   // Interactive State for Stage 0 (Prompt Synthesis)
   const [selectedPreset, setSelectedPreset] = useState<PresetPrompt>(PROMPT_PRESETS[0]);
@@ -105,28 +103,19 @@ export const StepsSection: React.FC = () => {
   const [isDryRunning, setIsDryRunning] = useState<boolean>(false);
   const [dryRunDone, setDryRunDone] = useState<boolean>(false);
 
-  // Strictly sequential auto-advance loop
+  // Strictly sequential auto-advance timer: 0 -> 1 -> 2 -> 3 -> 0
   useEffect(() => {
     if (!isPlaying) return;
 
-    const progressStep = (TICK_MS / STAGE_DURATION_MS) * 100;
+    const timer = setTimeout(() => {
+      setActiveStage((current) => (current + 1) % STAGES.length);
+    }, STAGE_DURATION_MS);
 
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev + progressStep >= 100) {
-          setActiveStage((current) => (current + 1) % STAGES.length);
-          return 0;
-        }
-        return prev + progressStep;
-      });
-    }, TICK_MS);
-
-    return () => clearInterval(interval);
-  }, [isPlaying]);
+    return () => clearTimeout(timer);
+  }, [isPlaying, activeStage]);
 
   const handleStageSelect = (index: number) => {
     setActiveStage(index);
-    setProgress(0);
   };
 
   const handleRunDryRun = () => {
@@ -194,12 +183,11 @@ export const StepsSection: React.FC = () => {
                     </span>
                   </div>
 
-                  <div>
-                    <h3 className={`font-unbounded text-xs sm:text-sm font-bold tracking-tight transition-colors line-clamp-1 ${
+                  <div className="min-h-[2rem] flex items-center">
+                    <h3 className={`font-unbounded text-[11px] sm:text-xs lg:text-[13px] font-bold tracking-tight transition-colors leading-snug ${
                       isActive ? 'text-[#18191c]' : 'text-[#18191c]/70'
                     }`}>
-                      <span className="sm:hidden">{stage.shortTitle}</span>
-                      <span className="hidden sm:inline">{stage.title}</span>
+                      {stage.title}
                     </h3>
                   </div>
 
@@ -207,11 +195,15 @@ export const StepsSection: React.FC = () => {
                   <div className="absolute bottom-0 left-0 w-full h-[3px] bg-[#18191c]/10 overflow-hidden">
                     {isActive ? (
                       <div
-                        className="h-full bg-[#18191c] transition-all duration-75 ease-linear"
-                        style={{ width: `${progress}%` }}
+                        key={`bar-${activeStage}-${isPlaying}`}
+                        className="h-full bg-[#18191c]"
+                        style={{
+                          animation: isPlaying ? `stageProgressFill ${STAGE_DURATION_MS}ms linear forwards` : 'none',
+                          width: isPlaying ? undefined : '100%'
+                        }}
                       />
                     ) : isPassed ? (
-                      <div className="h-full w-full bg-[#18191c]/40" />
+                      <div className="h-full w-full bg-[#18191c]/30" />
                     ) : (
                       <div className="h-full w-0" />
                     )}
@@ -220,6 +212,13 @@ export const StepsSection: React.FC = () => {
               );
             })}
           </div>
+
+          <style>{`
+            @keyframes stageProgressFill {
+              0% { width: 0%; }
+              100% { width: 100%; }
+            }
+          `}</style>
 
           {/* Active Stage Interactive Sandbox Workspace */}
           <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[440px]">
