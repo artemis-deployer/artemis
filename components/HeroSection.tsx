@@ -20,11 +20,11 @@ export const HeroSection: React.FC<HeroSectionProps> = () => {
   };
 
   return (
-    <section className="hero relative min-h-[780px] flex flex-col justify-center items-center text-center px-6 pt-36 pb-20 overflow-hidden bg-[#121218]">
+    <section className="hero relative min-h-[780px] w-full flex flex-col justify-center items-center text-center px-6 md:px-12 pt-36 pb-20 overflow-hidden bg-[#121218]">
       {/* Floating Animated Pixels */}
       <FloatingPixels />
 
-      <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center">
+      <div className="relative z-10 max-w-6xl mx-auto w-full flex flex-col items-center">
         {/* Router / Network Chip */}
         <button
           type="button"

@@ -54,7 +54,7 @@ export const ComparisonSection: React.FC = () => {
       className="comparison-story scroll-scene relative bg-[#121218] text-[#f5f3f7]"
       style={{ height: '240vh' }}
     >
-      <div className="comparison-stage sticky top-20 h-[calc(100vh-80px)] min-h-[580px] flex flex-col justify-center items-center overflow-hidden px-6">
+      <div className="comparison-stage sticky top-20 h-[calc(100vh-80px)] min-h-[580px] flex flex-col justify-center items-center overflow-hidden px-6 md:px-12">
         {/* Splitting Title */}
         <h2 className="comparison-title font-sans absolute inset-0 flex items-center justify-center gap-4 text-4xl sm:text-5xl md:text-7xl font-light pointer-events-none z-10 select-none">
           <span
@@ -66,14 +66,9 @@ export const ComparisonSection: React.FC = () => {
           >
             Custodial
           </span>
+          <span className="opacity-30">vs</span>
           <span
-            className="versus-word text-[#baacc6] transition-opacity duration-75"
-            style={{ opacity: Math.max(0, 1 - split * 1.8) }}
-          >
-            vs.
-          </span>
-          <span
-            className="sealed-word transition-transform duration-75"
+            className="sealed-word transition-transform duration-75 font-unbounded text-3xl sm:text-4xl md:text-6xl font-bold"
             style={{
               transform: `translateX(${split * distance}px)`,
               opacity: 1 - split
@@ -85,7 +80,7 @@ export const ComparisonSection: React.FC = () => {
 
         {/* Rising Comparison Cards Grid */}
         <div
-          className="compare-grid w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6 relative z-20"
+          className="compare-grid w-full max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 relative z-20"
           style={{
             opacity: cardsProgress,
             transform: `translateY(${rise}px) scale(${scale})`,

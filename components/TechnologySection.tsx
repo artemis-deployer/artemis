@@ -54,7 +54,7 @@ export const TechnologySection: React.FC = () => {
       data-theme="dark"
       className="technology-section py-28 px-6 md:px-12 bg-[#121218] text-[#f5f3f7]"
     >
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-6xl mx-auto w-full">
         <div className="center-heading text-center mb-24">
           <h2 className="font-sans text-3xl sm:text-4xl md:text-5xl font-light tracking-tight text-white leading-tight">
             The Mechanics of<br />Autonomous Launch Rails

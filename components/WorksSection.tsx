@@ -34,10 +34,11 @@ export const WorksSection: React.FC<WorksSectionProps> = () => {
     <section
       id="how-it-works"
       data-theme="dark"
-      className="works-section py-28 px-6 md:px-12 max-w-6xl mx-auto bg-[#121218] text-[#f5f3f7]"
+      className="works-section py-28 px-6 md:px-12 w-full bg-[#121218] text-[#f5f3f7]"
     >
-      {/* Section Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-16">
+      <div className="max-w-6xl mx-auto w-full">
+        {/* Section Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-16">
         <div>
           <h2 className="font-sans text-3xl sm:text-4xl md:text-5xl font-light tracking-tight text-white mb-4">
             A sovereign way to launch.
@@ -180,6 +181,7 @@ export const WorksSection: React.FC<WorksSectionProps> = () => {
             />
           </div>
         </article>
+      </div>
       </div>
     </section>
   );
