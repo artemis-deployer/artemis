@@ -150,7 +150,7 @@ p {
 }
 
 .button:hover, .dp-button:hover {
-  background: #eab9f6;
+  background: #fae8a4;
   transform: translateY(-1px);
 }
 
@@ -616,7 +616,7 @@ p {
 
 .scroll-scene .versus-word {
   opacity: calc(1 - var(--comparison-split, 0) * 1.5);
-  color: #baacc6;
+  color: #cadcf0;
 }
 
 .scroll-scene .compare-grid {
@@ -1272,7 +1272,7 @@ textarea:focus:not(:focus-visible) {
 .nav-index > .eyebrow {
   font-size: 11px;
   letter-spacing: 0.15em;
-  color: #c1abce;
+  color: rgba(255, 255, 255, 0.5);
   margin-bottom: 28px;
   font-family: monospace;
 }
@@ -1300,7 +1300,7 @@ textarea:focus:not(:focus-visible) {
 .nav-page-link small,
 .nav-section-link small {
   font-size: 12px;
-  color: #b098c3;
+  color: rgba(255, 255, 255, 0.45);
   align-self: flex-start;
   margin-top: 10px;
   font-family: monospace;
@@ -1323,7 +1323,7 @@ textarea:focus:not(:focus-visible) {
 }
 
 .nav-row:hover .nav-page-link {
-  color: #e8b6ed;
+  color: #fae8a4;
 }
 
 .nav-row:hover i {
@@ -1424,7 +1424,7 @@ textarea:focus:not(:focus-visible) {
   left: 14px;
   top: 12px;
   font-size: 32px;
-  color: #d7b5e9;
+  color: #fae8a4;
   z-index: 3;
   line-height: 1;
   user-select: none;
@@ -1453,7 +1453,7 @@ textarea:focus:not(:focus-visible) {
   justify-content: space-between;
   border-top: 1px solid rgba(255, 255, 255, 0.125);
   font-size: 11px;
-  color: #aa96ba;
+  color: rgba(255, 255, 255, 0.45);
   flex-shrink: 0;
 }
 
@@ -1675,14 +1675,14 @@ textarea:focus:not(:focus-visible) {
   margin-bottom: 18px;
   letter-spacing: 0.05em;
   font-family: monospace;
-  color: #b09ec7;
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .footer-grid a {
   display: block;
   margin: 9px 0;
   font-size: 14px;
-  color: #c8bdd3;
+  color: rgba(255, 255, 255, 0.7);
   text-decoration: none;
   transition: color 0.2s;
 }
@@ -1714,7 +1714,7 @@ textarea:focus:not(:focus-visible) {
   max-width: 270px;
   font-size: 14px;
   line-height: 1.6;
-  color: #c4b5d4;
+  color: rgba(255, 255, 255, 0.75);
   margin: 0;
 }
 
@@ -1723,7 +1723,7 @@ textarea:focus:not(:focus-visible) {
   font-size: 12px;
   opacity: 0.65;
   margin-top: 4px;
-  color: #a395b3;
+  color: rgba(255, 255, 255, 0.45);
 }
 
 .footer-social {
@@ -1766,7 +1766,7 @@ textarea:focus:not(:focus-visible) {
   padding-bottom: 25px;
   font-size: 12px;
   opacity: 0.65;
-  color: #b1a2bf;
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .footer-wordmark {
