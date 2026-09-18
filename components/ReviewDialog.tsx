@@ -4,7 +4,7 @@ import { forwardRef, useState } from "react";
 import { Keypair } from "@solana/web3.js";
 import { parseEther, type Address } from "viem";
 import { X, ExternalLink } from "lucide-react";
-import { DIRECT_SUPPLY, getChain } from "../lib/chains";
+import { DIRECT_SUPPLY, explorerTokenUrl, getChain } from "../lib/chains";
 import type { Draft } from "../lib/draft";
 import {
   addLiquidity,
@@ -431,7 +431,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
               <p className="m-0 flex items-center gap-1 font-mono text-xs text-white">
                 <span className="text-white/50">Mint:</span>
                 <a
-                  href={`https://solscan.io/token/${mint}`}
+                  href={explorerTokenUrl(draft.chainId, mint)}
                   target="_blank"
                   rel="noreferrer"
                   className="underline text-[#cadcf0] inline-flex items-center gap-0.5"
@@ -457,7 +457,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
               <p className="m-0 font-mono text-xs text-white/50">
                 <span>Resume prior launch: </span>
                 <a
-                  href={`${explorer}/address/${resume.token}`}
+                  href={explorerTokenUrl(draft.chainId, resume.token)}
                   target="_blank"
                   rel="noreferrer"
                   className="underline text-[#cadcf0]"

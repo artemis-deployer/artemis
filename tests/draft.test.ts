@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { parseDraftReply, validateDraft } from "../lib/draft";
+import { parseDraftReply, stripNumericSeparators, validateDraft } from "../lib/draft";
+import { explorerTokenUrl, explorerTxUrl } from "../lib/chains";
 
 describe("parseDraftReply", () => {
   it("extracts draft JSON embedded in prose", () => {
@@ -106,5 +107,61 @@ describe("validateDraft", () => {
     expect(validateDraft({ ticker: "X", pooled: "1", liquidity: "0", route: "direct" })).toContain(
       "liquidity must be a positive number",
     );
+  });
+
+  it("rejects dust with more than 18 decimals that parseEther truncates to zero", () => {
+    expect(
+      validateDraft({ ticker: "X", pooled: "0.0000000000000000001", liquidity: "1", route: "direct" }),
+    ).toContain("pooled must be a positive number");
+    expect(
+      validateDraft({ ticker: "X", pooled: "1", liquidity: "0.0000000000000000001", route: "direct" }),
+    ).toContain("liquidity must be a positive number");
+  });
+
+  it("accepts 18-decimal wei dust", () => {
+    expect(
+      validateDraft({ ticker: "X", pooled: "0.000000000000000001", liquidity: "1", route: "direct" }),
+    ).toEqual([]);
+  });
+
+  it("requires pooled when pumpfun route sits on an EVM chain (dialog runs EVM rail)", () => {
+    expect(validateDraft({ ticker: "X", route: "pumpfun", chainId: 4663, liquidity: "1" })).toContain(
+      "pooled is required",
+    );
+  });
+
+  it("keeps pooled optional for pumpfun on solana", () => {
+    expect(validateDraft({ ticker: "X", route: "pumpfun", chainId: "solana-devnet", liquidity: "1" })).toEqual(
+      [],
+    );
+  });
+
+  it("strips thousand separators from copilot pooled/liquidity", () => {
+    expect(parseDraftReply('{"ticker":"X","pooled":"500,000","liquidity":"0. 5"}')).toMatchObject({
+      pooled: "500000",
+      liquidity: "0.5",
+    });
+  });
+});
+
+describe("stripNumericSeparators", () => {
+  it("removes commas and whitespace, keeps digits and dot", () => {
+    expect(stripNumericSeparators("1,000 000")).toBe("1000000");
+    expect(stripNumericSeparators(" 0.5 ")).toBe("0.5");
+  });
+});
+
+describe("explorer urls", () => {
+  it("points solana-devnet links at path with cluster param", () => {
+    expect(explorerTokenUrl("solana-devnet", "MINT")).toBe("https://solscan.io/token/MINT?cluster=devnet");
+    expect(explorerTxUrl("solana-devnet", "SIG")).toBe("https://solscan.io/tx/SIG?cluster=devnet");
+  });
+
+  it("keeps mainnet and EVM explorer shapes", () => {
+    expect(explorerTokenUrl("solana-mainnet", "MINT")).toBe("https://solscan.io/token/MINT");
+    expect(explorerTokenUrl(46630, "0xabc")).toBe(
+      "https://explorer.testnet.chain.robinhood.com/address/0xabc",
+    );
+    expect(explorerTxUrl(4663, "0xhash")).toBe("https://robinhoodchain.blockscout.com/tx/0xhash");
   });
 });

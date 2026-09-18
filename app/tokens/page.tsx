@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Search, Copy, Check, ExternalLink, ArrowLeft } from "lucide-react";
 import { TransitionLink } from "../../components/PageTransition";
 import { dedupeLocalReceipts, listReceipts, type Receipt } from "../../lib/receipts";
-import { getChain } from "../../lib/chains";
+import { explorerTokenUrl, explorerTxUrl, getChain } from "../../lib/chains";
 
 type Token = {
   chain_id: string;
@@ -42,18 +42,11 @@ export default function TokensPage() {
   }
 
   function getExplorerUrl(chainId: string | number, address: string) {
-    const c = getChain(chainId);
-    const base = c?.explorer ?? (String(chainId).includes("solana") ? "https://solscan.io" : "https://blockscout.com");
-    if (String(chainId).includes("solana")) {
-      return `${base}/token/${address}`;
-    }
-    return `${base}/address/${address}`;
+    return explorerTokenUrl(chainId, address);
   }
 
   function getTxUrl(chainId: string | number, txHash: string) {
-    const c = getChain(chainId);
-    const base = c?.explorer ?? (String(chainId).includes("solana") ? "https://solscan.io" : "https://blockscout.com");
-    return `${base}/tx/${txHash}`;
+    return explorerTxUrl(chainId, txHash);
   }
 
   if (tokens === null) {

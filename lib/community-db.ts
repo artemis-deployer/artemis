@@ -37,9 +37,40 @@ export async function saveToken(input: {
   pool?: string;
   txHash?: string;
 }): Promise<void> {
+  const t = normalizeTokenInput(input);
   await sql()`INSERT INTO tokens (chain_id, address, creator, name, symbol, pool, tx_hash)
-    VALUES (${input.chainId}, ${input.address}, ${input.creator ?? ""}, ${input.name ?? ""}, ${input.symbol ?? ""}, ${input.pool ?? ""}, ${input.txHash ?? ""})
+    VALUES (${t.chainId}, ${t.address}, ${t.creator}, ${t.name}, ${t.symbol}, ${t.pool}, ${t.txHash})
     ON CONFLICT (chain_id, address) DO UPDATE SET
       creator = EXCLUDED.creator, name = EXCLUDED.name, symbol = EXCLUDED.symbol,
       pool = EXCLUDED.pool, tx_hash = EXCLUDED.tx_hash`;
+}
+
+// ponytail: route slices raw then verifies; trim-then-slice here keeps stored rows clean
+export function normalizeTokenInput(input: {
+  chainId: string;
+  address: string;
+  creator?: string;
+  name?: string;
+  symbol?: string;
+  pool?: string;
+  txHash?: string;
+}): {
+  chainId: string;
+  address: string;
+  creator: string;
+  name: string;
+  symbol: string;
+  pool: string;
+  txHash: string;
+} {
+  const clean = (v: unknown) => (typeof v === "string" ? v.trim().slice(0, 200) : "");
+  return {
+    chainId: String(input.chainId ?? "").trim(),
+    address: String(input.address ?? "").trim(),
+    creator: clean(input.creator),
+    name: clean(input.name),
+    symbol: clean(input.symbol),
+    pool: clean(input.pool),
+    txHash: clean(input.txHash),
+  };
 }

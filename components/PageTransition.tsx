@@ -19,6 +19,15 @@ export const PageTransitionProvider: React.FC<{ children: React.ReactNode }> = (
   const [transitionState, setTransitionState] = useState<'' | 'leaving' | 'entering'>('');
   const [, startTransition] = useTransition();
   const prevPathname = useRef(pathname);
+  const pushTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const failsafeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearPendingTimers = () => {
+    if (pushTimer.current) clearTimeout(pushTimer.current);
+    if (failsafeTimer.current) clearTimeout(failsafeTimer.current);
+    pushTimer.current = null;
+    failsafeTimer.current = null;
+  };
 
   const navigate = (href: string) => {
     // If external link or anchor on current page, proceed immediately
@@ -38,20 +47,40 @@ export const PageTransitionProvider: React.FC<{ children: React.ReactNode }> = (
       return;
     }
 
+    // Same-path navigation never triggers the pathname effect, so skip the
+    // wipe entirely instead of leaving the overlay stuck in "leaving".
+    if (href === pathname) {
+      router.push(href);
+      return;
+    }
+
+    // Ignore re-entrant navigations while a transition is already running.
+    if (transitionState !== '') {
+      return;
+    }
+
     // Trigger leaving transition (blue -> lavender -> pink -> dark wipe)
     setTransitionState('leaving');
 
-    setTimeout(() => {
+    clearPendingTimers();
+    pushTimer.current = setTimeout(() => {
       startTransition(() => {
         router.push(href);
       });
     }, 520);
+    // Failsafe: if router.push fails the pathname effect never fires, so
+    // release the overlay instead of leaving the wipe stuck on screen.
+    failsafeTimer.current = setTimeout(() => {
+      setTransitionState((prev) => (prev === 'leaving' ? '' : prev));
+    }, 3000);
   };
 
   // When pathname changes after navigation, trigger entering animation
   useEffect(() => {
     if (prevPathname.current !== pathname) {
       prevPathname.current = pathname;
+      if (failsafeTimer.current) clearTimeout(failsafeTimer.current);
+      failsafeTimer.current = null;
       const raf = requestAnimationFrame(() => {
         setTransitionState('entering');
       });
@@ -64,6 +93,14 @@ export const PageTransitionProvider: React.FC<{ children: React.ReactNode }> = (
       };
     }
   }, [pathname]);
+
+  // Release pending timers if the provider unmounts mid-transition.
+  useEffect(() => {
+    return () => {
+      if (pushTimer.current) clearTimeout(pushTimer.current);
+      if (failsafeTimer.current) clearTimeout(failsafeTimer.current);
+    };
+  }, []);
 
   return (
     <PageTransitionContext.Provider value={{ navigate }}>

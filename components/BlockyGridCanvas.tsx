@@ -310,18 +310,22 @@ export const BlockyGridCanvas: React.FC<BlockyGridCanvasProps> = ({ sectionRef }
 
     uniforms.iTime.value = performance.now() / 1000;
     pulse(0, 0);
-    setTimeout(() => pulse(1.2, -1.5), 600);
+    const pulseTimer = setTimeout(() => pulse(1.2, -1.5), 600);
 
     render();
 
     return () => {
       cancelAnimationFrame(animationFrameId);
+      clearTimeout(pulseTimer);
       resizeObserver.disconnect();
       targetSection.removeEventListener('pointermove', onPointerMove as EventListener);
       targetSection.removeEventListener('pointerleave', onPointerLeave as EventListener);
       targetSection.removeEventListener('click', onClick as EventListener);
       renderer.dispose();
       geo.dispose();
+      box.dispose();
+      base.geometry.dispose();
+      (base.material as THREE.Material).dispose();
       material.dispose();
       canvas.remove();
     };

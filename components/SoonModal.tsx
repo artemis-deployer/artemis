@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
 interface SoonModalProps {
   isOpen: boolean;
@@ -9,12 +9,30 @@ interface SoonModalProps {
 }
 
 export const SoonModal: React.FC<SoonModalProps> = ({ isOpen, feature, onClose }) => {
+  const closeRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    closeRef.current?.focus();
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
       <div className="relative w-full max-w-md bg-[#fae8a4] text-[#18191c] p-8 md:p-10 shadow-2xl border border-white/20 rounded">
         <button
+          ref={closeRef}
           onClick={onClose}
           className="absolute top-4 right-4 text-2xl text-[#18191c]/60 hover:text-[#18191c] transition-colors"
           aria-label="Close"

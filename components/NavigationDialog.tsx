@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePageTransition } from './PageTransition';
 
@@ -56,17 +56,42 @@ const navItems = [
 export const NavigationDialog: React.FC<NavigationDialogProps> = ({ isOpen, onClose }) => {
   const [activeArt, setActiveArt] = useState(navItems[0]);
   const { navigate } = usePageTransition();
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const prevFocus = useRef<Element | null>(null);
 
   useEffect(() => {
     if (isOpen) {
+      prevFocus.current = document.activeElement;
       document.body.classList.add('menu-is-open');
+      closeRef.current?.focus();
       const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') onClose();
+        if (e.key === 'Escape') {
+          onClose();
+          return;
+        }
+        if (e.key !== 'Tab') return;
+        const root = dialogRef.current;
+        if (!root) return;
+        const focusables = root.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusables.length === 0) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
       };
       window.addEventListener('keydown', handleKeyDown);
       return () => {
         document.body.classList.remove('menu-is-open');
         window.removeEventListener('keydown', handleKeyDown);
+        (prevFocus.current as HTMLElement | null)?.focus?.();
       };
     } else {
       document.body.classList.remove('menu-is-open');
@@ -92,6 +117,7 @@ export const NavigationDialog: React.FC<NavigationDialogProps> = ({ isOpen, onCl
   return (
     <dialog
       id="navigation-dialog"
+      ref={dialogRef}
       className="navigation-dialog is-open"
       open
       aria-labelledby="nav-title"
@@ -108,6 +134,7 @@ export const NavigationDialog: React.FC<NavigationDialogProps> = ({ isOpen, onCl
           <span>Kentir</span>
         </Link>
         <button
+          ref={closeRef}
           className="menu-close"
           onClick={onClose}
           aria-label="Close navigation"

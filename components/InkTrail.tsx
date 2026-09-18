@@ -299,6 +299,10 @@ export const InkTrail: React.FC = () => {
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('resize', resize);
+      simQuad.geometry.dispose();
+      (simQuad.material as THREE.Material).dispose();
+      displayMesh.geometry.dispose();
+      (displayMesh.material as THREE.Material).dispose();
       renderer.dispose();
       rtA.dispose();
       rtB.dispose();

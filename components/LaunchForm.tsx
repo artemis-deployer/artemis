@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { ArrowRight, ImagePlus, X } from "lucide-react";
 import { CHAINS, DIRECT_SUPPLY } from "../lib/chains";
-import { validateDraft } from "../lib/draft";
+import { stripNumericSeparators, validateDraft } from "../lib/draft";
 import { isSafeImageSrc, useDraft } from "./DraftContext";
 
 /** Downscale an image file to a small data URL (max 512px, JPEG). */
@@ -44,7 +44,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
   const chain = CHAINS.find((c) => c.id === draft.chainId) ?? CHAINS[2];
   const mainnet = !chain.testnet;
 
-  const isSolana = String(draft.chainId).startsWith("solana");
+  const isSolana = draft.route === "pumpfun" && String(draft.chainId).startsWith("solana");
   const totalSupply = isSolana ? 1_000_000_000 : DIRECT_SUPPLY;
   const pooledNumber = Number(draft.pooled) || 0;
   const liquidityNumber = Number(draft.liquidity) || 0;
@@ -213,7 +213,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
             autoComplete="off"
             spellCheck={false}
             aria-required={!isSolana}
-            onChange={(e) => setDraft({ ...draft, pooled: e.target.value.replace(/[,\\s]/g, "") })}
+            onChange={(e) => setDraft({ ...draft, pooled: stripNumericSeparators(e.target.value) })}
           />
         </div>
 
@@ -232,7 +232,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
             autoComplete="off"
             spellCheck={false}
             aria-required="true"
-            onChange={(e) => setDraft({ ...draft, liquidity: e.target.value.replace(/[,\\s]/g, "") })}
+            onChange={(e) => setDraft({ ...draft, liquidity: stripNumericSeparators(e.target.value) })}
           />
         </div>
       </div>

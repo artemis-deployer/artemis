@@ -12,6 +12,8 @@ export type ShowcaseInput = {
 export type ShowcaseStatus = "saved" | "rejected" | "offline";
 
 export async function submitShowcase(input: ShowcaseInput): Promise<ShowcaseStatus> {
+  // ponytail: server 400s these anyway; skip network, same status
+  if (!String(input.chainId ?? "").trim() || !String(input.address ?? "").trim()) return "rejected";
   try {
     const res = await fetch("/api/community/tokens", {
       method: "POST",

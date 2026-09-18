@@ -23,8 +23,8 @@ function sanitizeDraft(raw: Record<string, unknown>): Partial<Draft> {
   const out: Partial<Draft> = {};
   if (typeof raw.name === "string") out.name = raw.name.slice(0, 32);
   if (typeof raw.ticker === "string") out.ticker = raw.ticker.replace(/[^A-Za-z0-9]/g, "").slice(0, 12).toUpperCase();
-  if (typeof raw.pooled === "string") out.pooled = raw.pooled;
-  if (typeof raw.liquidity === "string") out.liquidity = raw.liquidity;
+  if (typeof raw.pooled === "string") out.pooled = stripNumericSeparators(raw.pooled);
+  if (typeof raw.liquidity === "string") out.liquidity = stripNumericSeparators(raw.liquidity);
   if (raw.route === "pumpfun" || raw.route === "direct") out.route = raw.route;
   return out;
 }
@@ -63,7 +63,8 @@ export function validateDraft(d: Partial<Draft>): string[] {
   const errors: string[] = [];
   if (!d.ticker || d.ticker.trim().length === 0) errors.push("ticker is required");
   if (d.ticker && d.ticker.length > 12) errors.push("ticker is too long");
-  const pump = d.route === "pumpfun";
+  // Dialog runs EVM rail unless route is pumpfun AND chain is solana: require pooled otherwise.
+  const pump = d.route === "pumpfun" && (d.chainId === undefined || String(d.chainId).startsWith("solana"));
   if (!pump && (d.pooled === undefined || d.pooled === "")) errors.push("pooled is required");
   else if (d.pooled !== undefined && d.pooled !== "" && !isPositiveNumberString(d.pooled))
     errors.push("pooled must be a positive number");
@@ -79,6 +80,14 @@ const NUMERIC_RE = /^\d+(\.\d+)?$/;
 // ponytail: same strict shape as toTokenUnits + server route, one shared check
 function isPositiveNumberString(value: string): boolean {
   if (!NUMERIC_RE.test(value)) return false;
+  // parseEther truncates >18 decimals (dust becomes 0): reject before onchain.
+  const frac = value.split(".")[1];
+  if (frac !== undefined && frac.length > 18) return false;
   const n = Number(value);
   return Number.isFinite(n) && n > 0;
+}
+
+/** Shared thousand-separator strip for numeric inputs (commas + whitespace). */
+export function stripNumericSeparators(value: string): string {
+  return value.replace(/[,\s]/g, "");
 }

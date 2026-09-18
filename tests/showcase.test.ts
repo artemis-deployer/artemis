@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { submitShowcase } from "../lib/showcase";
+import { normalizeTokenInput } from "../lib/community-db";
 
 describe("submitShowcase", () => {
   afterEach(() => {
@@ -39,5 +40,47 @@ describe("submitShowcase", () => {
       vi.fn().mockRejectedValue(new Error("down")),
     );
     await expect(submitShowcase({ chainId: 4663, address: "0xabc" })).resolves.toBe("offline");
+  });
+
+  it("rejects empty address/chainId without network", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response("{}", { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(submitShowcase({ chainId: "", address: "" })).resolves.toBe("rejected");
+    await expect(submitShowcase({ chainId: 4663, address: "   " })).resolves.toBe("rejected");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("normalizeTokenInput", () => {
+  it("trims before slicing token fields", () => {
+    expect(
+      normalizeTokenInput({
+        chainId: "4663",
+        address: "0xabc",
+        creator: "  0x123  ",
+        name: "  Hi  ",
+        symbol: " X ",
+        pool: " p ",
+        txHash: "  h  ",
+      }),
+    ).toEqual({
+      chainId: "4663",
+      address: "0xabc",
+      creator: "0x123",
+      name: "Hi",
+      symbol: "X",
+      pool: "p",
+      txHash: "h",
+    });
+  });
+
+  it("slices long fields after trim", () => {
+    const out = normalizeTokenInput({
+      chainId: " 4663 ",
+      address: "0xabc",
+      creator: `  ${"a".repeat(250)}  `,
+    });
+    expect(out.chainId).toBe("4663");
+    expect(out.creator).toBe("a".repeat(200));
   });
 });
