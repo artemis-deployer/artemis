@@ -31,7 +31,7 @@ import {
   uploadMetadata,
   validateTxBytes,
 } from "../lib/launcher-solana";
-import { listReceipts, saveReceipt } from "../lib/receipts";
+import { findResumableEvmReceipt, listReceipts, saveReceipt } from "../lib/receipts";
 import { submitShowcase } from "../lib/showcase";
 import SolanaButton, { getSolanaProvider, type SolanaProvider } from "./SolanaButton";
 import WalletButton from "./WalletButton";
@@ -65,6 +65,10 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
           (r.ticker === draft.ticker || r.ticker === undefined),
       )
     : undefined;
+  const evmResume =
+    !isPump && !token && chainId !== null
+      ? findResumableEvmReceipt(listReceipts(), chainId, draft.ticker)
+      : undefined;
   const chainObj = getChain(draft.chainId);
   const explorer = chainObj?.explorer ?? "https://solscan.io";
   const singleTx = chainId !== null && (getHoodConfig(chainId)?.launcher ?? null) !== null;
@@ -126,7 +130,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
           tokenAmount: toTokenUnits(draft.pooled || "0"),
           ethAmount: parseEther(draft.liquidity || "0"),
         });
-        saveReceipt({ chainId, token: dep.token, hash: liq.hash, createdAt: new Date().toISOString(), ticker: draft.ticker });
+        saveReceipt({ chainId, token: dep.token, hash: liq.hash, pool: liq.hash, createdAt: new Date().toISOString(), ticker: draft.ticker });
         void submitShowcase({ chainId, address: dep.token, creator: acc, name: draft.name || draft.ticker, symbol: draft.ticker, txHash: liq.hash });
         setHood("pool-done");
       } catch (inner: unknown) {
@@ -145,20 +149,38 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
   }
 
   async function resumePool() {
-    if (!token || !account) return;
+    if (!token) return;
+    if (chainId === null) return;
+    const acc = account ?? (await connectWallet().catch(() => null));
+    if (!acc) return;
+    setAccount(acc);
+    await fundPool(token, acc);
+  }
+
+  async function resumeFromReceipt() {
+    const receiptToken = evmResume?.token;
+    if (!receiptToken || chainId === null) return;
+    const acc = account ?? (await connectWallet().catch(() => null));
+    if (!acc) return;
+    setAccount(acc);
+    setToken(receiptToken as Address);
+    await fundPool(receiptToken as Address, acc);
+  }
+
+  async function fundPool(tokenAddr: Address, acc: Address) {
     if (chainId === null) return;
     setHood("working");
     try {
       await ensureChain(chainId);
       const liq = await addLiquidity({
         chainId,
-        account,
-        token,
+        account: acc,
+        token: tokenAddr,
         tokenAmount: toTokenUnits(draft.pooled || "0"),
         ethAmount: parseEther(draft.liquidity || "0"),
       });
-      saveReceipt({ chainId, token, hash: liq.hash, createdAt: new Date().toISOString(), ticker: draft.ticker });
-      void submitShowcase({ chainId, address: token, creator: account, name: draft.name || draft.ticker, symbol: draft.ticker, txHash: liq.hash });
+      saveReceipt({ chainId, token: tokenAddr, hash: liq.hash, pool: liq.hash, createdAt: new Date().toISOString(), ticker: draft.ticker });
+      void submitShowcase({ chainId, address: tokenAddr, creator: acc, name: draft.name || draft.ticker, symbol: draft.ticker, txHash: liq.hash });
       setHood("pool-done");
     } catch (e: unknown) {
       fail(e instanceof Error ? e.message : "launch_failed");
@@ -374,10 +396,10 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
                   : "Confirm & Launch on Hood"}
             </button>
 
-            {!singleTx && token && (hood === "token-done" || hood === "error") && (
+            {!singleTx && (hood === "token-done" || hood === "error" || hood === "idle") && (token || evmResume?.token) && (
               <button
                 type="button"
-                onClick={() => void resumePool()}
+                onClick={() => void (token ? resumePool() : resumeFromReceipt())}
                 className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-white/10"
               >
                 Resume Pool Funding (Step 2)

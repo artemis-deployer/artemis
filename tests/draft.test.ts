@@ -81,4 +81,30 @@ describe("validateDraft", () => {
     );
     expect(validateDraft({ ticker: "X", route: "direct", pooled: "999000000", liquidity: "1" })).toEqual([]);
   });
+
+  it("rejects whitespace-only ticker", () => {
+    expect(validateDraft({ ticker: "   ", pooled: "1", liquidity: "1", route: "direct" })).toContain(
+      "ticker is required",
+    );
+  });
+
+  it("rejects non-decimal numeric strings that token units refuse", () => {
+    for (const bad of ["Infinity", "0x10", "1e3"]) {
+      expect(validateDraft({ ticker: "X", pooled: bad, liquidity: "1", route: "direct" })).toContain(
+        "pooled must be a positive number",
+      );
+      expect(validateDraft({ ticker: "X", pooled: "1", liquidity: bad, route: "direct" })).toContain(
+        "liquidity must be a positive number",
+      );
+    }
+  });
+
+  it("rejects zero pooled and zero liquidity", () => {
+    expect(validateDraft({ ticker: "X", pooled: "0", liquidity: "1", route: "direct" })).toContain(
+      "pooled must be a positive number",
+    );
+    expect(validateDraft({ ticker: "X", pooled: "1", liquidity: "0", route: "direct" })).toContain(
+      "liquidity must be a positive number",
+    );
+  });
 });

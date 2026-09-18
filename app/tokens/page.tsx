@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Search, Copy, Check, ExternalLink, ArrowLeft } from "lucide-react";
 import { TransitionLink } from "../../components/PageTransition";
-import { listReceipts, type Receipt } from "../../lib/receipts";
+import { dedupeLocalReceipts, listReceipts, type Receipt } from "../../lib/receipts";
 import { getChain } from "../../lib/chains";
 
 type Token = {
@@ -75,13 +75,16 @@ export default function TokensPage() {
     return [t.name, t.symbol, t.address, t.tx_hash].some((f) => (f ?? "").toLowerCase().includes(q));
   });
 
-  // Filter local tokens
-  const filteredLocal = local.filter((r) => {
-    if (filter === "hood" && !["4663", "46630"].includes(String(r.chainId))) return false;
-    if (filter === "solana" && !String(r.chainId).toLowerCase().includes("solana")) return false;
-    if (!q) return true;
-    return [r.ticker, r.token, r.hash].some((f) => (f ?? "").toLowerCase().includes(q));
-  });
+  // Filter local tokens, preferring DB row when same token exists remotely
+  const filteredLocal = dedupeLocalReceipts(
+    local.filter((r) => {
+      if (filter === "hood" && !["4663", "46630"].includes(String(r.chainId))) return false;
+      if (filter === "solana" && !String(r.chainId).toLowerCase().includes("solana")) return false;
+      if (!q) return true;
+      return [r.ticker, r.token, r.hash].some((f) => (f ?? "").toLowerCase().includes(q));
+    }),
+    tokens ?? [],
+  );
 
   const totalCount = filteredCommunity.length + (filter === "all" || filter === "local" ? filteredLocal.length : 0);
 

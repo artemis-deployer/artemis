@@ -5,8 +5,12 @@ import { DEVNET_RPC, MAINNET_RPC } from "../../../../lib/launcher-solana";
 import { checkRateLimit, clientIp } from "../../../../lib/rate-limit";
 import { verifyEvmTx, verifySolanaTx } from "../../../../lib/verify-tx";
 
-export async function GET() {
+export async function GET(req?: Request) {
   if (!isDbConfigured()) return NextResponse.json({ error: "db_offline" }, { status: 502 });
+  const ip = req ? clientIp(req) : "local";
+  if (!checkRateLimit(`showcase-get:${ip}`, 60, 60000).ok) {
+    return NextResponse.json({ error: "too_many_requests" }, { status: 429 });
+  }
   try {
     return NextResponse.json({ tokens: await listTokens() });
   } catch {
@@ -37,12 +41,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
   }
   const chainNum = Number(chainId);
+  const creator = str(b.creator);
   let verified = false;
   if (chainNum === 4663 || chainNum === 46630) {
-    verified = await verifyEvmTx(chainNum, address, txHash);
+    const expectedFrom = /^0x[0-9a-fA-F]{40}$/.test(creator) ? creator : undefined;
+    verified = await verifyEvmTx(chainNum, address, txHash, expectedFrom);
   } else if (chainId.startsWith("solana")) {
     const rpc = chainId === "solana-mainnet" ? MAINNET_RPC : DEVNET_RPC;
-    verified = await verifySolanaTx(rpc, address, txHash);
+    const expectedCreator = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(creator) ? creator : undefined;
+    verified = await verifySolanaTx(rpc, address, txHash, expectedCreator);
   } else {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
   }

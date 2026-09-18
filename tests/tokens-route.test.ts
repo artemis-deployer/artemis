@@ -40,9 +40,22 @@ describe("tokens route", () => {
   it("GET lists newest tokens", async () => {
     mocked.isDbConfigured.mockReturnValue(true);
     mocked.listTokens.mockResolvedValue([{ chain_id: "4663", address: "0xabc", creator: "", name: "X", symbol: "", pool: "", tx_hash: "", created_at: "" }]);
-    const res = await GET();
+    const res = await GET(new Request("http://x/api/community/tokens"));
     expect(res.status).toBe(200);
     expect(((await res.json()) as { tokens: unknown[] }).tokens).toHaveLength(1);
+  });
+
+  it("GET throttles after 60 rapid calls with 429", async () => {
+    mocked.isDbConfigured.mockReturnValue(true);
+    mocked.listTokens.mockResolvedValue([]);
+    let last: Response | null = null;
+    for (let i = 0; i < 61; i++) {
+      last = await GET(
+        new Request("http://x/api/community/tokens", { headers: { "x-forwarded-for": "9.9.9.9" } }),
+      );
+    }
+    expect(last!.status).toBe(429);
+    expect(((await last!.json()) as { error: string }).error).toBe("too_many_requests");
   });
 
   it("POST rejects bad address with 400", async () => {
@@ -118,5 +131,58 @@ describe("tokens route", () => {
     const res = await POST(req);
     expect(res.status).toBe(502);
     expect(((await res.json()) as { error: string }).error).toBe("db_offline");
+  });
+
+  it("POST forwards EVM creator and rejects mismatch with invalid_tx", async () => {
+    mocked.isDbConfigured.mockReturnValue(true);
+    const victim = "0x2222222222222222222222222222222222222222";
+    mockedVerify.verifyEvmTx.mockImplementation(async (_c, _a, _h, expectedFrom?: string) =>
+      expectedFrom?.toLowerCase() === victim.toLowerCase() ? false : true,
+    );
+    const req = new Request("http://x/api/community/tokens", {
+      method: "POST",
+      body: JSON.stringify({ chainId: "4663", address: EVM_ADDR, txHash: EVM_HASH, creator: victim }),
+    });
+    const res = await POST(req);
+    expect(mockedVerify.verifyEvmTx).toHaveBeenCalledWith(4663, EVM_ADDR, EVM_HASH, victim);
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as { error: string }).error).toBe("invalid_tx");
+    expect(mocked.saveToken).not.toHaveBeenCalled();
+  });
+
+  it("POST accepts EVM creator match", async () => {
+    mocked.isDbConfigured.mockReturnValue(true);
+    mocked.saveToken.mockResolvedValue(undefined);
+    const creator = "0x1111111111111111111111111111111111111111";
+    mockedVerify.verifyEvmTx.mockResolvedValue(true);
+    const req = new Request("http://x/api/community/tokens", {
+      method: "POST",
+      body: JSON.stringify({ chainId: "4663", address: EVM_ADDR, txHash: EVM_HASH, creator }),
+    });
+    const res = await POST(req);
+    expect(mockedVerify.verifyEvmTx).toHaveBeenCalledWith(4663, EVM_ADDR, EVM_HASH, creator);
+    expect(res.status).toBe(200);
+  });
+
+  it("POST forwards Solana creator and rejects mismatch with invalid_tx", async () => {
+    mocked.isDbConfigured.mockReturnValue(true);
+    const mint = "Mint111111111111111111111111111111111111";
+    const victimCreator = "Creator11111111111111111111111111111111";
+    mockedVerify.verifySolanaTx.mockImplementation(async (_r, _m, _s, expected?: string) =>
+      expected === victimCreator ? false : true,
+    );
+    const req = new Request("http://x/api/community/tokens", {
+      method: "POST",
+      body: JSON.stringify({
+        chainId: "solana-devnet",
+        address: mint,
+        txHash: "5".repeat(88),
+        creator: victimCreator,
+      }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as { error: string }).error).toBe("invalid_tx");
+    expect(mocked.saveToken).not.toHaveBeenCalled();
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checkRateLimit, clearRateLimits, clientIp } from "../lib/rate-limit";
+import { bucketCount, checkRateLimit, clearRateLimits, clientIp } from "../lib/rate-limit";
 
 describe("checkRateLimit", () => {
   it("allows up to the limit then refuses", () => {
@@ -16,6 +16,16 @@ describe("checkRateLimit", () => {
     expect(checkRateLimit("a", 1, 60000).ok).toBe(true);
     expect(checkRateLimit("a", 1, 60000).ok).toBe(false);
     expect(checkRateLimit("b", 1, 60000).ok).toBe(true);
+  });
+
+  it("caps buckets at 5000 and still enforces limits", () => {
+    clearRateLimits();
+    for (let i = 0; i < 6000; i++) {
+      checkRateLimit(`cap-${i}`, 1, 60000);
+    }
+    expect(bucketCount()).toBeLessThanOrEqual(5000);
+    expect(checkRateLimit("cap-probe", 1, 60000).ok).toBe(true);
+    expect(checkRateLimit("cap-probe", 1, 60000).ok).toBe(false);
   });
 });
 

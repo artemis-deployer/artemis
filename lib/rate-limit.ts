@@ -2,6 +2,12 @@ type Bucket = { hits: number[] };
 
 const buckets = new Map<string, Bucket>();
 
+const MAX_BUCKETS = 5000;
+
+export function bucketCount(): number {
+  return buckets.size;
+}
+
 function now(): number {
   return Date.now();
 }
@@ -10,6 +16,10 @@ export function checkRateLimit(key: string, limit: number, windowMs: number): { 
   const t = now();
   let bucket = buckets.get(key);
   if (!bucket) {
+    if (buckets.size >= MAX_BUCKETS) {
+      const oldest = buckets.keys().next();
+      if (!oldest.done) buckets.delete(oldest.value);
+    }
     bucket = { hits: [] };
     buckets.set(key, bucket);
   }

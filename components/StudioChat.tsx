@@ -108,15 +108,16 @@ export default function StudioChat() {
         return;
       }
 
-      const json = (await res.json()) as {
-        reply?: string;
-        error?: string;
+      const json = (await res.json().catch(() => null)) as {
+        reply?: unknown;
+        error?: unknown;
         draft?: Partial<Draft> | null;
-        draftErrors?: string[];
-      };
-      const reply = json.reply || OFFLINE_LINE;
-      const serverDraft = json.draft && typeof json.draft === "object" ? json.draft : null;
-      const draftErrors = Array.isArray(json.draftErrors) ? json.draftErrors : [];
+        draftErrors?: unknown;
+      } | null;
+      const safe = json && typeof json === "object" ? json : {};
+      const reply = typeof safe.reply === "string" && safe.reply ? safe.reply : OFFLINE_LINE;
+      const serverDraft = safe.draft && typeof safe.draft === "object" ? safe.draft : null;
+      const draftErrors = Array.isArray(safe.draftErrors) ? (safe.draftErrors as string[]) : [];
       const hasValueError = draftErrors.some((e) => e !== "missing-json-block" && e !== "invalid-json");
       let patch: Partial<Draft>;
       if (serverDraft && Object.keys(serverDraft).length > 0) {

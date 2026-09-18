@@ -61,15 +61,24 @@ export function parseDraftReply(text: string): Partial<Draft> {
 
 export function validateDraft(d: Partial<Draft>): string[] {
   const errors: string[] = [];
-  if (!d.ticker || d.ticker.length === 0) errors.push("ticker is required");
+  if (!d.ticker || d.ticker.trim().length === 0) errors.push("ticker is required");
   if (d.ticker && d.ticker.length > 12) errors.push("ticker is too long");
   const pump = d.route === "pumpfun";
   if (!pump && (d.pooled === undefined || d.pooled === "")) errors.push("pooled is required");
-  else if (d.pooled !== undefined && d.pooled !== "" && !(Number(d.pooled) > 0))
+  else if (d.pooled !== undefined && d.pooled !== "" && !isPositiveNumberString(d.pooled))
     errors.push("pooled must be a positive number");
   else if (!pump && d.pooled !== undefined && d.pooled !== "" && Number(d.pooled) > DIRECT_SUPPLY)
     errors.push("pooled exceeds fixed supply");
   if (d.liquidity === undefined || d.liquidity === "") errors.push("liquidity is required");
-  else if (!(Number(d.liquidity) > 0)) errors.push("liquidity must be a positive number");
+  else if (!isPositiveNumberString(d.liquidity)) errors.push("liquidity must be a positive number");
   return errors;
+}
+
+const NUMERIC_RE = /^\d+(\.\d+)?$/;
+
+// ponytail: same strict shape as toTokenUnits + server route, one shared check
+function isPositiveNumberString(value: string): boolean {
+  if (!NUMERIC_RE.test(value)) return false;
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0;
 }
