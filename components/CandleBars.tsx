@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
 type MotionType = 'bull' | 'bear' | 'drift';
 
@@ -39,8 +39,83 @@ const candleNodes: CandleData[] = [
 ];
 
 export const CandleBars: React.FC<{ className?: string }> = ({ className = '' }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const candleRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return;
+    }
+
+    let mouseX = -9999;
+    let mouseY = -9999;
+    let targetMouseX = -9999;
+    let targetMouseY = -9999;
+    let rafId = 0;
+
+    const handlePointerMove = (e: MouseEvent) => {
+      const rect = container.getBoundingClientRect();
+      targetMouseX = e.clientX - rect.left;
+      targetMouseY = e.clientY - rect.top;
+    };
+
+    const handlePointerLeave = () => {
+      targetMouseX = -9999;
+      targetMouseY = -9999;
+    };
+
+    const parent = container.parentElement ?? window;
+    parent.addEventListener('mousemove', handlePointerMove as EventListener, { passive: true });
+    parent.addEventListener('mouseleave', handlePointerLeave as EventListener);
+
+    const tick = () => {
+      mouseX += (targetMouseX - mouseX) * 0.12;
+      mouseY += (targetMouseY - mouseY) * 0.12;
+
+      const rect = container.getBoundingClientRect();
+      const w = rect.width || 1;
+      const h = rect.height || 1;
+
+      candleNodes.forEach((c, idx) => {
+        const el = candleRefs.current[idx];
+        if (!el) return;
+
+        const nodePxX = (c.x / 100) * w;
+        const nodePxY = (c.y / 100) * h;
+        const dx = nodePxX - mouseX;
+        const dy = nodePxY - mouseY;
+        const dist = Math.hypot(dx, dy);
+        const radius = 190;
+
+        if (dist < radius && mouseX > -5000) {
+          const force = 1 - dist / radius;
+          const pushX = (dx / (dist || 1)) * force * 24;
+          const pushY = (dy / (dist || 1)) * force * 28;
+          const scale = 1 + force * 0.22;
+          el.style.transform = `translate(calc(-50% + ${pushX.toFixed(1)}px), calc(-50% + ${pushY.toFixed(1)}px)) scale(${scale.toFixed(2)})`;
+        } else {
+          el.style.transform = 'translate(-50%, -50%) scale(1)';
+        }
+      });
+
+      rafId = requestAnimationFrame(tick);
+    };
+
+    rafId = requestAnimationFrame(tick);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      parent.removeEventListener('mousemove', handlePointerMove as EventListener);
+      parent.removeEventListener('mouseleave', handlePointerLeave as EventListener);
+    };
+  }, []);
+
   return (
     <div
+      ref={containerRef}
       className={`pointer-events-none absolute inset-0 z-0 select-none overflow-hidden ${className}`}
       style={{
         maskImage: 'linear-gradient(to bottom, transparent, black 10%, black 90%, transparent)',
@@ -123,11 +198,15 @@ export const CandleBars: React.FC<{ className?: string }> = ({ className = '' })
         return (
           <div
             key={i}
-            className="absolute flex flex-col items-center justify-center"
+            ref={(el) => {
+              candleRefs.current[i] = el;
+            }}
+            className="absolute flex flex-col items-center justify-center transition-transform duration-75 ease-out"
             style={{
               left: `${c.x}%`,
               top: `${c.y}%`,
-              transform: 'translate(-50%, -50%)',
+              transform: 'translate(-50%, -50%) scale(1)',
+              willChange: 'transform',
             }}
           >
             {/* Vertical 1px Wick with dynamic stretch */}
