@@ -98,7 +98,7 @@ export const FeatureSection: React.FC = () => {
           <span>CORE CAPABILITIES</span>
         </div>
 
-        <h2 className="font-unbounded text-2xl sm:text-4xl lg:text-[2.6rem] font-bold tracking-tight leading-[1.12] text-[#18191c] max-w-3xl">
+        <h2 className="font-unbounded text-2xl sm:text-3xl md:text-4xl lg:text-[2.35rem] font-bold tracking-tight leading-[1.14] text-[#18191c] max-w-4xl mx-auto">
           Everything You Need for<br />
           <span className="text-[#18191c]/50 font-light">Autonomous Token Launches</span>
         </h2>
