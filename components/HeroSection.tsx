@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { CHAINS, DIRECT_SUPPLY } from '../lib/chains';
 import { HOOD_MAINNET } from '../lib/launcher-evm';
-import { FloatingPixels } from './FloatingPixels';
+import { LedgerStream } from './LedgerStream';
 import { TransitionLink } from './PageTransition';
 
 interface HeroSectionProps {
@@ -24,8 +24,8 @@ export const HeroSection: React.FC<HeroSectionProps> = () => {
 
   return (
     <section className="hero relative min-h-[820px] w-full flex flex-col justify-center items-center text-center px-[max(6.25vw,24px)] pt-36 pb-20 overflow-hidden bg-[#131416]">
-      {/* Floating Animated Pixels */}
-      <FloatingPixels />
+      {/* Onchain Ledger Telemetry Streams */}
+      <LedgerStream />
 
       <div className="relative z-10 max-w-[1400px] mx-auto w-full flex flex-col items-center">
         {/* Top Minimal Eyebrow (Flat typography, zero pills, zero dots) */}
