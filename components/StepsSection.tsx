@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Cpu, Coins, Layers, KeyRound, Play, Pause, Check, Terminal, ShieldCheck } from 'lucide-react';
+import { Cpu, Coins, Layers, KeyRound, Play, Pause, Check, Terminal, ShieldCheck, Zap, ShieldAlert } from 'lucide-react';
 import { DIRECT_SUPPLY } from '../lib/chains';
 import { HOOD_MAINNET } from '../lib/launcher-evm';
 
@@ -223,6 +223,15 @@ export const StepsSection: React.FC = () => {
               0% { width: 0%; }
               100% { width: 100%; }
             }
+            @keyframes termLineFade {
+              0% { opacity: 0; transform: translateY(5px); }
+              100% { opacity: 1; transform: translateY(0); }
+            }
+            .term-line-1 { animation: termLineFade 0.22s cubic-bezier(0.16, 1, 0.3, 1) 0.05s both; }
+            .term-line-2 { animation: termLineFade 0.22s cubic-bezier(0.16, 1, 0.3, 1) 0.18s both; }
+            .term-line-3 { animation: termLineFade 0.22s cubic-bezier(0.16, 1, 0.3, 1) 0.32s both; }
+            .term-line-4 { animation: termLineFade 0.22s cubic-bezier(0.16, 1, 0.3, 1) 0.46s both; }
+            .term-line-5 { animation: termLineFade 0.22s cubic-bezier(0.16, 1, 0.3, 1) 0.60s both; }
           `}</style>
 
           {/* Active Stage Interactive Sandbox Workspace */}
@@ -232,8 +241,7 @@ export const StepsSection: React.FC = () => {
             <div className="lg:col-span-6 p-6 sm:p-8 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-[#18191c]/10 bg-white">
               <div>
                 <div className="flex items-center gap-2 mb-2 font-mono text-[11px] text-[#18191c]/60 uppercase tracking-widest">
-                  <span className="w-2 h-2 rounded-full bg-[#18191c]/30" />
-                  <span>{STAGES[activeStage].roman} · Stage Inspector</span>
+                  <span>{STAGES[activeStage].roman} // Stage Inspector</span>
                 </div>
                 
                 <h3 className="font-unbounded text-xl sm:text-2xl font-bold text-[#18191c] mb-2 leading-tight">
@@ -280,23 +288,25 @@ export const StepsSection: React.FC = () => {
                     <div className="flex flex-wrap gap-2">
                       <button
                         onClick={() => setAuditTest(auditTest === 'mint' ? 'idle' : 'mint')}
-                        className={`text-xs px-3 py-1.5 rounded-[2px] font-mono transition-all border cursor-pointer ${
+                        className={`text-xs px-3 py-1.5 rounded-[2px] font-mono transition-all border cursor-pointer inline-flex items-center gap-1.5 ${
                           auditTest === 'mint'
                             ? 'bg-[#18191c] text-red-300 border-[#18191c]'
                             : 'bg-white text-[#18191c]/80 border-[#18191c]/20 hover:border-[#18191c]/50'
                         }`}
                       >
-                        ⚡ Test Arbitrary Mint()
+                        <Zap className="w-3.5 h-3.5 text-red-400" />
+                        <span>Test Arbitrary Mint()</span>
                       </button>
                       <button
                         onClick={() => setAuditTest(auditTest === 'owner' ? 'idle' : 'owner')}
-                        className={`text-xs px-3 py-1.5 rounded-[2px] font-mono transition-all border cursor-pointer ${
+                        className={`text-xs px-3 py-1.5 rounded-[2px] font-mono transition-all border cursor-pointer inline-flex items-center gap-1.5 ${
                           auditTest === 'owner'
                             ? 'bg-[#18191c] text-amber-200 border-[#18191c]'
                             : 'bg-white text-[#18191c]/80 border-[#18191c]/20 hover:border-[#18191c]/50'
                         }`}
                       >
-                        🛡️ Test Owner Backdoor
+                        <ShieldAlert className="w-3.5 h-3.5 text-amber-300" />
+                        <span>Test Owner Backdoor</span>
                       </button>
                     </div>
 
@@ -412,9 +422,8 @@ export const StepsSection: React.FC = () => {
                     </>
                   )}
                 </button>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-[11px]">Subsystem Ready</span>
+                <div className="flex items-center gap-1.5 font-mono text-[10px] text-[#18191c]/50 tracking-wider">
+                  <span>SUBSYSTEM // ARMED</span>
                 </div>
               </div>
             </div>
@@ -422,58 +431,68 @@ export const StepsSection: React.FC = () => {
             {/* Right Output Column (Live Reactive Terminal & Receipt Monitor) */}
             <div className="lg:col-span-6 bg-[#131416] text-[#f8f6f0] p-6 sm:p-8 font-mono flex flex-col justify-between">
               <div>
-                {/* Terminal Header */}
+                {/* Terminal Header (No green dot, pure developer telemetry) */}
                 <div className="flex items-center justify-between pb-3 mb-4 border-b border-white/10 text-[11px] text-white/50">
                   <div className="flex items-center gap-2">
                     <Terminal className="w-3.5 h-3.5 text-[#fae8a4]" />
-                    <span className="tracking-wider uppercase">Runtime Telemetry</span>
+                    <span className="tracking-wider uppercase font-semibold text-white/75">
+                      kernel_v1 // stage_{activeStage + 1}.log
+                    </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                    <span className="text-[10px] text-white/60">LIVE STREAM</span>
+                  <div className="flex items-center gap-2 text-[10px] text-white/40">
+                    <span>PID: 8841</span>
+                    <span>/</span>
+                    <span>RPC: HOOD_MAINNET</span>
                   </div>
                 </div>
 
-                {/* Live Stage Terminal Outputs with Smooth State Transition */}
-                <div key={activeStage} className="space-y-2.5 text-xs text-white/85 transition-opacity duration-200">
+                {/* Live Staggered Terminal Logs */}
+                <div key={`${activeStage}-${selectedPreset.id}-${auditTest}-${activeNetwork}-${dryRunDone}`} className="space-y-2.5 text-xs text-white/85">
                   {activeStage === 0 && (
                     <>
-                      <div className="text-white/40">// NLP Extraction Vector:</div>
-                      <div className="text-[#fae8a4]">&gt; copilot.parseNaturalPrompt(input)</div>
-                      <div className="pl-3 border-l border-white/15 py-1 space-y-1 text-white/70">
+                      <div className="term-line-1 text-white/40">// [00:00.08] NLP Extraction Vector:</div>
+                      <div className="term-line-2 text-[#fae8a4]">&gt; copilot.parseNaturalPrompt(input)</div>
+                      <div className="term-line-3 pl-3 border-l border-white/15 py-1 space-y-1 text-white/70">
                         <div>name: <span className="text-white font-semibold">&quot;{selectedPreset.name}&quot;</span></div>
                         <div>symbol: <span className="text-[#cadcf0] font-semibold">{selectedPreset.symbol}</span></div>
                         <div>target_supply: <span className="text-white">{selectedPreset.supply}</span></div>
                         <div>curve_model: <span className="text-white">{selectedPreset.curve}</span></div>
                       </div>
-                      <div className="text-emerald-400 text-[11px] mt-2 flex items-center gap-1.5">
-                        <Check className="w-3 h-3" />
-                        <span>Parameters compiled into immutable genesis payload</span>
+                      <div className="term-line-4 text-white/90 text-[11px] mt-2 flex items-center gap-1.5 font-semibold">
+                        <Check className="w-3.5 h-3.5 text-[#fae8a4]" />
+                        <span>[OK] Parameters compiled into immutable genesis payload</span>
                       </div>
                     </>
                   )}
 
                   {activeStage === 1 && (
                     <>
-                      <div className="text-white/40">// Smart Contract Bytecode Integrity:</div>
-                      <div className="text-[#fae8a4]">&gt; solc.verifyBytecode(ERC20Sovereign.sol)</div>
-                      <div className="pl-3 border-l border-white/15 py-1 space-y-1 text-white/70">
+                      <div className="term-line-1 text-white/40">// [00:00.12] Smart Contract Bytecode Integrity:</div>
+                      <div className="term-line-2 text-[#fae8a4]">&gt; solc.verifyBytecode(ERC20Sovereign.sol)</div>
+                      <div className="term-line-3 pl-3 border-l border-white/15 py-1 space-y-1 text-white/70">
                         <div>constructor_supply: <span className="text-white">999,000,000 * 10^18</span></div>
                         <div>ownership_status: <span className="text-white">address(0) [RENOUNCED]</span></div>
-                        <div>mint_selector: <span className="text-emerald-400">0x00000000 (NOT IMPLEMENTED)</span></div>
+                        <div>mint_selector: <span className="text-[#fae8a4]">0x00000000 (NOT IMPLEMENTED)</span></div>
                       </div>
 
                       {auditTest === 'mint' && (
-                        <div className="mt-3 p-2 bg-red-950/60 border border-red-500/30 rounded-[2px] text-red-300 text-[11px]">
+                        <div className="term-line-4 mt-3 p-2 bg-red-950/60 border border-red-500/30 rounded-[2px] text-red-300 text-[11px]">
                           [SECURITY CHECK] execute: mint(to, 1000000)<br />
                           ↳ REVERT: 0x4e487b71 (Function signature does not exist)
                         </div>
                       )}
 
                       {auditTest === 'owner' && (
-                        <div className="mt-3 p-2 bg-amber-950/60 border border-amber-500/30 rounded-[2px] text-amber-200 text-[11px]">
+                        <div className="term-line-4 mt-3 p-2 bg-amber-950/60 border border-amber-500/30 rounded-[2px] text-amber-200 text-[11px]">
                           [SECURITY CHECK] execute: setTaxFee(0.05)<br />
                           ↳ REVERT: Caller is not owner. Owner is address(0).
+                        </div>
+                      )}
+
+                      {auditTest === 'idle' && (
+                        <div className="term-line-4 text-white/60 text-[11px] mt-2 flex items-center gap-1.5">
+                          <Check className="w-3.5 h-3.5 text-[#fae8a4]" />
+                          <span>[PASS] 0 backdoors detected in compiled bytecode</span>
                         </div>
                       )}
                     </>
@@ -481,14 +500,14 @@ export const StepsSection: React.FC = () => {
 
                   {activeStage === 2 && (
                     <>
-                      <div className="text-white/40">// Liquidity Settlement Routing:</div>
-                      <div className="text-[#fae8a4]">
+                      <div className="term-line-1 text-white/40">// [00:00.15] Liquidity Settlement Routing:</div>
+                      <div className="term-line-2 text-[#fae8a4]">
                         &gt; {activeNetwork === 'robinhood' ? 'UniswapV2Factory.createPair()' : 'pump.fun.initializeAMM()'}
                       </div>
-                      <div className="pl-3 border-l border-white/15 py-1 space-y-1 text-white/70 text-[11px]">
-                        <div>chain: <span className="text-white font-semibold">{activeNetwork === 'robinhood' ? 'Robinhood EVM' : 'Solana Mainnet'}</span></div>
+                      <div className="term-line-3 pl-3 border-l border-white/15 py-1 space-y-1 text-white/70 text-[11px]">
+                        <div>chain: <span className="text-white font-semibold">{activeNetwork === 'robinhood' ? 'Robinhood EVM (Chain ID 4663)' : 'Solana Mainnet'}</span></div>
                         <div>router: <span className="text-[#cadcf0]">{activeNetwork === 'robinhood' ? (HOOD_MAINNET.router?.slice(0, 18) ?? '0x89e5db8b5aa49aa') + '...' : 'pump...4M5u'}</span></div>
-                        <div>lp_destination: <span className="text-emerald-400">0x000000000000000000000000000000000000dead</span></div>
+                        <div>lp_destination: <span className="text-[#fae8a4]">0x000000000000000000000000000000000000dead</span></div>
                         <div>rugpull_prevention: <span className="text-white">LIQUIDITY LOCKED FOREVER</span></div>
                       </div>
                     </>
@@ -496,23 +515,35 @@ export const StepsSection: React.FC = () => {
 
                   {activeStage === 3 && (
                     <>
-                      <div className="text-white/40">// Local Cryptographic Signing:</div>
-                      <div className="text-[#fae8a4]">&gt; window.ethereum.request(&#123; method: &apos;eth_sendRawTransaction&apos; &#125;)</div>
-                      <div className="pl-3 border-l border-white/15 py-1 space-y-1 text-white/70 text-[11px]">
+                      <div className="term-line-1 text-white/40">// [00:00.18] Local Cryptographic Signing:</div>
+                      <div className="term-line-2 text-[#fae8a4]">&gt; window.ethereum.request(&#123; method: &apos;eth_sendRawTransaction&apos; &#125;)</div>
+                      <div className="term-line-3 pl-3 border-l border-white/15 py-1 space-y-1 text-white/70 text-[11px]">
                         <div>client_provider: <span className="text-white">Injected Web3 Wallet</span></div>
-                        <div>key_isolation: <span className="text-emerald-400">100% Non-Custodial</span></div>
+                        <div>key_isolation: <span className="text-[#fae8a4]">100% Non-Custodial</span></div>
                         <div>server_data_transit: <span className="text-white">0 bytes (Zero Private Keys Stored)</span></div>
                       </div>
-                      <div className="text-white/50 text-[10px] mt-2">
+                      <div className="term-line-4 text-white/50 text-[10px] mt-2">
                         Signed with ECDSA secp256k1 locally on user hardware.
                       </div>
                     </>
                   )}
                 </div>
+
+                {/* Active Shell Prompt with Blinking Cursor */}
+                <div className="pt-3 mt-4 border-t border-white/10 flex items-center gap-2 text-[11px] font-mono">
+                  <span className="text-white/40">kentir@node:~$</span>
+                  <span className="text-[#fae8a4]">
+                    {activeStage === 0 && `copilot.synthesize("${selectedPreset.tag}")`}
+                    {activeStage === 1 && `solc.verify --fixed-supply`}
+                    {activeStage === 2 && `router.routeAMM --network=${activeNetwork}`}
+                    {activeStage === 3 && `eip712.signLocal --offline`}
+                  </span>
+                  <span className="inline-block w-1.5 h-3.5 bg-[#fae8a4] animate-pulse ml-0.5" />
+                </div>
               </div>
 
-              {/* Terminal Bottom Telemetry Status */}
-              <div className="mt-8 pt-3 border-t border-white/10 flex items-center justify-between text-[10px] text-white/40">
+              {/* Terminal Bottom Telemetry Status (Clean, no green dot) */}
+              <div className="mt-8 pt-3 border-t border-white/10 flex items-center justify-between text-[10px] text-white/40 font-mono">
                 <div className="flex items-center gap-2">
                   <span>GAS: &lt; 0.001 ETH</span>
                   <span>·</span>
