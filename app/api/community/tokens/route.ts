@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { classifyAddress } from "../../../../lib/addresses";
 import { isDbConfigured, listTokens, saveToken } from "../../../../lib/community-db";
+import { DEVNET_RPC, MAINNET_RPC } from "../../../../lib/launcher-solana";
+import { checkRateLimit, clientIp } from "../../../../lib/rate-limit";
+import { verifyEvmTx, verifySolanaTx } from "../../../../lib/verify-tx";
 
 export async function GET() {
   if (!isDbConfigured()) return NextResponse.json({ error: "db_offline" }, { status: 502 });
@@ -13,6 +16,9 @@ export async function GET() {
 
 export async function POST(req: Request) {
   if (!isDbConfigured()) return NextResponse.json({ error: "db_offline" }, { status: 502 });
+  if (!checkRateLimit(`showcase:${clientIp(req)}`, 20, 60000).ok) {
+    return NextResponse.json({ error: "too_many_requests" }, { status: 429 });
+  }
   let body: unknown;
   try {
     body = await req.json();
@@ -22,9 +28,26 @@ export async function POST(req: Request) {
   const b = body as Record<string, unknown>;
   const chainId = typeof b.chainId === "number" || typeof b.chainId === "string" ? String(b.chainId) : "";
   const address = typeof b.address === "string" ? b.address.trim() : "";
+  const txHash = typeof b.txHash === "string" ? b.txHash.trim() : "";
   const str = (v: unknown) => (typeof v === "string" ? v.slice(0, 200) : "");
   if (!chainId || classifyAddress(address) === null) {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
+  }
+  if (!txHash) {
+    return NextResponse.json({ error: "bad_request" }, { status: 400 });
+  }
+  const chainNum = Number(chainId);
+  let verified = false;
+  if (chainNum === 4663 || chainNum === 46630) {
+    verified = await verifyEvmTx(chainNum, address, txHash);
+  } else if (chainId.startsWith("solana")) {
+    const rpc = chainId === "solana-mainnet" ? MAINNET_RPC : DEVNET_RPC;
+    verified = await verifySolanaTx(rpc, address, txHash);
+  } else {
+    return NextResponse.json({ error: "bad_request" }, { status: 400 });
+  }
+  if (!verified) {
+    return NextResponse.json({ error: "invalid_tx" }, { status: 400 });
   }
   try {
     await saveToken({

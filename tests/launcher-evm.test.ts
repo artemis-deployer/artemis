@@ -52,6 +52,12 @@ describe("eth min slippage", () => {
   it("maps zero to zero", () => {
     expect(calcEthMin(0n)).toBe(0n);
   });
+
+  it("clamps dust to 1 wei", () => {
+    expect(calcEthMin(1n)).toBe(1n);
+    expect(calcEthMin(0n)).toBe(0n);
+    expect(calcEthMin(10n ** 18n)).toBe(98n * 10n ** 16n);
+  });
 });
 
 describe("launchOneTx guards", () => {

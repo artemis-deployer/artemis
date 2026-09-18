@@ -30,7 +30,9 @@ export const ETH_MIN_BPS = 9800;
 export const TX_DEADLINE_SECS = 600;
 
 export function calcEthMin(ethAmount: bigint): bigint {
-  return (ethAmount * BigInt(ETH_MIN_BPS)) / 10000n;
+  const result = (ethAmount * BigInt(ETH_MIN_BPS)) / 10000n;
+  if (ethAmount > 0n && result === 0n) return 1n;
+  return result;
 }
 
 export const HOOD_MAINNET: HoodConfig = {

@@ -108,12 +108,15 @@ export async function buildCreateTx(payload: TradePayload): Promise<VersionedTra
   if (!res) throw new Error("pump_offline");
   if (!res.ok) throw new Error("pump_rejected: trade-local failed");
   const b64 = (await res.text()).trim().replace(/^"|"$/g, "");
-  if (!b64.length) throw new Error("pump_rejected: empty tx bytes");
+  if (inspectTxSize(b64) === 0) throw new Error("pump_rejected: empty tx bytes");
+  let tx: VersionedTransaction;
   try {
-    return VersionedTransaction.deserialize(base64ToBytes(b64));
+    tx = VersionedTransaction.deserialize(base64ToBytes(b64));
   } catch {
     throw new Error("pump_rejected: bad tx bytes");
   }
+  validateTxBytes(tx);
+  return tx;
 }
 
 export type SolanaWallet = {

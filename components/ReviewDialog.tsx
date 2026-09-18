@@ -21,6 +21,7 @@ import {
 import {
   DEVNET_RPC,
   MAINNET_RPC,
+  PUMP_FEE_SOL,
   buildCreateTx,
   buildMetadata,
   buildTradePayload,
@@ -414,6 +415,8 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
                 </a>
               </p>
             )}
+
+            <p className="m-0 text-xs text-white/50">Est. creation cost ~{PUMP_FEE_SOL} SOL plus network fees.</p>
 
             <button
               type="button"

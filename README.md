@@ -19,6 +19,11 @@ npm run dev                  # http://localhost:3000
 | `LLM_MODEL` | Default `mimo-v2.5` |
 | `DATABASE_URL` | Supabase Postgres (pooler). Missing = showcase falls back to local receipts |
 
+## Env security
+
+- `.env.local` holds live keys and is git-ignored. If a key ever leaks, rotate it
+  in the Mimo / Supabase dashboard and restrict the Postgres role to least privilege.
+
 ## Scripts
 
 | Command | Purpose |

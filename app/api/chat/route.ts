@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { DIRECT_SUPPLY } from "../../../lib/chains";
+import { checkRateLimit, clientIp } from "../../../lib/rate-limit";
 
 export const SYSTEM_PROMPT = [
   "You are Kentir, a coin launch copilot.",
@@ -11,7 +13,7 @@ export const SYSTEM_PROMPT = [
   "Example exchange:",
   'User: Arts club coin, ticker ARTS, 500M pooled, 1.5 liquidity, direct route.',
   "Assistant: Great pick for the arts club! I set ARTS with 500000000 pooled and 1.5 liquidity on direct.",
-  '```json {"name":"Arts Club","ticker":"ARTS","pooled":"500000","liquidity":"1.5","route":"direct"} ```',
+  '```json {"name":"Arts Club","ticker":"ARTS","pooled":"500000000","liquidity":"1.5","route":"direct"} ```',
 ].join(" ");
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
@@ -25,7 +27,7 @@ export type ServerDraft = {
 };
 
 const TICKER_RE = /^[A-Z0-9]{1,12}$/;
-const DIRECT_SUPPLY = 999000000;
+const NUMERIC_RE = /^\d+(\.\d+)?$/;
 
 function asNumericString(value: unknown): string | null {
   if (typeof value === "number") {
@@ -39,6 +41,7 @@ function asNumericString(value: unknown): string | null {
 }
 
 function isPositiveNumberString(value: string): boolean {
+  if (!NUMERIC_RE.test(value)) return false;
   const n = Number(value);
   return Number.isFinite(n) && n > 0;
 }
@@ -101,6 +104,9 @@ export function extractServerDraft(reply: string): { draft: ServerDraft | null; 
 }
 
 export async function POST(req: Request) {
+  if (!checkRateLimit(`chat:${clientIp(req)}`, 10, 60000).ok) {
+    return NextResponse.json({ error: "too_many_requests" }, { status: 429 });
+  }
   const url = process.env.LLM_API_URL;
   const key = process.env.LLM_API_KEY;
   const model = process.env.LLM_MODEL ?? "mimo-v2.5";

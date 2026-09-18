@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET as statusGET } from "../app/api/status/route";
 import { POST as chatPOST, SYSTEM_PROMPT } from "../app/api/chat/route";
+import { clearRateLimits } from "../lib/rate-limit";
 
 describe("status route", () => {
   it("reports unconfigured when env is missing", async () => {
@@ -15,6 +16,7 @@ describe("status route", () => {
 
 describe("chat route", () => {
   beforeEach(() => {
+    clearRateLimits();
     vi.unstubAllGlobals();
     vi.stubEnv("LLM_API_URL", "https://example.test/v1/chat/completions");
     vi.stubEnv("LLM_API_KEY", "secret");
@@ -232,5 +234,96 @@ describe("chat route", () => {
     const json = (await res.json()) as { error: string; draft?: unknown };
     expect(json.error).toBe("chat_offline");
     expect(json.draft).toBeUndefined();
+  });
+
+  it("throttles after 11 rapid posts with 429", async () => {
+    clearRateLimits();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          choices: [
+            {
+              message: {
+                content:
+                  'Nice!\n```json\n{"name":"Arts Club","ticker":"ARTS","pooled":"500000000","liquidity":"1.5","route":"direct"}\n```',
+              },
+            },
+          ],
+        }),
+      }),
+    );
+    const makeReq = () =>
+      new Request("http://x/api/chat", {
+        method: "POST",
+        body: JSON.stringify({ messages: [{ role: "user", content: "make a coin" }] }),
+      });
+    for (let i = 0; i < 10; i++) {
+      const res = await chatPOST(makeReq());
+      expect(res.status).toBe(200);
+    }
+    const limited = await chatPOST(makeReq());
+    expect(limited.status).toBe(429);
+    expect(((await limited.json()) as { error: string }).error).toBe("too_many_requests");
+  });
+
+  it("rejects hex numerics like 0x10", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          choices: [
+            {
+              message: {
+                content:
+                  'Hex!\n```json\n{"name":"Hex","ticker":"HEX","pooled":"0x10","liquidity":"1.5","route":"direct"}\n```',
+              },
+            },
+          ],
+        }),
+      }),
+    );
+    const req = new Request("http://x/api/chat", {
+      method: "POST",
+      body: JSON.stringify({ messages: [{ role: "user", content: "make a coin" }] }),
+    });
+    const res = await chatPOST(req);
+    const json = (await res.json()) as { draft: unknown; draftErrors: string[] };
+    expect(json.draft).toBeNull();
+    expect(json.draftErrors).toContain("invalid-pooled");
+  });
+
+  it("rejects exponent numerics like 1e6", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          choices: [
+            {
+              message: {
+                content:
+                  'Exp!\n```json\n{"name":"Exp","ticker":"EXP","pooled":"1e6","liquidity":"1.5","route":"direct"}\n```',
+              },
+            },
+          ],
+        }),
+      }),
+    );
+    const req = new Request("http://x/api/chat", {
+      method: "POST",
+      body: JSON.stringify({ messages: [{ role: "user", content: "make a coin" }] }),
+    });
+    const res = await chatPOST(req);
+    const json = (await res.json()) as { draft: unknown; draftErrors: string[] };
+    expect(json.draft).toBeNull();
+    expect(json.draftErrors).toContain("invalid-pooled");
+  });
+
+  it("keeps few-shot example prose and JSON consistent", () => {
+    expect(SYSTEM_PROMPT).toContain("500000000 pooled");
+    expect(SYSTEM_PROMPT).toContain('"pooled":"500000000"');
   });
 });
