@@ -284,7 +284,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
   }
 
   return (
-    <dialog ref={ref} aria-label="Review your launch" className="m-auto max-w-[min(540px,94vw)] overflow-hidden rounded-xl border border-white/15 bg-[#18171f] p-0 text-white shadow-2xl">
+    <dialog ref={ref} aria-label="Review your launch" className="m-auto max-w-[min(540px,94vw)] overflow-hidden rounded-xl border border-white/15 bg-[#1a1b1f] p-0 text-white shadow-2xl">
       <div className="flex flex-col gap-4 p-6 max-sm:p-[18px]">
         <div className="flex items-center justify-between border-b border-white/10 pb-3.5">
           <div>
@@ -298,29 +298,29 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
           </form>
         </div>
 
-        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 rounded-lg border border-white/10 bg-[#131219] p-3.5 text-[13px]">
+        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 rounded-lg border border-white/10 bg-[#131416] p-3.5 text-[13px]">
           <dt className="font-medium text-white/50">Network:</dt>
           <dd className="m-0 text-right font-semibold break-all text-white">{chainObj?.name ?? String(draft.chainId)}</dd>
           <dt className="font-medium text-white/50">Token Name:</dt>
           <dd className="m-0 text-right font-semibold break-all text-white">{draft.name || draft.ticker || "-"}</dd>
           <dt className="font-medium text-white/50">Ticker Symbol:</dt>
-          <dd className="m-0 text-right font-mono font-bold break-all text-[#e4cef7] uppercase">{draft.ticker}</dd>
+          <dd className="m-0 text-right font-mono font-bold break-all text-[#fae8a4] uppercase">{draft.ticker}</dd>
           <dt className="font-medium text-white/50">Pool Tokens:</dt>
           <dd className="m-0 text-right font-mono font-semibold break-all text-white">{draft.pooled}</dd>
           <dt className="font-medium text-white/50">Initial Liquidity:</dt>
           <dd className="m-0 text-right font-mono font-semibold break-all text-white">{draft.liquidity} {chainObj?.currency}</dd>
           <dt className="font-medium text-white/50">Supply Rule:</dt>
-          <dd className="m-0 text-right font-mono font-semibold break-all text-[#b9e2f8]">{(isPump ? 1000000000 : DIRECT_SUPPLY).toLocaleString("en-US")} (Fixed · No Mint)</dd>
+          <dd className="m-0 text-right font-mono font-semibold break-all text-[#cadcf0]">{(isPump ? 1000000000 : DIRECT_SUPPLY).toLocaleString("en-US")} (Fixed · No Mint)</dd>
         </dl>
 
         {!isPump && (
-          <p className="m-0 rounded border border-white/10 bg-[#131219] p-2.5 text-xs text-white/60">
+          <p className="m-0 rounded border border-white/10 bg-[#131416] p-2.5 text-xs text-white/60">
             Protection: {100 - ETH_MIN_BPS / 100}% ETH slippage · {TX_DEADLINE_SECS / 60}-min deadline. Token minimum is exact.
           </p>
         )}
 
         {mainnet && (
-          <p className="m-0 rounded border border-white/10 bg-[#131219] p-2.5 text-xs text-white/60">
+          <p className="m-0 rounded border border-white/10 bg-[#131416] p-2.5 text-xs text-white/60">
             <strong className="text-white">Mainnet Deployment:</strong> Wallet signatures will execute live blockchain transactions and spend real tokens for gas and initial pool liquidity.
           </p>
         )}
@@ -353,7 +353,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
                   href={`${explorer}/address/${token}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="underline text-[#b9e2f8] inline-flex items-center gap-0.5"
+                  className="underline text-[#cadcf0] inline-flex items-center gap-0.5"
                 >
                   <span>{token.slice(0, 10)}…{token.slice(-8)}</span>
                   <ExternalLink size={11} />
@@ -365,7 +365,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
               type="button"
               disabled={hood === "working"}
               onClick={() => void launch()}
-              className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-[#e4cef7] px-6 py-3 text-sm font-bold text-[#17131f] transition-all hover:bg-[#f1d2e8] disabled:cursor-not-allowed disabled:border disabled:border-white/10 disabled:bg-white/5 disabled:text-white/30"
+              className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-[#fae8a4] px-6 py-3 text-sm font-bold text-[#18191c] transition-all hover:bg-[#ece4d4] disabled:cursor-not-allowed disabled:border disabled:border-white/10 disabled:bg-white/5 disabled:text-white/30"
             >
               {hood === "working"
                 ? "Deploying & Funding…"
@@ -408,7 +408,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
                   href={`https://solscan.io/token/${mint}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="underline text-[#b9e2f8] inline-flex items-center gap-0.5"
+                  className="underline text-[#cadcf0] inline-flex items-center gap-0.5"
                 >
                   <span>{mint.slice(0, 10)}…{mint.slice(-8)}</span>
                   <ExternalLink size={11} />
@@ -422,7 +422,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
               type="button"
               disabled={pump === "working"}
               onClick={() => void launchPump()}
-              className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-[#e4cef7] px-6 py-3 text-sm font-bold text-[#17131f] transition-all hover:bg-[#f1d2e8] disabled:cursor-not-allowed disabled:border disabled:border-white/10 disabled:bg-white/5 disabled:text-white/30"
+              className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-[#fae8a4] px-6 py-3 text-sm font-bold text-[#18191c] transition-all hover:bg-[#ece4d4] disabled:cursor-not-allowed disabled:border disabled:border-white/10 disabled:bg-white/5 disabled:text-white/30"
             >
               {pump === "working" ? "Building Transaction…" : "Confirm & Launch on Solana"}
             </button>
@@ -434,7 +434,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
                   href={`${explorer}/address/${resume.token}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="underline text-[#b9e2f8]"
+                  className="underline text-[#cadcf0]"
                 >
                   {resume.token.slice(0, 8)}…
                 </a>

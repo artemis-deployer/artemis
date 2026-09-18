@@ -35,7 +35,7 @@ function MainApp() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#121218] text-[#f5f3f7] selection:bg-[#e4cef7] selection:text-[#17131f] font-sans">
+    <div className="relative min-h-screen bg-[#131416] text-[#f8f6f0] selection:bg-[#fae8a4] selection:text-[#18191c] font-sans">
       {/* Editorial Arrival Redaction Splash */}
       <ArrivalPreloader />
 

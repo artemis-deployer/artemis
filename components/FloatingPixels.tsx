@@ -12,7 +12,7 @@ const pixelData: [number, number, number, number][] = [
   [82, 78, 36, 20]
 ];
 
-const colors = ['#e5c0ef', '#afddfa', '#f1d4ef', '#aa83ee'];
+const colors = ['#fae8a4', '#cadcf0', '#ece4d4', '#e2d3b8'];
 
 export const FloatingPixels: React.FC<{ className?: string }> = ({ className = '' }) => {
   return (

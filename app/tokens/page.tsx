@@ -58,7 +58,7 @@ export default function TokensPage() {
 
   if (tokens === null) {
     return (
-      <div className="min-h-screen bg-[#121218] text-[#f5f3f7] flex items-center justify-center">
+      <div className="min-h-screen bg-[#131416] text-[#f8f6f0] flex items-center justify-center">
         <p className="text-base text-white/50 font-mono">Loading community showcase…</p>
       </div>
     );
@@ -86,8 +86,8 @@ export default function TokensPage() {
   const totalCount = filteredCommunity.length + (filter === "all" || filter === "local" ? filteredLocal.length : 0);
 
   return (
-    <div className="min-h-screen bg-[#121218] text-[#f5f3f7] font-sans">
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#121218]/90 backdrop-blur-md">
+    <div className="min-h-screen bg-[#131416] text-[#f8f6f0] font-sans">
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#131416]/90 backdrop-blur-md">
         <div className="mx-auto flex min-h-[80px] max-w-[1800px] items-center justify-between gap-4 px-[max(6.25vw,24px)]">
           <TransitionLink href="/" className="flex items-center gap-3 no-underline text-inherit">
             <img src="/assets/logo.png" className="w-8 h-8 rounded-full object-cover" alt="" />
@@ -118,7 +118,7 @@ export default function TokensPage() {
 
       <main className="mx-auto max-w-[1800px] px-[max(6.25vw,24px)] pt-12 pb-24">
         <div className="mb-10 border-b border-white/10 pb-8">
-          <p className="m-0 mb-2 text-xs font-mono uppercase tracking-[0.2em] text-[#e4cef7]">ONCHAIN CATALOG</p>
+          <p className="m-0 mb-2 text-xs font-mono uppercase tracking-[0.2em] text-[#fae8a4]">ONCHAIN CATALOG</p>
           <h1 className="font-unbounded m-0 mb-3 text-3xl sm:text-5xl font-extrabold tracking-tight text-white">
             Token Showcase
           </h1>
@@ -144,7 +144,7 @@ export default function TokensPage() {
                 onClick={() => setFilter(v)}
                 className={`min-h-10 cursor-pointer rounded px-4 py-2 text-xs font-semibold transition-all border ${
                   filter === v
-                    ? "border-[#e4cef7] bg-[#e4cef7] text-[#17131f] shadow-md"
+                    ? "border-[#fae8a4] bg-[#fae8a4] text-[#18191c] shadow-md"
                     : "border-white/15 bg-white/5 text-white/70 hover:border-white/30 hover:text-white"
                 }`}
               >
@@ -159,7 +159,7 @@ export default function TokensPage() {
               type="search"
               value={query}
               placeholder="Search ticker, name, address…"
-              className="w-full rounded-lg border border-white/15 bg-[#18171f] py-2.5 pr-3.5 pl-9 text-xs text-white placeholder-white/30 focus:border-[#e4cef7] focus:bg-[#1e1c28]"
+              className="w-full rounded-lg border border-white/15 bg-[#1a1b1f] py-2.5 pr-3.5 pl-9 text-xs text-white placeholder-white/30 focus:border-[#fae8a4] focus:bg-[#202126]"
               onChange={(e) => setQuery(e.target.value)}
             />
           </div>
@@ -172,7 +172,7 @@ export default function TokensPage() {
 
         {/* Empty State */}
         {totalCount === 0 && (
-          <div className="my-12 rounded-xl border border-dashed border-white/15 bg-[#18171f] p-12 text-center">
+          <div className="my-12 rounded-xl border border-dashed border-white/15 bg-[#1a1b1f] p-12 text-center">
             <h3 className="mb-2 font-unbounded text-xl font-bold text-white">No tokens found</h3>
             <p className="mb-6 text-sm text-white/60">
               {query ? "No tokens match your search query." : "No launches have been registered yet."}
@@ -194,14 +194,14 @@ export default function TokensPage() {
             return (
               <article
                 key={`${t.chain_id}:${t.address}`}
-                className="flex flex-col gap-3 rounded-xl border border-white/10 bg-[#18171f] p-6 shadow-xl hover:border-white/25 transition-all"
+                className="flex flex-col gap-3 rounded-xl border border-white/10 bg-[#1a1b1f] p-6 shadow-xl hover:border-white/25 transition-all"
               >
                 <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-3.5">
                   <div>
                     <h3 className="m-0 text-base font-bold text-white">
                       {t.name || t.symbol || "Untitled Coin"}
                     </h3>
-                    <span className="font-mono text-xs font-bold tracking-wider text-[#e4cef7]">
+                    <span className="font-mono text-xs font-bold tracking-wider text-[#fae8a4]">
                       ${t.symbol || "TOKEN"}
                     </span>
                   </div>
@@ -218,7 +218,7 @@ export default function TokensPage() {
                         href={getExplorerUrl(t.chain_id, t.address)}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-[#b9e2f8] underline hover:text-white"
+                        className="inline-flex items-center gap-1 text-[#cadcf0] underline hover:text-white"
                       >
                         <span>{t.address.slice(0, 6)}…{t.address.slice(-4)}</span>
                         <ExternalLink size={11} />
@@ -248,7 +248,7 @@ export default function TokensPage() {
                         href={getTxUrl(t.chain_id, t.tx_hash)}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-[#b9e2f8] underline hover:text-white"
+                        className="inline-flex items-center gap-1 text-[#cadcf0] underline hover:text-white"
                       >
                         <span>{t.tx_hash.slice(0, 8)}…</span>
                         <ExternalLink size={11} />
@@ -265,7 +265,7 @@ export default function TokensPage() {
             filteredLocal.map((r, i) => (
               <article
                 key={`${r.hash}:${i}`}
-                className="flex flex-col gap-3 rounded-xl border border-dashed border-white/20 bg-[#18171f] p-6 shadow-xl hover:border-white/35 transition-all"
+                className="flex flex-col gap-3 rounded-xl border border-dashed border-white/20 bg-[#1a1b1f] p-6 shadow-xl hover:border-white/35 transition-all"
               >
                 <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-3.5">
                   <div>
@@ -274,7 +274,7 @@ export default function TokensPage() {
                     </h3>
                     <span className="text-xs text-white/50">Saved in this browser</span>
                   </div>
-                  <span className="rounded border border-[#b9e2f8]/30 bg-[#b9e2f8]/10 px-2 py-0.5 font-mono text-[10px] text-[#b9e2f8] uppercase">
+                  <span className="rounded border border-[#cadcf0]/30 bg-[#cadcf0]/10 px-2 py-0.5 font-mono text-[10px] text-[#cadcf0] uppercase">
                     Local
                   </span>
                 </div>
@@ -293,7 +293,7 @@ export default function TokensPage() {
                           href={getExplorerUrl(r.chainId, r.token)}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center gap-1 text-[#b9e2f8] underline hover:text-white"
+                          className="inline-flex items-center gap-1 text-[#cadcf0] underline hover:text-white"
                         >
                           <span>{r.token.slice(0, 6)}…{r.token.slice(-4)}</span>
                           <ExternalLink size={11} />
@@ -316,7 +316,7 @@ export default function TokensPage() {
                       href={getTxUrl(r.chainId, r.hash)}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1 text-[#b9e2f8] underline hover:text-white"
+                      className="inline-flex items-center gap-1 text-[#cadcf0] underline hover:text-white"
                     >
                       <span>{r.hash.slice(0, 8)}…</span>
                       <ExternalLink size={11} />

@@ -60,7 +60,7 @@ export default function WalletModal({
       onClick={onClose}
     >
       <div
-        className="wallet-panel-in flex max-h-[85vh] w-full max-w-[420px] flex-col gap-1 overflow-hidden rounded-2xl border border-white/15 bg-[#18171f] p-6 text-white shadow-2xl"
+        className="wallet-panel-in flex max-h-[85vh] w-full max-w-[420px] flex-col gap-1 overflow-hidden rounded-2xl border border-white/15 bg-[#1a1b1f] p-6 text-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-3 flex items-center justify-between border-b border-white/10 pb-3">
@@ -92,7 +92,7 @@ export default function WalletModal({
                 onClick={() => void choose(o.id, detected, o.installUrl)}
                 className={`flex min-h-[52px] cursor-pointer items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left transition-all disabled:cursor-wait disabled:opacity-60 ${
                   detected
-                    ? "border-white/10 bg-[#131219] hover:border-[#e4cef7] hover:bg-white/5"
+                    ? "border-white/10 bg-[#131416] hover:border-[#fae8a4] hover:bg-white/5"
                     : "border-dashed border-white/15 bg-white/5 hover:border-white/30"
                 }`}
               >

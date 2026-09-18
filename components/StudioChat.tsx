@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Markdown from "react-markdown";
+import rehypeSanitize from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
 import { RotateCcw, SendHorizonal, Sparkles } from "lucide-react";
 import { parseDraftReply } from "../lib/draft";
@@ -107,11 +108,24 @@ export default function StudioChat() {
         return;
       }
 
-      const json = (await res.json()) as { reply?: string; error?: string; draft?: Partial<Draft> | null };
+      const json = (await res.json()) as {
+        reply?: string;
+        error?: string;
+        draft?: Partial<Draft> | null;
+        draftErrors?: string[];
+      };
       const reply = json.reply || OFFLINE_LINE;
       const serverDraft = json.draft && typeof json.draft === "object" ? json.draft : null;
-      const patch =
-        serverDraft && Object.keys(serverDraft).length > 0 ? serverDraft : parseDraftReply(reply);
+      const draftErrors = Array.isArray(json.draftErrors) ? json.draftErrors : [];
+      const hasValueError = draftErrors.some((e) => e !== "missing-json-block" && e !== "invalid-json");
+      let patch: Partial<Draft>;
+      if (serverDraft && Object.keys(serverDraft).length > 0) {
+        patch = serverDraft;
+      } else if (hasValueError && reply !== OFFLINE_LINE) {
+        patch = {};
+      } else {
+        patch = parseDraftReply(reply);
+      }
       const hasPatch = Object.keys(patch).length > 0;
       const shown = displayOf(reply, hasPatch);
       const at = next.length;
@@ -130,10 +144,10 @@ export default function StudioChat() {
   }
 
   return (
-    <section className="flex h-[640px] flex-col overflow-hidden rounded-xl border border-white/10 bg-[#14131b] shadow-2xl max-sm:h-[560px]" aria-label="Talk to Kentir">
-      <div className="flex items-center justify-between border-b border-white/10 bg-[#18171f] px-5 py-3.5">
+    <section className="flex h-[640px] flex-col overflow-hidden rounded-xl border border-white/10 bg-[#131416] shadow-2xl max-sm:h-[560px]" aria-label="Talk to Kentir">
+      <div className="flex items-center justify-between border-b border-white/10 bg-[#1a1b1f] px-5 py-3.5">
         <div className="flex items-center gap-2.5">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#e4cef7] font-unbounded text-sm text-[#17131f]" aria-hidden="true">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#fae8a4] font-unbounded text-sm text-[#18191c]" aria-hidden="true">
             K
           </span>
           <div className="flex flex-col">
@@ -162,22 +176,22 @@ export default function StudioChat() {
             data-role={l.role}
             className={`max-w-[86%] rounded-lg px-4 py-3 text-sm leading-relaxed break-words ${
               l.role === "user"
-                ? "self-end bg-[#e4cef7] font-medium text-[#17131f] shadow-md"
+                ? "self-end bg-[#fae8a4] font-medium text-[#18191c] shadow-md"
                 : l.kind === "error"
-                  ? "self-start border border-amber-300/30 bg-amber-300/10 text-[#f5f3f7]"
-                  : "self-start border border-white/10 bg-[#1b1924] text-[#f5f3f7]"
+                  ? "self-start border border-amber-300/30 bg-amber-300/10 text-[#f8f6f0]"
+                  : "self-start border border-white/10 bg-[#1a1b1f] text-[#f8f6f0]"
             }`}
           >
             <span
               className={`mb-1 block font-mono text-[11px] font-bold tracking-[0.06em] uppercase ${
-                l.role === "user" ? "text-[#17131f]/70" : "text-[#b9e2f8]"
+                l.role === "user" ? "text-[#18191c]/70" : "text-[#cadcf0]"
               }`}
             >
               {l.role === "user" ? "You" : "Kentir"}
             </span>
             {l.role === "assistant" ? (
               <div className="md-body">
-                <Markdown remarkPlugins={[remarkGfm]}>{visible(l, i)}</Markdown>
+                <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]}>{visible(l, i)}</Markdown>
               </div>
             ) : (
               <p className="m-0 leading-relaxed whitespace-pre-wrap">{l.content}</p>
@@ -186,7 +200,7 @@ export default function StudioChat() {
               <button
                 type="button"
                 onClick={() => applyPatch(i)}
-                className="mt-2 inline-flex cursor-pointer items-center gap-1 rounded-full border border-[#e4cef7]/40 bg-[#e4cef7]/10 px-3 py-1 text-[11px] font-bold text-[#e4cef7] transition-all hover:bg-[#e4cef7]/20"
+                className="mt-2 inline-flex cursor-pointer items-center gap-1 rounded-full border border-[#fae8a4]/40 bg-[#fae8a4]/10 px-3 py-1 text-[11px] font-bold text-[#fae8a4] transition-all hover:bg-[#fae8a4]/20"
               >
                 <Sparkles size={11} aria-hidden="true" /> Apply to form →
               </button>
@@ -200,7 +214,7 @@ export default function StudioChat() {
         ))}
 
         {busy && (
-          <div className="flex items-center gap-1.5 self-start rounded-lg border border-white/10 bg-[#1b1924] px-4 py-3" aria-label="Kentir is thinking">
+          <div className="flex items-center gap-1.5 self-start rounded-lg border border-white/10 bg-[#1a1b1f] px-4 py-3" aria-label="Kentir is thinking">
             {[0, 1, 2].map((d) => (
               <span
                 key={d}
@@ -212,7 +226,7 @@ export default function StudioChat() {
         )}
       </div>
 
-      <div className="flex items-center gap-2 overflow-x-auto border-t border-white/10 bg-[#18171f] px-5 py-2.5">
+      <div className="flex items-center gap-2 overflow-x-auto border-t border-white/10 bg-[#1a1b1f] px-5 py-2.5">
         <span className="font-mono text-xs font-semibold tracking-wider text-white/40 uppercase">
           Suggestions:
         </span>
@@ -224,21 +238,21 @@ export default function StudioChat() {
             disabled={busy}
             onClick={() => void send(s)}
           >
-            <Sparkles size={12} className="text-[#e4cef7]" aria-hidden="true" />
+            <Sparkles size={12} className="text-[#fae8a4]" aria-hidden="true" />
             {s}
           </button>
         ))}
       </div>
 
       <form
-        className="flex flex-col gap-2.5 border-t border-white/10 bg-[#14131b] px-5 py-4"
+        className="flex flex-col gap-2.5 border-t border-white/10 bg-[#131416] px-5 py-4"
         onSubmit={(e) => {
           e.preventDefault();
           void send(input);
         }}
       >
         <div className="flex items-end gap-2.5">
-          <div className="flex min-h-11 flex-1 items-center gap-2 rounded-lg border border-white/15 bg-[#18171f] px-3.5 transition-colors focus-within:border-[#e4cef7] focus-within:bg-[#1b1924]">
+          <div className="flex min-h-11 flex-1 items-center gap-2 rounded-lg border border-white/15 bg-[#1a1b1f] px-3.5 transition-colors focus-within:border-[#fae8a4] focus-within:bg-[#202126]">
           <textarea
             id="chat-input"
             ref={areaRef}
@@ -263,7 +277,7 @@ export default function StudioChat() {
             type="submit"
             disabled={busy || !input.trim()}
             title="Send (Enter)"
-            className="inline-flex h-11 shrink-0 cursor-pointer items-center justify-center gap-1.5 self-end rounded-lg bg-[#e4cef7] px-5 text-[13px] font-bold whitespace-nowrap text-[#17131f] transition-all hover:bg-[#f1d2e8] disabled:cursor-not-allowed disabled:border disabled:border-white/10 disabled:bg-white/5 disabled:text-white/30"
+            className="inline-flex h-11 shrink-0 cursor-pointer items-center justify-center gap-1.5 self-end rounded-lg bg-[#fae8a4] px-5 text-[13px] font-bold whitespace-nowrap text-[#18191c] transition-all hover:bg-[#ece4d4] disabled:cursor-not-allowed disabled:border disabled:border-white/10 disabled:bg-white/5 disabled:text-white/30"
             aria-label="Send message"
           >
             <SendHorizonal size={16} />

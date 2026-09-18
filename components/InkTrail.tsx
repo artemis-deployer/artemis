@@ -17,7 +17,7 @@ export const InkTrail: React.FC = () => {
 
     const CONFIG = {
       bgColor: '#000000',
-      inkColor: '#bf8ade',
+      inkColor: '#fae8a4',
       brushSize: 0.012,
       deposit: 1.10,
       smear: 5.5,

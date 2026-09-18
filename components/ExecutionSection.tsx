@@ -15,15 +15,15 @@ export const ExecutionSection: React.FC<ExecutionSectionProps> = () => {
     <section
       id="execution"
       data-theme="light"
-      className="execution-section py-28 px-[max(6.25vw,24px)] w-full bg-[#f8f7fa] text-[#17131f]"
+      className="execution-section py-28 px-[max(6.25vw,24px)] w-full bg-[#f8f6f0] text-[#18191c]"
     >
       <div className="max-w-[1800px] mx-auto w-full">
         {/* Center Heading */}
         <div className="text-center max-w-3xl mx-auto mb-12">
-          <h2 className="font-sans text-3xl sm:text-4xl md:text-5xl font-light tracking-tight text-[#17131f] mb-4">
+          <h2 className="font-sans text-3xl sm:text-4xl md:text-5xl font-light tracking-tight text-[#18191c] mb-4">
             Two Verified Rails.<br />One Transparent Standard.
           </h2>
-          <p className="text-[#17131f]/70 text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
+          <p className="text-[#18191c]/70 text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
             Choose your execution rail. Both paths guarantee client-side transaction compilation and non-custodial wallet signatures.
           </p>
           <div className="mt-8">
@@ -39,14 +39,14 @@ export const ExecutionSection: React.FC<ExecutionSectionProps> = () => {
 
         {/* Rail Toggle Tabs */}
         <div className="flex justify-center mb-10">
-          <div className="inline-flex p-1 bg-[#17131f]/5 border border-[#17131f]/15 rounded">
+          <div className="inline-flex p-1 bg-[#18191c]/5 border border-[#18191c]/15 rounded">
             <button
               type="button"
               onClick={() => setActiveRail('robinhood')}
               className={`px-6 py-2.5 text-xs md:text-sm font-medium rounded transition-colors cursor-pointer border-0 ${
                 activeRail === 'robinhood'
-                  ? 'bg-[#17131f] text-white'
-                  : 'text-[#17131f]/70 hover:text-[#17131f] bg-transparent'
+                  ? 'bg-[#18191c] text-white'
+                  : 'text-[#18191c]/70 hover:text-[#18191c] bg-transparent'
               }`}
             >
               Robinhood Chain (EVM V2)
@@ -56,8 +56,8 @@ export const ExecutionSection: React.FC<ExecutionSectionProps> = () => {
               onClick={() => setActiveRail('solana')}
               className={`px-6 py-2.5 text-xs md:text-sm font-medium rounded transition-colors cursor-pointer border-0 ${
                 activeRail === 'solana'
-                  ? 'bg-[#17131f] text-white'
-                  : 'text-[#17131f]/70 hover:text-[#17131f] bg-transparent'
+                  ? 'bg-[#18191c] text-white'
+                  : 'text-[#18191c]/70 hover:text-[#18191c] bg-transparent'
               }`}
             >
               Solana (pump.fun)
@@ -71,11 +71,11 @@ export const ExecutionSection: React.FC<ExecutionSectionProps> = () => {
           <article
             className={`rounded p-8 transition-all duration-300 ${
               activeRail === 'robinhood'
-                ? 'bg-[#b9e2f8] ring-2 ring-[#7955ad] shadow-lg'
-                : 'bg-[#b9e2f8]/60 opacity-80'
+                ? 'bg-[#cadcf0] ring-2 ring-[#18191c]/40 shadow-lg'
+                : 'bg-[#cadcf0]/60 opacity-80'
             }`}
           >
-            <div className="flex justify-between items-center text-xs font-mono uppercase tracking-wider text-[#17131f]/70 mb-6">
+            <div className="flex justify-between items-center text-xs font-mono uppercase tracking-wider text-[#18191c]/70 mb-6">
               <span className="font-semibold">EVM Rail · Uniswap V2</span>
               <span className="text-xl">↗</span>
             </div>
@@ -83,10 +83,10 @@ export const ExecutionSection: React.FC<ExecutionSectionProps> = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-white/80 p-6 rounded">
               <div className="flex flex-col justify-between">
                 <div>
-                  <h3 className="font-sans text-2xl sm:text-3xl font-light tracking-tight text-[#17131f] mb-3">
+                  <h3 className="font-sans text-2xl sm:text-3xl font-light tracking-tight text-[#18191c] mb-3">
                     Robinhood<br />Chain V2
                   </h3>
-                  <p className="text-xs sm:text-sm text-[#17131f]/80 leading-relaxed mb-6">
+                  <p className="text-xs sm:text-sm text-[#18191c]/80 leading-relaxed mb-6">
                     Two-step honest deployment: creates a fixed 999M ERC20 contract, then pairs with ETH via Uniswap V2 Router.
                   </p>
                 </div>
@@ -99,7 +99,7 @@ export const ExecutionSection: React.FC<ExecutionSectionProps> = () => {
                 </a>
               </div>
 
-              <ul className="space-y-3 text-xs sm:text-sm text-[#17131f]/90 border-l border-[#17131f]/15 pl-4 sm:pl-6 my-auto list-none p-0">
+              <ul className="space-y-3 text-xs sm:text-sm text-[#18191c]/90 border-l border-[#18191c]/15 pl-4 sm:pl-6 my-auto list-none p-0">
                 <li className="flex items-center gap-2">⊙ Fixed 999M total supply</li>
                 <li className="flex items-center gap-2">⊙ Router {(HOOD_MAINNET.router ?? "").slice(0, 6)}...{(HOOD_MAINNET.router ?? "").slice(-4)}</li>
                 <li className="flex items-center gap-2">⊙ Paired with native ETH</li>
@@ -113,11 +113,11 @@ export const ExecutionSection: React.FC<ExecutionSectionProps> = () => {
           <article
             className={`rounded p-8 transition-all duration-300 ${
               activeRail === 'solana'
-                ? 'bg-[#e4cef7] ring-2 ring-[#7955ad] shadow-lg'
-                : 'bg-[#e4cef7]/60 opacity-80'
+                ? 'bg-[#fae8a4] ring-2 ring-[#18191c]/40 shadow-lg'
+                : 'bg-[#fae8a4]/60 opacity-80'
             }`}
           >
-            <div className="flex justify-between items-center text-xs font-mono uppercase tracking-wider text-[#17131f]/70 mb-6">
+            <div className="flex justify-between items-center text-xs font-mono uppercase tracking-wider text-[#18191c]/70 mb-6">
               <span className="font-semibold">Solana Rail · PumpPortal</span>
               <span className="text-xl">⊞</span>
             </div>
@@ -125,10 +125,10 @@ export const ExecutionSection: React.FC<ExecutionSectionProps> = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-white/80 p-6 rounded">
               <div className="flex flex-col justify-between">
                 <div>
-                  <h3 className="font-sans text-2xl sm:text-3xl font-light tracking-tight text-[#17131f] mb-3">
+                  <h3 className="font-sans text-2xl sm:text-3xl font-light tracking-tight text-[#18191c] mb-3">
                     Solana<br />pump.fun
                   </h3>
-                  <p className="text-xs sm:text-sm text-[#17131f]/80 leading-relaxed mb-6">
+                  <p className="text-xs sm:text-sm text-[#18191c]/80 leading-relaxed mb-6">
                     Fair-launch bonding-curve rail. Decentralized metadata uploaded to IPFS and signed via Phantom or Solflare.
                   </p>
                 </div>
@@ -141,7 +141,7 @@ export const ExecutionSection: React.FC<ExecutionSectionProps> = () => {
                 </a>
               </div>
 
-              <ul className="space-y-3 text-xs sm:text-sm text-[#17131f]/90 border-l border-[#17131f]/15 pl-4 sm:pl-6 my-auto list-none p-0">
+              <ul className="space-y-3 text-xs sm:text-sm text-[#18191c]/90 border-l border-[#18191c]/15 pl-4 sm:pl-6 my-auto list-none p-0">
                 <li className="flex items-center gap-2">⊙ 1,000,000,000 bonding curve</li>
                 <li className="flex items-center gap-2">⊙ IPFS image and metadata</li>
                 <li className="flex items-center gap-2">⊙ Signed via Phantom/Solflare</li>
@@ -153,8 +153,8 @@ export const ExecutionSection: React.FC<ExecutionSectionProps> = () => {
         </div>
 
         {/* Full Width Assurance Card */}
-        <article className="rounded p-8 bg-[#f1d2e8] text-[#17131f]">
-          <div className="flex justify-between items-center text-xs font-mono uppercase tracking-wider text-[#17131f]/70 mb-4">
+        <article className="rounded p-8 bg-[#ece4d4] text-[#18191c]">
+          <div className="flex justify-between items-center text-xs font-mono uppercase tracking-wider text-[#18191c]/70 mb-4">
             <span>Non-Custodial Architecture Assurance</span>
             <span className="text-xl">⊞</span>
           </div>
@@ -164,7 +164,7 @@ export const ExecutionSection: React.FC<ExecutionSectionProps> = () => {
               <h3 className="font-sans text-2xl font-light tracking-tight mb-2">
                 Fair, verifiable, and rehearsed.
               </h3>
-              <p className="text-sm text-[#17131f]/80 leading-relaxed">
+              <p className="text-sm text-[#18191c]/80 leading-relaxed">
                 Robinhood Testnet and Solana Devnet let you rehearse token creation before spending real mainnet assets. Every deployment receipt is recorded in browser storage with direct links to official block explorers.
               </p>
             </div>

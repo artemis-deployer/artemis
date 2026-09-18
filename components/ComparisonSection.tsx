@@ -57,7 +57,7 @@ export const ComparisonSection: React.FC = () => {
       ref={containerRef}
       id="visible-vs-sealed"
       data-theme="dark"
-      className="comparison-story scroll-scene relative bg-[#121218] text-[#f5f3f7]"
+      className="comparison-story scroll-scene relative bg-[#131416] text-[#f8f6f0]"
       style={{ height: '250svh', minHeight: '1700px' }}
     >
       <div
@@ -103,7 +103,7 @@ export const ComparisonSection: React.FC = () => {
           }}
         >
           {/* Card 1: Custodial (Dark, Warning) */}
-          <article className="rounded bg-[#18171f] border border-white/10 p-7 md:p-8 shadow-2xl relative overflow-hidden text-[#f1eaf6]">
+          <article className="rounded bg-[#1a1b1f] border border-white/10 p-7 md:p-8 shadow-2xl relative overflow-hidden text-[#f1eaf6]">
             <h3 className="text-xl md:text-2xl font-light text-white mb-2 tracking-tight">
               The cost of custodial launchpads
             </h3>
@@ -144,46 +144,46 @@ export const ComparisonSection: React.FC = () => {
             </div>
           </article>
 
-          {/* Card 2: Kentir (Lavender, Success) with darkpoolfi decorative notches */}
-          <article className="rounded bg-[#e4cef7] text-[#21172d] p-7 md:p-8 shadow-2xl relative overflow-hidden border border-[#e4cef7]">
+          {/* Card 2: Kentir (Buttercream, Success) with darkpoolfi decorative notches */}
+          <article className="rounded bg-[#fae8a4] text-[#18191c] p-7 md:p-8 shadow-2xl relative overflow-hidden border border-[#fae8a4]">
             {/* Subtle decorative geometry accents from darkpoolfi */}
-            <div className="absolute top-0 left-0 w-12 h-7 bg-[#cfa9e9]/40 pointer-events-none" />
-            <div className="absolute bottom-[15%] right-0 w-4 h-20 bg-[#cfa9e9]/40 pointer-events-none" />
+            <div className="absolute top-0 left-0 w-12 h-7 bg-[#fae8a4]/40 pointer-events-none" />
+            <div className="absolute bottom-[15%] right-0 w-4 h-20 bg-[#fae8a4]/40 pointer-events-none" />
 
-            <h3 className="text-xl md:text-2xl font-light text-[#21172d] mb-2 tracking-tight">
+            <h3 className="text-xl md:text-2xl font-light text-[#18191c] mb-2 tracking-tight">
               Sovereign launch with Kentir
             </h3>
-            <p className="text-sm text-[#21172d]/70 mb-6 pb-6 border-b border-[#21172d]/15 leading-relaxed">
+            <p className="text-sm text-[#18191c]/70 mb-6 pb-6 border-b border-[#18191c]/15 leading-relaxed">
               Every parameter is immutable and executed directly through your personal Web3 wallet.
             </p>
 
             <div className="space-y-5">
               <div className="relative pl-11 pt-1">
-                <span className="absolute left-0 top-0 w-7 h-7 rounded-full border border-[#21172d]/30 text-[#21172d] flex items-center justify-center text-xs font-bold">
+                <span className="absolute left-0 top-0 w-7 h-7 rounded-full border border-[#18191c]/30 text-[#18191c] flex items-center justify-center text-xs font-bold">
                   ✓
                 </span>
-                <h4 className="text-base font-semibold text-[#21172d]">100% Non-Custodial</h4>
-                <p className="text-xs text-[#766080] leading-relaxed mt-1">
+                <h4 className="text-base font-semibold text-[#18191c]">100% Non-Custodial</h4>
+                <p className="text-xs text-[#18191c]/80 leading-relaxed mt-1">
                   Private keys never leave your browser. MetaMask, Phantom, and Solflare sign every deployment call directly.
                 </p>
               </div>
 
-              <div className="relative pl-11 pt-1 border-t border-[#21172d]/15 pt-5">
-                <span className="absolute left-0 top-5 w-7 h-7 rounded-full border border-[#21172d]/30 text-[#21172d] flex items-center justify-center text-xs font-bold">
+              <div className="relative pl-11 pt-1 border-t border-[#18191c]/15 pt-5">
+                <span className="absolute left-0 top-5 w-7 h-7 rounded-full border border-[#18191c]/30 text-[#18191c] flex items-center justify-center text-xs font-bold">
                   ✓
                 </span>
-                <h4 className="text-base font-semibold text-[#21172d]">Fixed 999M Supply</h4>
-                <p className="text-xs text-[#766080] leading-relaxed mt-1">
+                <h4 className="text-base font-semibold text-[#18191c]">Fixed 999M Supply</h4>
+                <p className="text-xs text-[#18191c]/80 leading-relaxed mt-1">
                   Minted once in deployment. No mint functions, no administrative owner privileges, no transfer taxes.
                 </p>
               </div>
 
-              <div className="relative pl-11 pt-1 border-t border-[#21172d]/15 pt-5">
-                <span className="absolute left-0 top-5 w-7 h-7 rounded-full border border-[#21172d]/30 text-[#21172d] flex items-center justify-center text-xs font-bold">
+              <div className="relative pl-11 pt-1 border-t border-[#18191c]/15 pt-5">
+                <span className="absolute left-0 top-5 w-7 h-7 rounded-full border border-[#18191c]/30 text-[#18191c] flex items-center justify-center text-xs font-bold">
                   ✓
                 </span>
-                <h4 className="text-base font-semibold text-[#21172d]">$0 Platform Fees</h4>
-                <p className="text-xs text-[#766080] leading-relaxed mt-1">
+                <h4 className="text-base font-semibold text-[#18191c]">$0 Platform Fees</h4>
+                <p className="text-xs text-[#18191c]/80 leading-relaxed mt-1">
                   Zero cuts, zero protocol taxes. You pay standard network gas and whatever liquidity you choose to fund.
                 </p>
               </div>

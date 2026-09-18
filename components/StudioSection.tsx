@@ -19,12 +19,12 @@ export const StudioSection: React.FC = () => {
     <section
       id="studio"
       data-theme="dark"
-      className="studio-section py-28 px-[max(6.25vw,24px)] w-full text-[#f5f3f7] relative z-10"
+      className="studio-section py-28 px-[max(6.25vw,24px)] w-full text-[#f8f6f0] relative z-10"
       aria-label="Token Studio"
     >
       <div className="max-w-[1800px] mx-auto w-full">
         <div className="text-center max-w-2xl mx-auto mb-12">
-        <p className="text-xs font-mono uppercase tracking-[0.2em] text-[#e4cef7] mb-3">
+        <p className="text-xs font-mono uppercase tracking-[0.2em] text-[#fae8a4] mb-3">
           INTERACTIVE LAUNCHPAD STUDIO
         </p>
         <h2 className="font-unbounded text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white mb-4">
@@ -45,7 +45,7 @@ export const StudioSection: React.FC = () => {
             onClick={() => setTab('copilot')}
             className={`min-h-11 px-8 py-2.5 text-xs md:text-sm font-semibold rounded-full transition-all cursor-pointer border-0 ${
               tab === 'copilot'
-                ? 'bg-[#e4cef7] text-[#17131f] shadow-md'
+                ? 'bg-[#fae8a4] text-[#18191c] shadow-md'
                 : 'bg-transparent text-white/70 hover:text-white'
             }`}
           >
@@ -58,7 +58,7 @@ export const StudioSection: React.FC = () => {
             onClick={() => setTab('manual')}
             className={`min-h-11 px-8 py-2.5 text-xs md:text-sm font-semibold rounded-full transition-all cursor-pointer border-0 ${
               tab === 'manual'
-                ? 'bg-[#e4cef7] text-[#17131f] shadow-md'
+                ? 'bg-[#fae8a4] text-[#18191c] shadow-md'
                 : 'bg-transparent text-white/70 hover:text-white'
             }`}
           >
@@ -68,7 +68,7 @@ export const StudioSection: React.FC = () => {
       </div>
 
       {/* Main Studio Frame */}
-      <div className="rounded-xl border border-white/15 bg-[#18171f] shadow-2xl p-4 sm:p-8">
+      <div className="rounded-xl border border-white/15 bg-[#1a1b1f] shadow-2xl p-4 sm:p-8">
         {/* Both panes stay mounted so the conversation survives tab switches.
             Only the reset button inside Copilot Chat clears it. */}
         <div hidden={tab !== 'copilot'}>

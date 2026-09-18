@@ -21,7 +21,7 @@ export const HeroSection: React.FC<HeroSectionProps> = () => {
   };
 
   return (
-    <section className="hero relative min-h-[780px] w-full flex flex-col justify-center items-center text-center px-[max(6.25vw,24px)] pt-36 pb-20 overflow-hidden bg-[#121218]">
+    <section className="hero relative min-h-[780px] w-full flex flex-col justify-center items-center text-center px-[max(6.25vw,24px)] pt-36 pb-20 overflow-hidden bg-[#131416]">
       {/* Floating Animated Pixels */}
       <FloatingPixels />
 
@@ -33,13 +33,13 @@ export const HeroSection: React.FC<HeroSectionProps> = () => {
           className="hero-ca inline-flex items-center gap-2 mb-8 px-4 py-2 border border-white/20 rounded-full bg-white/5 hover:bg-white/10 hover:border-white/40 transition-all cursor-pointer text-xs font-mono text-white/90"
         >
           <span className="text-white/60 font-semibold tracking-wider">VERIFIED ROUTER :</span>
-          <span className="text-[#e4cef7] font-mono tracking-tight">
+          <span className="text-[#fae8a4] font-mono tracking-tight">
             {copied ? 'COPIED TO CLIPBOARD' : routerAddress}
           </span>
         </button>
 
         {/* Hero Title */}
-        <h1 className="font-unbounded text-4xl sm:text-5xl md:text-7xl font-extrabold tracking-tight leading-[1.08] text-[#f5f3f7] max-w-3xl">
+        <h1 className="font-unbounded text-4xl sm:text-5xl md:text-7xl font-extrabold tracking-tight leading-[1.08] text-[#f8f6f0] max-w-3xl">
           Deploy sovereign coins<br />straight from your wallet.
         </h1>
 

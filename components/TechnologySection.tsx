@@ -56,7 +56,7 @@ export const TechnologySection: React.FC = () => {
     <section
       id="rails"
       data-theme="dark"
-      className="technology-section py-28 px-[max(6.25vw,24px)] w-full bg-[#121218] text-[#f5f3f7]"
+      className="technology-section py-28 px-[max(6.25vw,24px)] w-full bg-[#131416] text-[#f8f6f0]"
     >
       <div className="max-w-[1800px] mx-auto w-full">
         <div className="center-heading text-center mb-16">

@@ -21,7 +21,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
       </head>
-      <body className="bg-[#121218] text-[#f5f3f7] antialiased selection:bg-[#e4cef7] selection:text-[#17131f] font-sans">
+      <body className="bg-[#131416] text-[#f8f6f0] antialiased selection:bg-[#fae8a4] selection:text-[#18191c] font-sans">
         <PageTransitionProvider>
           {children}
         </PageTransitionProvider>

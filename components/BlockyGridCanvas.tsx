@@ -36,10 +36,10 @@ export const BlockyGridCanvas: React.FC<BlockyGridCanvasProps> = ({ sectionRef }
     container.appendChild(canvas);
 
     const CONFIG = {
-      bgColor: '#e2caf3',    // lavender base
-      underColor: '#99cce7', // sky-blue revealed on tile sides as it lifts
+      bgColor: '#ece4d4',    // warm sand base
+      underColor: '#cadcf0', // oxford mist revealed on tile sides as it lifts
       edgeColor: '#ffffff',  // bright white rim lights raised tile top edges
-      shadeColor: '#bc91d5', // cool ambient on exposed blue sides
+      shadeColor: '#c5b8a5', // warm ambient on exposed sides
       gridCols: 48,
       gridRows: 50,
       spacing: 0.48,

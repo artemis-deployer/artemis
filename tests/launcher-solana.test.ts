@@ -132,12 +132,19 @@ describe("pump network retry", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
-  it("buildCreateTx retries once then throws pump_offline", async () => {
-    const fetchMock = vi.fn().mockRejectedValue(new Error("network down"));
+  it("buildCreateTx rejects empty bytes via size check", async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce({ ok: true, text: async () => '""' });
     vi.stubGlobal("fetch", fetchMock);
-    await expect(
-      buildCreateTx({ publicKey: "p", action: "create" }),
-    ).rejects.toThrow("pump_offline");
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    await expect(buildCreateTx({ publicKey: "p", action: "create" })).rejects.toThrow(
+      "pump_rejected: empty tx bytes",
+    );
+  });
+
+  it("buildCreateTx rejects undecodable bytes", async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce({ ok: true, text: async () => '"aGk="' });
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(buildCreateTx({ publicKey: "p", action: "create" })).rejects.toThrow(
+      "pump_rejected: bad tx bytes",
+    );
   });
 });

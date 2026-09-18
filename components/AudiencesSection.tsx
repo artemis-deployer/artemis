@@ -4,13 +4,13 @@ import React, { useState } from 'react';
 
 const audiences = [
   {
-    theme: 'bg-[#18171f] border-[#b9e2f8]/30',
+    theme: 'bg-[#1a1b1f] border-[#cadcf0]/30',
     tag: 'COMMUNITY CREATORS & CULTS',
     title: 'Turn inside jokes and\nmovements into real onchain\nliquidity without custody.',
     img: '/assets/walkways.png'
   },
   {
-    theme: 'bg-[#18171f] border-[#e4cef7]/30',
+    theme: 'bg-[#1a1b1f] border-[#fae8a4]/30',
     tag: 'WEB3 DEVELOPERS & PROTOCOLS',
     title: 'Deploy verified ERC20\ntokens directly to DEX pools\nwith zero admin backdoors.',
     img: '/assets/terrain.png'
@@ -27,7 +27,7 @@ export const AudiencesSection: React.FC = () => {
     <section
       id="who-its-for"
       data-theme="dark"
-      className="audiences-section py-28 px-[max(6.25vw,24px)] w-full bg-[#121218] text-[#f5f3f7]"
+      className="audiences-section py-28 px-[max(6.25vw,24px)] w-full bg-[#131416] text-[#f8f6f0]"
     >
       <div className="max-w-[1800px] mx-auto w-full">
         <div className="flex justify-between items-end mb-12">
@@ -85,7 +85,7 @@ export const AudiencesSection: React.FC = () => {
                 <h3 className="font-sans text-2xl sm:text-3xl md:text-4xl font-light tracking-tight leading-snug whitespace-pre-line text-white">
                   {aud.title}
                 </h3>
-                <p className="text-xs md:text-sm font-mono tracking-widest text-[#e4cef7] uppercase text-right pt-8 border-t border-white/10">
+                <p className="text-xs md:text-sm font-mono tracking-widest text-[#fae8a4] uppercase text-right pt-8 border-t border-white/10">
                   {aud.tag}
                 </p>
               </div>

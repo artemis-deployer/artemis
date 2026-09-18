@@ -53,7 +53,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
       : null;
 
   return (
-    <section className="flex flex-col gap-[18px] rounded-xl border border-white/10 bg-[#14131b] p-7 shadow-2xl text-white max-sm:p-[18px]" aria-label="Your launch">
+    <section className="flex flex-col gap-[18px] rounded-xl border border-white/10 bg-[#1a1b1f] p-7 shadow-2xl text-white max-sm:p-[18px]" aria-label="Your launch">
       <div className="flex items-center justify-between border-b border-white/10 pb-3">
         <div>
           <h3 className="m-0 text-lg font-bold font-unbounded text-white">Launch Parameters</h3>
@@ -61,19 +61,19 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
             Configure parameters or let Kentir Copilot draft them
           </p>
         </div>
-        <span className="rounded border border-white/15 px-2.5 py-1 text-xs font-mono text-[#b9e2f8]">
+        <span className="rounded border border-white/15 px-2.5 py-1 text-xs font-mono text-[#cadcf0]">
           Non-Custodial
         </span>
       </div>
 
       {/* Live Token Stamp Preview */}
-      <div className="flex items-center justify-between gap-3 rounded-lg border border-white/15 bg-[#18171f] px-[18px] py-3.5 max-sm:flex-wrap">
+      <div className="flex items-center justify-between gap-3 rounded-lg border border-white/15 bg-[#1a1b1f] px-[18px] py-3.5 max-sm:flex-wrap">
         <div className="flex items-baseline gap-2">
           {draft.image && (
             /* eslint-disable-next-line @next/next/no-img-element -- local data-URL preview, never remote */
             <img src={draft.image} alt="" aria-hidden="true" className="h-7 w-7 self-center rounded-full border border-white/15 object-cover" />
           )}
-          <span className="font-unbounded text-[24px] font-bold leading-none text-[#e4cef7] max-sm:text-xl">
+          <span className="font-unbounded text-[24px] font-bold leading-none text-[#fae8a4] max-sm:text-xl">
             {draft.ticker ? `$${draft.ticker}` : "$TICKER"}
           </span>
           <span className="text-[13px] font-medium text-white/80">
@@ -82,7 +82,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
         </div>
         <div className="text-right">
           <span className="block font-mono text-[11px] font-bold text-white/50 uppercase">{chain.name}</span>
-          <span className="text-[11px] font-mono text-[#b9e2f8]">
+          <span className="text-[11px] font-mono text-[#cadcf0]">
             {totalSupply.toLocaleString("en-US")} Fixed
           </span>
         </div>
@@ -111,8 +111,8 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
                 }}
                 className={`flex cursor-pointer flex-col gap-1 rounded-lg border p-3 transition-all ${
                   active
-                    ? "border-[#e4cef7] bg-[#1e1c28] shadow-md"
-                    : "border-white/10 bg-[#18171f] hover:border-white/20"
+                    ? "border-[#fae8a4] bg-[#1e1c28] shadow-md"
+                    : "border-white/10 bg-[#1a1b1f] hover:border-white/20"
                 }`}
                 role="button"
                 tabIndex={0}
@@ -129,7 +129,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
                     <span
                       aria-hidden="true"
                       className={`flex h-4 w-4 items-center justify-center rounded-full border text-[10px] leading-none ${
-                        active ? "border-[#e4cef7] bg-[#e4cef7] text-[#17131f]" : "border-white/25 text-transparent"
+                        active ? "border-[#fae8a4] bg-[#fae8a4] text-[#18191c]" : "border-white/25 text-transparent"
                       }`}
                     >
                       ✓
@@ -137,7 +137,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
                     <span>{c.name}</span>
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <span className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-[10px] font-bold text-[#b9e2f8]">
+                    <span className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-[10px] font-bold text-[#cadcf0]">
                       {c.currency}
                     </span>
                     <span className={`rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase font-mono ${
@@ -165,7 +165,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
           </label>
           <input
             id="token-name"
-            className="min-h-11 w-full rounded-lg border border-white/15 bg-[#18171f] px-3 py-2.5 text-sm text-white placeholder-white/30 focus:border-[#e4cef7] focus:bg-[#1b1924]"
+            className="min-h-11 w-full rounded-lg border border-white/15 bg-[#1a1b1f] px-3 py-2.5 text-sm text-white placeholder-white/30 focus:border-[#fae8a4] focus:bg-[#1b1924]"
             placeholder="e.g. Kentir Spark"
             value={draft.name}
             maxLength={32}
@@ -178,11 +178,11 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
         <div className="flex flex-col gap-[5px]">
           <label className="flex items-center justify-between text-xs font-bold tracking-[0.02em] text-white/90" htmlFor="token-ticker">
             <span>Ticker Symbol</span>
-            <span className="font-bold text-[#e4cef7]">*</span>
+            <span className="font-bold text-[#fae8a4]">*</span>
           </label>
           <input
             id="token-ticker"
-            className="min-h-11 w-full rounded-lg border border-white/15 bg-[#18171f] px-3 py-2.5 font-mono text-sm font-bold tracking-wider text-white uppercase placeholder-white/30 focus:border-[#e4cef7] focus:bg-[#1b1924]"
+            className="min-h-11 w-full rounded-lg border border-white/15 bg-[#1a1b1f] px-3 py-2.5 font-mono text-sm font-bold tracking-wider text-white uppercase placeholder-white/30 focus:border-[#fae8a4] focus:bg-[#1b1924]"
             placeholder="e.g. SPARK"
             value={draft.ticker}
             maxLength={12}
@@ -203,7 +203,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
           </label>
           <input
             id="pool-tokens"
-            className="min-h-11 w-full rounded-lg border border-white/15 bg-[#18171f] px-3 py-2.5 font-mono text-sm text-white placeholder-white/30 focus:border-[#e4cef7] focus:bg-[#1b1924]"
+            className="min-h-11 w-full rounded-lg border border-white/15 bg-[#1a1b1f] px-3 py-2.5 font-mono text-sm text-white placeholder-white/30 focus:border-[#fae8a4] focus:bg-[#1b1924]"
             inputMode="decimal"
             placeholder="e.g. 500000000"
             value={draft.pooled}
@@ -222,7 +222,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
           </label>
           <input
             id="initial-liquidity"
-            className="min-h-11 w-full rounded-lg border border-white/15 bg-[#18171f] px-3 py-2.5 font-mono text-sm text-white placeholder-white/30 focus:border-[#e4cef7] focus:bg-[#1b1924]"
+            className="min-h-11 w-full rounded-lg border border-white/15 bg-[#1a1b1f] px-3 py-2.5 font-mono text-sm text-white placeholder-white/30 focus:border-[#fae8a4] focus:bg-[#1b1924]"
             inputMode="decimal"
             placeholder="e.g. 0.5"
             value={draft.liquidity}
@@ -235,36 +235,32 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
         </div>
       </div>
 
-      {/* Coin Image */}
+      {/* Upload Token Icon */}
       <div className="flex flex-col gap-[5px]">
-        <span className="flex items-center justify-between text-xs font-bold tracking-[0.02em] text-white/90">
-          <span>Coin Image</span>
-          <span className="text-[11px] font-medium text-white/40">Solana launches · optional</span>
-        </span>
+        <label className="flex items-center justify-between text-xs font-bold tracking-[0.02em] text-white/90">
+          <span>Token Brand Icon</span>
+          <span className="text-[11px] font-medium text-white/40">Optional · Max 512px</span>
+        </label>
         <input
           ref={fileRef}
           type="file"
-          accept="image/png,image/jpeg,image/webp,image/gif"
+          accept="image/png,image/jpeg,image/webp"
           className="hidden"
-          aria-label="Upload coin image"
           onChange={(e) => {
             const file = e.target.files?.[0];
-            e.target.value = "";
             if (!file) return;
             setImageError("");
-            void fileToDataUrl(file).then(
-              (url) => setDraft({ ...draft, image: url }),
-              () => setImageError("Could not read that image. Try a PNG or JPEG."),
-            );
+            fileToDataUrl(file)
+              .then((dataUrl) => setDraft({ ...draft, image: dataUrl }))
+              .catch(() => setImageError("Image processing failed. Try another file."));
           }}
         />
         {draft.image ? (
-          <div className="flex items-center gap-3 rounded-lg border border-white/15 bg-[#18171f] p-3">
-            {/* eslint-disable-next-line @next/next/no-img-element -- local data-URL preview, never remote */}
-            <img src={draft.image} alt="Coin preview" className="h-14 w-14 rounded-lg border border-white/15 object-cover" />
-            <div className="flex flex-1 flex-col">
-              <span className="text-xs font-semibold text-white">Image attached</span>
-              <span className="text-[11px] text-white/40">Uploaded with Solana metadata</span>
+          <div className="flex items-center justify-between rounded-lg border border-white/15 bg-[#1a1b1f] p-2.5">
+            <div className="flex items-center gap-2.5">
+              {/* eslint-disable-next-line @next/next/no-img-element -- user draft image */}
+              <img src={draft.image} alt="Preview" className="h-9 w-9 rounded-full object-cover" />
+              <span className="text-xs font-medium text-white/80">Image attached</span>
             </div>
             <button
               type="button"
@@ -279,7 +275,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
-            className="flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-white/20 bg-[#18171f] px-3 py-2.5 text-sm font-semibold text-white/70 transition-all hover:border-[#e4cef7] hover:text-white"
+            className="flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-white/20 bg-[#1a1b1f] px-3 py-2.5 text-sm font-semibold text-white/70 transition-all hover:border-[#fae8a4] hover:text-white"
           >
             <ImagePlus size={16} aria-hidden="true" />
             <span>Upload image (PNG/JPEG)</span>
@@ -293,7 +289,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
       </div>
 
       {/* Economics Preview */}
-      <div className="flex flex-col gap-1.5 rounded-lg border border-white/10 bg-[#18171f] px-4 py-3">
+      <div className="flex flex-col gap-1.5 rounded-lg border border-white/10 bg-[#1a1b1f] px-4 py-3">
         <div className="mb-1 text-xs font-bold tracking-wider text-white uppercase font-mono">
           Pool Economics Preview
         </div>
@@ -312,7 +308,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
         {estimatedPrice && (
           <div className="flex justify-between gap-3 text-[13px]">
             <span className="text-white/50">Opening Est. Price:</span>
-            <span className="text-right font-mono font-semibold break-words text-[#b9e2f8]">
+            <span className="text-right font-mono font-semibold break-words text-[#cadcf0]">
               ~{estimatedPrice} {chain.currency} / token
             </span>
           </div>
@@ -321,12 +317,12 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
 
       {/* Mainnet Notice */}
       {mainnet && (
-        <label className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-white/10 bg-[#18171f] px-3.5 py-3 text-xs text-white">
+        <label className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-white/10 bg-[#1a1b1f] px-3.5 py-3 text-xs text-white">
           <input
             type="checkbox"
             checked={consent}
             onChange={(e) => setConsent(e.target.checked)}
-            className="mt-0.5 h-4 w-4 accent-[#e4cef7]"
+            className="mt-0.5 h-4 w-4 accent-[#fae8a4]"
           />
           <div>
             <span className="block font-bold">Mainnet Real Funds Confirmation</span>
@@ -353,7 +349,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
         type="button"
         disabled={errors.length > 0 || (mainnet && !consent)}
         onClick={onReview}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#e4cef7] px-6 py-3 text-base font-bold text-[#17131f] transition-all hover:bg-[#f1d2e8] disabled:cursor-not-allowed disabled:border disabled:border-white/10 disabled:bg-white/5 disabled:text-white/30 cursor-pointer"
+        className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#fae8a4] px-6 py-3 text-base font-bold text-[#18191c] transition-all hover:bg-[#ece4d4] disabled:cursor-not-allowed disabled:border disabled:border-white/10 disabled:bg-white/5 disabled:text-white/30 cursor-pointer"
       >
         <span>Review Your Launch</span>
         <ArrowRight size={16} />
