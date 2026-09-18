@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import Link from 'next/link';
+import { TransitionLink } from './PageTransition';
 import { FloatingPixels } from './FloatingPixels';
 
 interface FooterProps {
@@ -48,7 +48,7 @@ export const Footer: React.FC<FooterProps> = () => {
               <li><a href="#studio" className="hover:text-white transition-colors no-underline text-inherit">Launch Studio</a></li>
               <li><a href="#how-it-works" className="hover:text-white transition-colors no-underline text-inherit">How it works</a></li>
               <li><a href="#rails" className="hover:text-white transition-colors no-underline text-inherit">Rails</a></li>
-              <li><Link href="/tokens" className="hover:text-white transition-colors no-underline text-inherit">Showcase</Link></li>
+              <li><TransitionLink href="/tokens" className="hover:text-white transition-colors no-underline text-inherit">Showcase</TransitionLink></li>
             </ul>
           </div>
 

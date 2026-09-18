@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import { TransitionLink } from './PageTransition';
 
 interface ExecutionSectionProps {
   onOpenSoon: (feature: string) => void;
@@ -167,13 +168,13 @@ export const ExecutionSection: React.FC<ExecutionSectionProps> = () => {
               </p>
             </div>
 
-            <a
+            <TransitionLink
               href="/tokens"
               className="dp-button dark-button whitespace-nowrap flex-shrink-0"
             >
               <span>BROWSE SHOWCASE</span>
               <span className="arrow-box">↗</span>
-            </a>
+            </TransitionLink>
           </div>
         </article>
       </div>

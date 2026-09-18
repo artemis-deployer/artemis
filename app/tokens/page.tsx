@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Search, Copy, Check, ExternalLink, ArrowLeft } from "lucide-react";
+import { TransitionLink } from "../../components/PageTransition";
 import { listReceipts, type Receipt } from "../../lib/receipts";
 import { getChain } from "../../lib/chains";
 
@@ -87,35 +88,35 @@ export default function TokensPage() {
   return (
     <div className="min-h-screen bg-[#121218] text-[#f5f3f7] font-sans">
       <header className="sticky top-0 z-50 border-b border-white/10 bg-[#121218]/90 backdrop-blur-md">
-        <div className="mx-auto flex min-h-[72px] max-w-6xl items-center justify-between gap-4 px-6">
-          <Link href="/" className="flex items-center gap-3 no-underline text-inherit">
+        <div className="mx-auto flex min-h-[80px] max-w-[1800px] items-center justify-between gap-4 px-[max(4vw,24px)]">
+          <TransitionLink href="/" className="flex items-center gap-3 no-underline text-inherit">
             <img src="/assets/logo.png" className="w-8 h-8 rounded-full object-cover" alt="" />
             <span className="font-unbounded text-xl font-bold tracking-tight">kentir</span>
-          </Link>
+          </TransitionLink>
 
           <nav className="flex items-center gap-1" aria-label="Main Navigation">
-            <Link
+            <TransitionLink
               href="/"
               className="inline-flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-semibold tracking-wider text-white/70 uppercase no-underline transition-colors hover:text-white hover:bg-white/5 border border-white/15"
             >
               <ArrowLeft size={13} />
               <span>Back to Studio</span>
-            </Link>
+            </TransitionLink>
           </nav>
 
           <div className="flex items-center gap-3">
-            <Link
+            <TransitionLink
               href="/#studio"
               className="dp-button text-xs py-1"
             >
               <span>NEW LAUNCH</span>
               <span className="arrow-box">↘</span>
-            </Link>
+            </TransitionLink>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-6 pt-12 pb-24">
+      <main className="mx-auto max-w-[1800px] px-[max(4vw,24px)] pt-12 pb-24">
         <div className="mb-10 border-b border-white/10 pb-8">
           <p className="m-0 mb-2 text-xs font-mono uppercase tracking-[0.2em] text-[#e4cef7]">ONCHAIN CATALOG</p>
           <h1 className="font-unbounded m-0 mb-3 text-3xl sm:text-5xl font-extrabold tracking-tight text-white">

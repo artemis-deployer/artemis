@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
+import { TransitionLink } from './PageTransition';
 import StatusBadge from './StatusBadge';
 import TopbarWallet from './TopbarWallet';
 
@@ -39,10 +39,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenMenu }) => {
           : 'bg-[#121218]/90 text-[#f5f3f7] border-white/10 backdrop-blur-md'
       }`}
     >
-      <Link href="/" className="flex items-center gap-3 text-2xl font-bold tracking-tight no-underline text-inherit">
+      <TransitionLink href="/" className="flex items-center gap-3 text-2xl font-bold tracking-tight no-underline text-inherit">
         <img src="/assets/logo.png" className="w-9 h-9 rounded-full object-cover" alt="Kentir" />
         <span className="font-unbounded tracking-tighter text-xl md:text-2xl font-bold">Kentir</span>
-      </Link>
+      </TransitionLink>
 
       <span className="hidden lg:inline text-xs tracking-[0.14em] uppercase opacity-70 font-mono">
         NON-CUSTODIAL LAUNCHPAD <i className="not-italic mx-2">·</i> ROBINHOOD & SOLANA
@@ -53,14 +53,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenMenu }) => {
 
         <TopbarWallet />
 
-        <Link
+        <TransitionLink
           href="/tokens"
           className={`text-xs md:text-sm font-medium border px-3 py-1.5 rounded transition-all hover:opacity-80 flex items-center gap-1 no-underline ${
             isLightNav ? 'border-[#21172d]/20 text-[#21172d] hover:border-[#21172d]' : 'border-white/20 text-[#f5f3f7] hover:border-white'
           }`}
         >
           SHOWCASE <span>↗</span>
-        </Link>
+        </TransitionLink>
 
         <button
           onClick={onOpenMenu}

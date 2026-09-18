@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import { usePageTransition } from './PageTransition';
 
 interface NavigationDialogProps {
   isOpen: boolean;
@@ -48,8 +49,19 @@ const navItems = [
 
 export const NavigationDialog: React.FC<NavigationDialogProps> = ({ isOpen, onClose }) => {
   const [activeArt, setActiveArt] = useState(navItems[0]);
+  const { navigate } = usePageTransition();
 
   if (!isOpen) return null;
+
+  const handleItemClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (href.startsWith('/')) {
+      e.preventDefault();
+      onClose();
+      navigate(href);
+    } else {
+      onClose();
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[100] bg-[#121218]/95 backdrop-blur-md flex flex-col justify-between p-6 md:p-12 overflow-y-auto">
@@ -77,7 +89,7 @@ export const NavigationDialog: React.FC<NavigationDialogProps> = ({ isOpen, onCl
               <a
                 key={item.num}
                 href={item.href}
-                onClick={onClose}
+                onClick={(e) => handleItemClick(e, item.href)}
                 onMouseEnter={() => setActiveArt(item)}
                 className="group flex items-center justify-between border-b border-white/10 pb-4 text-3xl md:text-5xl font-light hover:text-[#e4cef7] transition-all"
               >

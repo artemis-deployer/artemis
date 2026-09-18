@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { PageTransitionProvider } from "../components/PageTransition";
 
 export const metadata: Metadata = {
   title: "Kentir — Autonomous Non-Custodial Token Launchpad",
@@ -21,7 +22,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="bg-[#121218] text-[#f5f3f7] antialiased selection:bg-[#e4cef7] selection:text-[#17131f] font-sans">
-        {children}
+        <PageTransitionProvider>
+          {children}
+        </PageTransitionProvider>
       </body>
     </html>
   );
