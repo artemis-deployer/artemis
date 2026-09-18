@@ -15,8 +15,11 @@ export function isDbConfigured(): boolean {
   return Boolean(process.env.DATABASE_URL);
 }
 
+let cached: ReturnType<typeof postgres> | null = null;
+
 function sql() {
-  return postgres(process.env.DATABASE_URL as string, { prepare: false });
+  cached ??= postgres(process.env.DATABASE_URL as string, { prepare: false });
+  return cached;
 }
 
 export async function listTokens(limit = 50): Promise<TokenRow[]> {

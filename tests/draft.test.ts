@@ -30,4 +30,16 @@ describe("validateDraft", () => {
   it("accepts a good draft", () => {
     expect(validateDraft({ ticker: "EMBER", pooled: "800000", liquidity: "0.1" })).toEqual([]);
   });
+
+  it("requires pooled and liquidity for direct launches", () => {
+    expect(validateDraft({ ticker: "X", route: "direct" })).toContain("pooled is required");
+    expect(validateDraft({ ticker: "X", route: "direct" })).toContain("liquidity is required");
+  });
+
+  it("requires only liquidity for pumpfun launches", () => {
+    expect(validateDraft({ ticker: "X", route: "pumpfun", liquidity: "1" })).toEqual([]);
+    expect(validateDraft({ ticker: "X", route: "pumpfun", pooled: "", liquidity: "" })).toContain(
+      "liquidity is required",
+    );
+  });
 });

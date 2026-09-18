@@ -1,9 +1,9 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, type Dispatch, type SetStateAction } from "react";
 import { EMPTY_DRAFT, type Draft } from "../lib/draft";
 
-const DraftCtx = createContext<{ draft: Draft; setDraft: (d: Draft) => void }>({
+const DraftCtx = createContext<{ draft: Draft; setDraft: Dispatch<SetStateAction<Draft>> }>({
   draft: EMPTY_DRAFT,
   setDraft: () => undefined,
 });

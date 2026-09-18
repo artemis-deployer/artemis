@@ -27,6 +27,7 @@ import {
   uploadMetadata,
 } from "../lib/launcher-solana";
 import { listReceipts, saveReceipt } from "../lib/receipts";
+import { submitShowcase } from "../lib/showcase";
 import SolanaButton, { getSolanaProvider, type SolanaProvider } from "./SolanaButton";
 import WalletButton from "./WalletButton";
 
@@ -77,6 +78,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       setAccount(acc);
       const cfg = getHoodConfig(chainId);
       if (!cfg) return fail("Unsupported chain.");
+      if (cfg.router) await validateRouter(cfg);
       const dep = await deployToken({
         chainId,
         account: acc,
@@ -86,6 +88,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       });
       setToken(dep.token);
       saveReceipt({ chainId, token: dep.token, hash: dep.hash, createdAt: new Date().toISOString(), ticker: draft.ticker });
+      void submitShowcase({ chainId, address: dep.token, creator: acc, name: draft.name || draft.ticker, symbol: draft.ticker, txHash: dep.hash });
       setHood("token-done");
       try {
         await validateRouter(cfg);
@@ -97,6 +100,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
           ethAmount: parseEther(draft.liquidity || "0"),
         });
         saveReceipt({ chainId, token: dep.token, hash: liq.hash, createdAt: new Date().toISOString(), ticker: draft.ticker });
+        void submitShowcase({ chainId, address: dep.token, creator: acc, name: draft.name || draft.ticker, symbol: draft.ticker, txHash: liq.hash });
         setHood("pool-done");
       } catch (inner: unknown) {
         const m = inner instanceof Error ? inner.message : "launch_failed";
@@ -127,6 +131,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
         ethAmount: parseEther(draft.liquidity || "0"),
       });
       saveReceipt({ chainId, token, hash: liq.hash, createdAt: new Date().toISOString(), ticker: draft.ticker });
+      void submitShowcase({ chainId, address: token, creator: account, name: draft.name || draft.ticker, symbol: draft.ticker, txHash: liq.hash });
       setHood("pool-done");
     } catch (e: unknown) {
       fail(e instanceof Error ? e.message : "launch_failed");
@@ -230,6 +235,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       await confirmTx(MAINNET_RPC, sig);
       setMint(mintBase58);
       saveReceipt({ chainId: draft.chainId, token: mintBase58, hash: sig, createdAt: new Date().toISOString(), ticker: draft.ticker });
+      void submitShowcase({ chainId: draft.chainId, address: mintBase58, creator: p.publicKey.toBase58(), name: meta.name, symbol: meta.symbol, txHash: sig });
       setPump("sent");
     } catch (e: unknown) {
       setPumpNote(mapPumpError(e));
@@ -264,7 +270,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
           <dt>Initial Liquidity:</dt>
           <dd className="font-mono">{draft.liquidity} {chainObj?.currency}</dd>
           <dt>Supply Rule:</dt>
-          <dd className="font-mono">{DIRECT_SUPPLY.toLocaleString("en-US")} (Fixed · No Mint)</dd>
+          <dd className="font-mono">{(isPump ? 1000000000 : DIRECT_SUPPLY).toLocaleString("en-US")} (Fixed · No Mint)</dd>
         </dl>
 
         {mainnet && (

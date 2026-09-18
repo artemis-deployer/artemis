@@ -16,7 +16,7 @@ const SUGGESTIONS = [
 const OFFLINE_LINE = "AI offline · configure parameters in the form directly.";
 
 export default function StudioChat() {
-  const { draft, setDraft } = useDraft();
+  const { setDraft } = useDraft();
   const [log, setLog] = useState<Line[]>([
     {
       role: "assistant",
@@ -64,7 +64,7 @@ export default function StudioChat() {
 
       const patch = parseDraftReply(reply);
       if (Object.keys(patch).length > 0) {
-        setDraft({ ...draft, ...patch });
+        setDraft((prev) => ({ ...prev, ...patch }));
       }
     } catch {
       setLog([...next, { role: "assistant" as const, content: OFFLINE_LINE }]);

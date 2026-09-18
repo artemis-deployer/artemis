@@ -75,7 +75,16 @@ export default function CharacterStage() {
   }
 
   if (!webgl) {
-    return null;
+    return (
+      <div className="crypto-stage" aria-label="Geometric 3D Stage">
+        <div className="crypto-viewport" role="img" aria-label="Kentir coin emblem">
+          <span aria-hidden="true" className="text-6xl text-[var(--accent)]">◎</span>
+        </div>
+        <div className="crypto-stage-bar">
+          <span>3D unavailable — static emblem</span>
+        </div>
+      </div>
+    );
   }
 
   return (

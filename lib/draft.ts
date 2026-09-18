@@ -38,7 +38,11 @@ export function validateDraft(d: Partial<Draft>): string[] {
   const errors: string[] = [];
   if (!d.ticker || d.ticker.length === 0) errors.push("ticker is required");
   if (d.ticker && d.ticker.length > 12) errors.push("ticker is too long");
-  if (d.pooled !== undefined && d.pooled !== "" && !(Number(d.pooled) > 0)) errors.push("pooled must be a positive number");
-  if (d.liquidity !== undefined && d.liquidity !== "" && !(Number(d.liquidity) > 0)) errors.push("liquidity must be a positive number");
+  const pump = d.route === "pumpfun";
+  if (!pump && (d.pooled === undefined || d.pooled === "")) errors.push("pooled is required");
+  else if (d.pooled !== undefined && d.pooled !== "" && !(Number(d.pooled) > 0))
+    errors.push("pooled must be a positive number");
+  if (d.liquidity === undefined || d.liquidity === "") errors.push("liquidity is required");
+  else if (!(Number(d.liquidity) > 0)) errors.push("liquidity must be a positive number");
   return errors;
 }
