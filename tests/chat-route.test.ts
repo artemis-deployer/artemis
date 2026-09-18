@@ -39,6 +39,15 @@ describe("chat route", () => {
     expect(res.status).toBe(400);
   });
 
+  it("rejects null and non-object JSON with 400", async () => {
+    for (const raw of ["null", "[]", '"hi"', "5"]) {
+      const req = new Request("http://x/api/chat", { method: "POST", body: raw });
+      const res = await chatPOST(req);
+      expect(res.status).toBe(400);
+      expect(((await res.json()) as { error: string }).error).toBe("bad_request");
+    }
+  });
+
   it("rejects malformed message items with 400", async () => {
     const req = new Request("http://x/api/chat", {
       method: "POST",

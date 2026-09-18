@@ -49,14 +49,14 @@ export function findResumableEvmReceipt(
   ticker?: string,
 ): Receipt | undefined {
   const wantChain = String(chainId).toLowerCase();
-  const wantTicker = ticker?.toUpperCase();
+  const wantTicker = typeof ticker === "string" ? ticker.toUpperCase() : undefined;
   const candidates = receipts.filter(
     (r) =>
       String(r.chainId).toLowerCase() === wantChain &&
       typeof r.token === "string" &&
       r.token.length > 0 &&
       !r.pool &&
-      (!wantTicker || r.ticker === undefined || r.ticker.toUpperCase() === wantTicker),
+      (!wantTicker || r.ticker === undefined || (typeof r.ticker === "string" && r.ticker.toUpperCase() === wantTicker)),
   );
   for (const c of candidates) {
     const addr = (c.token as string).toLowerCase();
@@ -76,9 +76,9 @@ export function dedupeLocalReceipts(
   local: Receipt[],
   community: { chain_id: string | number; address: string }[],
 ): Receipt[] {
-  const db = new Set(community.map((t) => `${String(t.chain_id).toLowerCase()}:${t.address.toLowerCase()}`));
+  const db = new Set(community.map((t) => `${String(t.chain_id).toLowerCase()}:${String(t.address).toLowerCase()}`));
   return local.filter((r) => {
-    if (!r.token) return true;
+    if (typeof r.token !== "string" || r.token.length === 0) return true;
     return !db.has(`${String(r.chainId).toLowerCase()}:${r.token.toLowerCase()}`);
   });
 }

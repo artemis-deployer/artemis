@@ -30,6 +30,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
   }
   const b = body as Record<string, unknown>;
+  if (typeof body !== "object" || body === null || Array.isArray(body)) {
+    return NextResponse.json({ error: "bad_request" }, { status: 400 });
+  }
   const chainId = typeof b.chainId === "number" || typeof b.chainId === "string" ? String(b.chainId) : "";
   const address = typeof b.address === "string" ? b.address.trim() : "";
   const txHash = typeof b.txHash === "string" ? b.txHash.trim() : "";

@@ -133,6 +133,29 @@ describe("tokens route", () => {
     expect(((await res.json()) as { error: string }).error).toBe("db_offline");
   });
 
+  it("POST rejects null and non-object JSON with 400", async () => {
+    mocked.isDbConfigured.mockReturnValue(true);
+    for (const raw of ["null", "[]", '"hi"', "5"]) {
+      const req = new Request("http://x/api/community/tokens", { method: "POST", body: raw });
+      const res = await POST(req);
+      expect(res.status).toBe(400);
+      expect(((await res.json()) as { error: string }).error).toBe("bad_request");
+    }
+    expect(mocked.saveToken).not.toHaveBeenCalled();
+  });
+
+  it("POST imports clean in node env without window (server regression)", async () => {
+    expect(typeof window).toBe("undefined");
+    mocked.isDbConfigured.mockReturnValue(true);
+    mocked.saveToken.mockResolvedValue(undefined);
+    const req = new Request("http://x/api/community/tokens", {
+      method: "POST",
+      body: JSON.stringify({ chainId: "4663", address: EVM_ADDR, txHash: EVM_HASH }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+  });
+
   it("POST forwards EVM creator and rejects mismatch with invalid_tx", async () => {
     mocked.isDbConfigured.mockReturnValue(true);
     const victim = "0x2222222222222222222222222222222222222222";

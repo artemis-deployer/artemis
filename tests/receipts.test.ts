@@ -54,6 +54,37 @@ describe("findResumableEvmReceipt", () => {
     expect(findResumableEvmReceipt(list, 46630, "SPARK")).toBeUndefined();
   });
 
+  it("treats 1-tx receipt with pool marker on same receipt as done", () => {
+    const list = [{ chainId: 46630, token, hash: "0xaaa", pool: "0xaaa", createdAt: "t1", ticker: "SPARK" }];
+    expect(findResumableEvmReceipt(list, 46630, "SPARK")).toBeUndefined();
+  });
+
+  it("matches chainId across number-vs-string storage", () => {
+    const asString = [{ chainId: "46630", token, hash: "0xaaa", createdAt: "t1", ticker: "SPARK" }];
+    expect(findResumableEvmReceipt(asString as never, 46630, "SPARK")?.hash).toBe("0xaaa");
+    const asNumber = [{ chainId: 46630, token, hash: "0xaaa", createdAt: "t1", ticker: "SPARK" }];
+    expect(findResumableEvmReceipt(asNumber, "46630", "SPARK")?.hash).toBe("0xaaa");
+  });
+
+  it("matches ticker case-insensitively", () => {
+    const list = [{ chainId: 46630, token, hash: "0xaaa", createdAt: "t1", ticker: "spark" }];
+    expect(findResumableEvmReceipt(list, 46630, "SPARK")?.hash).toBe("0xaaa");
+    expect(findResumableEvmReceipt(list, 46630, "spark")?.hash).toBe("0xaaa");
+  });
+
+  it("treats pool-done as done even when token case differs", () => {
+    const list = [
+      { chainId: 46630, token: token.toUpperCase(), hash: "0xbbb", pool: "0xbbb", createdAt: "t2", ticker: "SPARK" },
+      { chainId: 46630, token: token.toLowerCase(), hash: "0xaaa", createdAt: "t1", ticker: "SPARK" },
+    ];
+    expect(findResumableEvmReceipt(list, 46630, "SPARK")).toBeUndefined();
+  });
+
+  it("ignores non-string ticker without throwing", () => {
+    const list = [{ chainId: 46630, token, hash: "0xaaa", createdAt: "t1", ticker: 123 }];
+    expect(findResumableEvmReceipt(list as never, 46630, "SPARK")).toBeUndefined();
+  });
+
   it("ignores chain or ticker mismatch", () => {
     const list = [{ chainId: 46630, token, hash: "0xaaa", createdAt: "t1", ticker: "SPARK" }];
     expect(findResumableEvmReceipt(list, 4663, "SPARK")).toBeUndefined();

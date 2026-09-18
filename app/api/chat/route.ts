@@ -112,13 +112,16 @@ export async function POST(req: Request) {
   const model = process.env.LLM_MODEL ?? "mimo-v2.5";
   if (!url || !key) return NextResponse.json({ error: "chat_offline" }, { status: 502 });
 
-  let body: { messages?: unknown };
+  let body: unknown;
   try {
-    body = (await req.json()) as { messages?: unknown };
+    body = (await req.json()) as unknown;
   } catch {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
   }
-  const rawItems: unknown = body.messages;
+  if (typeof body !== "object" || body === null || Array.isArray(body)) {
+    return NextResponse.json({ error: "bad_request" }, { status: 400 });
+  }
+  const rawItems: unknown = (body as { messages?: unknown }).messages;
   const raw = Array.isArray(rawItems) ? rawItems : [];
   const messages = raw.filter(
     (m): m is ChatMessage =>

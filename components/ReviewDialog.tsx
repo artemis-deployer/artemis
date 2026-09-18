@@ -59,10 +59,14 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
   const resume = isPump
     ? listReceipts().find(
         (r) =>
-          String(r.chainId) === String(draft.chainId) &&
-          r.token &&
+          String(r.chainId).toLowerCase() === String(draft.chainId).toLowerCase() &&
+          typeof r.token === "string" &&
+          r.token.length > 0 &&
           !r.pool &&
-          (r.ticker === draft.ticker || r.ticker === undefined),
+          (r.ticker === undefined ||
+            (typeof r.ticker === "string" &&
+              typeof draft.ticker === "string" &&
+              r.ticker.toUpperCase() === draft.ticker.toUpperCase())),
       )
     : undefined;
   const evmResume =
@@ -89,7 +93,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       ethAmount: parseEther(draft.liquidity || "0"),
     });
     setToken(one.token);
-    saveReceipt({ chainId: chainId as 4663 | 46630, token: one.token, hash: one.hash, createdAt: new Date().toISOString(), ticker: draft.ticker });
+    saveReceipt({ chainId: chainId as 4663 | 46630, token: one.token, hash: one.hash, pool: one.hash, createdAt: new Date().toISOString(), ticker: draft.ticker });
     void submitShowcase({ chainId: chainId as 4663 | 46630, address: one.token, creator: acc, name: draft.name || draft.ticker, symbol: draft.ticker, txHash: one.hash });
     setHood("pool-done");
     setNote(`One transaction: token deployed and pool funded together (${launcher.slice(0, 10)}…).`);
