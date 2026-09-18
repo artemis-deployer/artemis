@@ -45,11 +45,6 @@ export const WorksSection: React.FC<WorksSectionProps> = () => {
         {/* Section Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-16 border-b border-white/10 pb-10">
           <div>
-            <div className="inline-flex items-center gap-2 font-mono text-[11px] tracking-[0.2em] uppercase text-white/50 mb-3">
-              <span>// ARCHITECTURE_02</span>
-              <span className="text-white/20">/</span>
-              <span>LIFECYCLE PIPELINE</span>
-            </div>
             <h2 className="font-unbounded text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-[#f8f6f0] leading-[1.1]">
               A sovereign way to launch.
             </h2>
@@ -67,11 +62,11 @@ export const WorksSection: React.FC<WorksSectionProps> = () => {
           </a>
         </div>
 
-        {/* Work Stack (Preserved Sticky Stacking Animation) */}
+        {/* Work Stack (Sticky Stacking Animation with 5 Lifecycle Cards) */}
         <div ref={stackRef} className="work-stack space-y-8">
           
-          {/* Card 1: The Launch Draft */}
-          <article className="work-card sticky top-24 rounded-sm bg-[#cadcf0] text-[#18191c] grid grid-cols-1 lg:grid-cols-12 overflow-hidden shadow-2xl transition-transform duration-200 border border-[#18191c]/15">
+          {/* Card 1: Genesis Specification */}
+          <article className="work-card sticky top-20 rounded-sm bg-[#cadcf0] text-[#18191c] grid grid-cols-1 lg:grid-cols-12 overflow-hidden shadow-2xl transition-transform duration-200 border border-[#18191c]/15">
             <div className="lg:col-span-7 p-7 sm:p-10 md:p-12 flex flex-col justify-between">
               <div>
                 <div className="flex justify-between items-center text-xs font-mono uppercase tracking-widest text-[#18191c]/70 mb-5 pb-3 border-b border-[#18191c]/15">
@@ -118,8 +113,8 @@ export const WorksSection: React.FC<WorksSectionProps> = () => {
             </div>
           </article>
 
-          {/* Card 2: Sovereign Liquidity Rails */}
-          <article className="work-card sticky top-28 rounded-sm bg-[#fae8a4] text-[#18191c] grid grid-cols-1 lg:grid-cols-12 overflow-hidden shadow-2xl transition-transform duration-200 border border-[#18191c]/15">
+          {/* Card 2: Dual-Chain Routing */}
+          <article className="work-card sticky top-24 rounded-sm bg-[#fae8a4] text-[#18191c] grid grid-cols-1 lg:grid-cols-12 overflow-hidden shadow-2xl transition-transform duration-200 border border-[#18191c]/15">
             <div className="lg:col-span-7 p-7 sm:p-10 md:p-12 flex flex-col justify-between">
               <div>
                 <div className="flex justify-between items-center text-xs font-mono uppercase tracking-widest text-[#18191c]/70 mb-5 pb-3 border-b border-[#18191c]/15">
@@ -167,7 +162,7 @@ export const WorksSection: React.FC<WorksSectionProps> = () => {
           </article>
 
           {/* Card 3: Client-Side Signatures */}
-          <article className="work-card sticky top-32 rounded-sm bg-[#ece4d4] text-[#18191c] grid grid-cols-1 lg:grid-cols-12 overflow-hidden shadow-2xl transition-transform duration-200 border border-[#18191c]/15">
+          <article className="work-card sticky top-28 rounded-sm bg-[#ece4d4] text-[#18191c] grid grid-cols-1 lg:grid-cols-12 overflow-hidden shadow-2xl transition-transform duration-200 border border-[#18191c]/15">
             <div className="lg:col-span-7 p-7 sm:p-10 md:p-12 flex flex-col justify-between">
               <div>
                 <div className="flex justify-between items-center text-xs font-mono uppercase tracking-widest text-[#18191c]/70 mb-5 pb-3 border-b border-[#18191c]/15">
@@ -210,6 +205,102 @@ export const WorksSection: React.FC<WorksSectionProps> = () => {
               />
               <span className="absolute bottom-9 right-9 font-mono text-[10px] tracking-widest uppercase bg-black/60 text-white px-2 py-1 rounded-[2px] backdrop-blur-xs">
                 PROOF // LOCAL_SIGN
+              </span>
+            </div>
+          </article>
+
+          {/* Card 4: Liquidity Provision & Token Locking */}
+          <article className="work-card sticky top-32 rounded-sm bg-[#cadcf0] text-[#18191c] grid grid-cols-1 lg:grid-cols-12 overflow-hidden shadow-2xl transition-transform duration-200 border border-[#18191c]/15">
+            <div className="lg:col-span-7 p-7 sm:p-10 md:p-12 flex flex-col justify-between">
+              <div>
+                <div className="flex justify-between items-center text-xs font-mono uppercase tracking-widest text-[#18191c]/70 mb-5 pb-3 border-b border-[#18191c]/15">
+                  <span className="font-bold">04 // PHASE FOUR: LIQUIDITY PROVISION</span>
+                  <span className="border border-[#18191c]/25 bg-white/40 px-2 py-0.5 rounded-[2px] text-[10px] font-bold">
+                    POOL AUTOMATION
+                  </span>
+                </div>
+                <h3 className="font-unbounded text-2xl sm:text-3xl lg:text-[2.2rem] font-bold tracking-tight leading-[1.15] mb-4 text-[#18191c]">
+                  LP pair creation.<br />
+                  <span className="font-light text-[#18191c]/60">Permanent autonomous liquidity.</span>
+                </h3>
+                <p className="text-sm md:text-base text-[#18191c]/80 leading-relaxed max-w-xl">
+                  Initial supply and base liquidity are paired atomically in a single atomic transaction block. The creator receives standard LP tokens directly into their wallet with zero platform escrow lockouts.
+                </p>
+              </div>
+
+              {/* 4-Metric Architectural Telemetry Grid */}
+              <div className="grid grid-cols-2 gap-4 sm:gap-6 pt-8 border-t border-[#18191c]/15 mt-8 font-mono">
+                <div className="border-l-2 border-[#18191c]/25 pl-4">
+                  <small className="block text-[11px] uppercase tracking-wider text-[#18191c]/60 mb-1">Pool Settlement</small>
+                  <strong className="block text-lg sm:text-xl font-bold tracking-tight text-[#18191c]">Atomic Uniswap V2</strong>
+                  <small className="block text-[11px] uppercase tracking-wider text-[#18191c]/60 mt-3 mb-1">Dev Withdrawal Backdoor</small>
+                  <strong className="block text-base sm:text-lg font-semibold text-[#18191c]">None (Renounced)</strong>
+                </div>
+                <div className="border-l-2 border-[#18191c]/25 pl-4">
+                  <small className="block text-[11px] uppercase tracking-wider text-[#18191c]/60 mb-1">Community Allocation</small>
+                  <strong className="block text-lg sm:text-xl font-bold tracking-tight text-[#18191c]">100% Sovereign Float</strong>
+                  <small className="block text-[11px] uppercase tracking-wider text-[#18191c]/60 mt-3 mb-1">Trading Toll</small>
+                  <strong className="block text-base sm:text-lg font-semibold text-[#18191c]">0.00% Zero Fee</strong>
+                </div>
+              </div>
+            </div>
+
+            <div className="lg:col-span-5 h-64 lg:h-auto overflow-hidden bg-black/10 flex items-center justify-center p-6 relative">
+              <img
+                src="/assets/walkways.png"
+                alt="Automated liquidity pool walkways"
+                className="w-full h-full object-cover rounded-sm shadow-md"
+              />
+              <span className="absolute bottom-9 right-9 font-mono text-[10px] tracking-widest uppercase bg-black/60 text-white px-2 py-1 rounded-[2px] backdrop-blur-xs">
+                AMM // POOL_CREATION
+              </span>
+            </div>
+          </article>
+
+          {/* Card 5: Showcase & Community Index */}
+          <article className="work-card sticky top-36 rounded-sm bg-[#fae8a4] text-[#18191c] grid grid-cols-1 lg:grid-cols-12 overflow-hidden shadow-2xl transition-transform duration-200 border border-[#18191c]/15">
+            <div className="lg:col-span-7 p-7 sm:p-10 md:p-12 flex flex-col justify-between">
+              <div>
+                <div className="flex justify-between items-center text-xs font-mono uppercase tracking-widest text-[#18191c]/70 mb-5 pb-3 border-b border-[#18191c]/15">
+                  <span className="font-bold">05 // PHASE FIVE: SHOWCASE INDEXING</span>
+                  <span className="border border-[#18191c]/25 bg-white/40 px-2 py-0.5 rounded-[2px] text-[10px] font-bold">
+                    PUBLIC DIRECTORY
+                  </span>
+                </div>
+                <h3 className="font-unbounded text-2xl sm:text-3xl lg:text-[2.2rem] font-bold tracking-tight leading-[1.15] mb-4 text-[#18191c]">
+                  Global discovery.<br />
+                  <span className="font-light text-[#18191c]/60">Transparent token showcase.</span>
+                </h3>
+                <p className="text-sm md:text-base text-[#18191c]/80 leading-relaxed max-w-xl">
+                  Your deployed token is immediately discoverable on Kentir&apos;s public community showcase. Anyone can verify creator receipts, audit contract bytecode on the explorer, and trade directly on DEX rails.
+                </p>
+              </div>
+
+              {/* 4-Metric Architectural Telemetry Grid */}
+              <div className="grid grid-cols-2 gap-4 sm:gap-6 pt-8 border-t border-[#18191c]/15 mt-8 font-mono">
+                <div className="border-l-2 border-[#18191c]/25 pl-4">
+                  <small className="block text-[11px] uppercase tracking-wider text-[#18191c]/60 mb-1">Showcase State</small>
+                  <strong className="block text-lg sm:text-xl font-bold tracking-tight text-[#18191c]">Instant Indexing Live</strong>
+                  <small className="block text-[11px] uppercase tracking-wider text-[#18191c]/60 mt-3 mb-1">Provenance Proof</small>
+                  <strong className="block text-base sm:text-lg font-semibold text-[#18191c]">Signer Verified</strong>
+                </div>
+                <div className="border-l-2 border-[#18191c]/25 pl-4">
+                  <small className="block text-[11px] uppercase tracking-wider text-[#18191c]/60 mb-1">Trading Settlement</small>
+                  <strong className="block text-lg sm:text-xl font-bold tracking-tight text-[#18191c]">Direct DEX Routing</strong>
+                  <small className="block text-[11px] uppercase tracking-wider text-[#18191c]/60 mt-3 mb-1">Explorer Audit</small>
+                  <strong className="block text-base sm:text-lg font-semibold text-[#18191c]">Direct Contract Link</strong>
+                </div>
+              </div>
+            </div>
+
+            <div className="lg:col-span-5 h-64 lg:h-auto overflow-hidden bg-black/10 flex items-center justify-center p-6 relative">
+              <img
+                src="/assets/terrain.png"
+                alt="Global token discovery showcase"
+                className="w-full h-full object-cover rounded-sm shadow-md"
+              />
+              <span className="absolute bottom-9 right-9 font-mono text-[10px] tracking-widest uppercase bg-black/60 text-white px-2 py-1 rounded-[2px] backdrop-blur-xs">
+                INDEX // SHOWCASE_LIVE
               </span>
             </div>
           </article>
