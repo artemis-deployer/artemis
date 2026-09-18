@@ -140,7 +140,7 @@ export const FeatureSection: React.FC = () => {
           {[...features, ...features].map((card, idx) => (
             <article
               key={idx}
-              className={`feature ${card.theme} w-[310px] sm:w-[350px] p-5 sm:p-6 text-left flex flex-col justify-between rounded-sm border border-[#18191c]/15 shadow-xs hover:-translate-y-1.5 hover:shadow-md transition-all duration-300 relative group flex-shrink-0`}
+              className={`feature ${card.theme} w-[325px] sm:w-[365px] p-5 sm:p-6 text-left flex flex-col justify-between rounded-sm border border-[#18191c]/15 shadow-xs hover:-translate-y-1.5 hover:shadow-md transition-all duration-300 relative group flex-shrink-0`}
             >
               {/* Top Technical Metadata Header */}
               <div className="flex items-center justify-between border-b border-[#18191c]/15 pb-2.5 mb-3.5 font-mono text-[11px]">
@@ -161,11 +161,13 @@ export const FeatureSection: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/15 to-transparent pointer-events-none" />
               </div>
 
-              {/* Title & Description - Capped at Maximum 2 Lines */}
+              {/* Title & Description - Strictly Capped at Maximum 2 Lines */}
               <div className="flex-1 flex flex-col justify-start">
-                <h3 className="font-unbounded text-base sm:text-lg font-bold tracking-tight text-[#18191c] mb-2 line-clamp-2 min-h-[2.75rem] sm:min-h-[3.25rem] flex items-center leading-snug">
-                  {card.title}
-                </h3>
+                <div className="h-11 sm:h-12 flex flex-col justify-center mb-2">
+                  <h3 className="font-unbounded text-sm sm:text-[15px] font-bold tracking-tight text-[#18191c] leading-snug line-clamp-2">
+                    {card.title}
+                  </h3>
+                </div>
                 <p className="text-xs sm:text-[13px] text-[#18191c]/75 leading-relaxed">
                   {card.desc}
                 </p>
