@@ -1,77 +1,72 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
 
 const steps = [
   {
     num: '01',
-    phase: 'STAGE // 01',
-    tag: 'PROMPT INTAKE',
-    theme: 'bg-[#ece4d4]',
-    title: 'DRAFT WITH AI COPILOT',
-    desc: 'Describe your community token or concept. Kentir extracts name, symbol, supply, and liquidity allocation into a clean draft.',
-    spec: 'INPUT: NATURAL LANGUAGE DRAFT'
+    label: 'PROMPT SYNTHESIS',
+    badge: 'COPILOT_V1',
+    title: 'Draft with Copilot',
+    desc: 'Describe your community token or concept in natural language. Kentir extracts name, symbol, supply, and liquidity allocation into a clean review draft.',
+    terminal: [
+      '> kentir.parse("sovereign coin $KENTIR")',
+      '[OK] symbol: $KENTIR | supply: 999M'
+    ],
+    accent: 'hover:bg-[#ece4d4]/30'
   },
   {
     num: '02',
-    phase: 'STAGE // 02',
-    tag: 'GENESIS TOKENOMICS',
-    theme: 'bg-[#fae8a4]',
-    title: 'UNALTERABLE 999M SUPPLY',
-    desc: 'Total supply is strictly minted at inception. There is no mint function, no administrative keys, and zero transfer tax.',
-    spec: 'SUPPLY: 999,000,000 FIXED'
+    label: 'GENESIS TOKENOMICS',
+    badge: 'IMMUTABLE',
+    title: 'Fixed 999M Supply',
+    desc: 'Total supply is minted once at inception. There is no mint function, no administrative backdoor keys, and zero platform transfer tax.',
+    terminal: [
+      '> token.deploy(supply: 999000000)',
+      '[LOCKED] ownership: renounced'
+    ],
+    accent: 'hover:bg-[#fae8a4]/20'
   },
   {
     num: '03',
-    phase: 'STAGE // 03',
-    tag: 'AMM LIQUIDITY',
-    theme: 'bg-[#cadcf0]',
-    title: 'PAIR ONCHAIN LIQUIDITY',
-    desc: 'Allocate token supply directly into a DEX liquidity pool. Pair with ETH or SOL to establish sovereign market pricing.',
-    spec: 'ROUTERS: HOOD V2 + PUMP.FUN'
+    label: 'LIQUIDITY SETTLEMENT',
+    badge: 'DUAL_RAILS',
+    title: 'Pair Onchain Liquidity',
+    desc: 'Deploy initial supply directly into Uniswap V2 on Robinhood Chain or fair-launch bonding curves on Solana pump.fun.',
+    terminal: [
+      '> router.createPair(0x89e5…9eba)',
+      '[ACTIVE] autonomous pool live'
+    ],
+    accent: 'hover:bg-[#cadcf0]/30'
   },
   {
     num: '04',
-    phase: 'STAGE // 04',
-    tag: 'LOCAL RUNTIME',
-    theme: 'bg-[#ece4d4]',
-    title: 'SIGN FROM YOUR WALLET',
-    desc: 'Review gas estimates and sign the deployment transaction in MetaMask, Phantom, or Solflare. Kentir never touches your keys.',
-    spec: 'SIGNING: 100% NON-CUSTODIAL'
+    label: 'CLIENT RUNTIME',
+    badge: 'NON_CUSTODIAL',
+    title: 'Sign from Wallet',
+    desc: 'Review gas estimates and sign the deployment transaction in MetaMask, Phantom, or Rabby. Private keys never touch any server.',
+    terminal: [
+      '> wallet.signTransaction(localKey)',
+      '[BROADCAST] tx confirmed onchain'
+    ],
+    accent: 'hover:bg-[#ece4d4]/30'
   }
 ];
 
 export const StepsSection: React.FC = () => {
-  const [inView, setInView] = useState(false);
-  const sectionRef = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setInView(true);
-        }
-      },
-      { threshold: 0.2 }
-    );
-
-    if (sectionRef.current) observer.observe(sectionRef.current);
-    return () => observer.disconnect();
-  }, []);
-
   return (
     <section
-      ref={sectionRef}
+      id="how-it-works"
       data-theme="light"
       className="steps-section py-20 sm:py-24 px-[max(6.25vw,24px)] bg-[#f8f6f0] text-[#18191c] overflow-hidden w-full border-t border-[#18191c]/10"
     >
       <div className="max-w-[1400px] mx-auto w-full">
-        {/* Centered Section Top */}
-        <div className="mb-16 text-center flex flex-col items-center">
+        {/* Section Header */}
+        <div className="mb-14 text-center flex flex-col items-center">
           <div className="inline-flex items-center justify-center gap-2 font-mono text-[11px] tracking-[0.2em] uppercase text-[#18191c]/55 mb-3 border-b border-[#18191c]/15 pb-1">
-            <span>// PROTOCOL_LIFECYCLE</span>
+            <span>// EXECUTION_PIPELINE</span>
             <span className="text-[#18191c]/25">/</span>
-            <span>FOUR DELIBERATE STAGES</span>
+            <span>END-TO-END WORKFLOW</span>
           </div>
           <h2 className="font-unbounded text-2xl sm:text-4xl lg:text-[2.6rem] font-bold tracking-tight text-[#18191c] leading-[1.12]">
             Four Steps from Spark to Pool.
@@ -81,79 +76,69 @@ export const StepsSection: React.FC = () => {
           </p>
         </div>
 
-        {/* Stepper Pipeline Cards Grid with Staggered Elevation & Directional Flow */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 pb-12 relative">
-          {steps.map((step, idx) => {
-            const digit0 = parseInt(step.num[0], 10);
-            const digit1 = parseInt(step.num[1], 10);
+        {/* Unified Architectural Execution Console (Diverged from DarkpoolFi staggered cards) */}
+        <div className="w-full border border-[#18191c]/15 bg-white/70 backdrop-blur-sm rounded-sm shadow-xs overflow-hidden">
+          
+          {/* Top Sequential Progress Header */}
+          <div className="hidden lg:grid grid-cols-4 border-b border-[#18191c]/10 font-mono text-[11px] uppercase tracking-wider text-[#18191c]/60 bg-[#18191c]/[0.02]">
+            <div className="px-6 py-3 border-r border-[#18191c]/10 flex items-center justify-between">
+              <span className="font-bold text-[#18191c]">01 // STEP ONE</span>
+              <span className="text-[#18191c]/30">››</span>
+            </div>
+            <div className="px-6 py-3 border-r border-[#18191c]/10 flex items-center justify-between">
+              <span className="font-bold text-[#18191c]">02 // STEP TWO</span>
+              <span className="text-[#18191c]/30">››</span>
+            </div>
+            <div className="px-6 py-3 border-r border-[#18191c]/10 flex items-center justify-between">
+              <span className="font-bold text-[#18191c]">03 // STEP THREE</span>
+              <span className="text-[#18191c]/30">››</span>
+            </div>
+            <div className="px-6 py-3 flex items-center justify-between">
+              <span className="font-bold text-[#18191c]">04 // STEP FOUR</span>
+              <span className="text-[#18191c]/30">✓</span>
+            </div>
+          </div>
 
-            const stairOffsets = ['lg:translate-y-0', 'lg:translate-y-5', 'lg:translate-y-10', 'lg:translate-y-15'];
-
-            return (
-              <article
+          {/* 4 Connected Architectural Bays */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-[#18191c]/10">
+            {steps.map((step) => (
+              <div
                 key={step.num}
-                className={`${step.theme} ${stairOffsets[idx] ?? ''} p-6 sm:p-7 min-h-[340px] rounded-sm border border-[#18191c]/15 flex flex-col justify-between shadow-xs transition-all duration-300 hover:-translate-y-2 hover:shadow-md relative group`}
+                className={`p-6 sm:p-8 flex flex-col justify-between transition-colors duration-200 ${step.accent} group relative`}
               >
-                {/* Card Top Metadata Header */}
                 <div>
-                  <div className="flex items-center justify-between border-b border-[#18191c]/15 pb-2.5 mb-4 font-mono text-[10px]">
-                    <span className="font-bold tracking-wider text-[#18191c]">{step.phase}</span>
-                    <span className="border border-[#18191c]/20 bg-white/40 px-2 py-0.5 rounded-[2px] tracking-tight uppercase text-[#18191c]/75">
-                      {step.tag}
+                  {/* Bay Metadata Bar */}
+                  <div className="flex items-center justify-between font-mono text-[11px] mb-6">
+                    <span className="font-bold tracking-widest text-[#18191c] text-xs">
+                      {step.num} // {step.label}
+                    </span>
+                    <span className="border border-[#18191c]/20 bg-white/80 px-2 py-0.5 rounded-[2px] text-[10px] text-[#18191c]/70 font-semibold tracking-tight">
+                      {step.badge}
                     </span>
                   </div>
 
-                  {/* Mechanical rolling digit slot reel */}
-                  <div className="my-4 text-6xl sm:text-7xl font-unbounded font-black tracking-tighter text-[#18191c] flex items-center leading-none">
-                    <span className="digit-slot">
-                      <span
-                        className="digit-reel"
-                        style={{
-                          transform: inView ? `translateY(-${digit0 * 1.2}em)` : 'translateY(0)',
-                          transitionDelay: `${idx * 120}ms`
-                        }}
-                      >
-                        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
-                          <i key={n}>{n}</i>
-                        ))}
-                      </span>
-                    </span>
-                    <span className="digit-slot">
-                      <span
-                        className="digit-reel"
-                        style={{
-                          transform: inView ? `translateY(-${digit1 * 1.2}em)` : 'translateY(0)',
-                          transitionDelay: `${idx * 120 + 90}ms`
-                        }}
-                      >
-                        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
-                          <i key={n}>{n}</i>
-                        ))}
-                      </span>
-                    </span>
-                  </div>
-
-                  <h3 className="font-unbounded text-sm sm:text-base font-bold tracking-tight text-[#18191c] leading-snug mb-2">
+                  {/* Title & Description */}
+                  <h3 className="font-unbounded text-base sm:text-lg font-bold text-[#18191c] tracking-tight mb-3 leading-snug">
                     {step.title}
                   </h3>
 
-                  <p className="text-xs sm:text-[13px] text-[#18191c]/75 leading-relaxed">
+                  <p className="text-xs sm:text-[13px] text-[#18191c]/75 leading-relaxed mb-6 font-sans">
                     {step.desc}
                   </p>
                 </div>
 
-                {/* Bottom Spec Footer */}
-                <div className="mt-5 pt-3 border-t border-[#18191c]/15 flex items-center justify-between font-mono text-[10px] text-[#18191c]/60">
-                  <span>{step.spec}</span>
-                  <span className="text-[#18191c]/35 group-hover:text-[#18191c] transition-colors">↘</span>
+                {/* Micro Terminal Execution Receipt */}
+                <div className="mt-4 pt-3 border-t border-[#18191c]/10 font-mono text-[11px] bg-[#18191c]/5 p-3 rounded-[2px] border border-[#18191c]/5 space-y-1 text-[#18191c]/80">
+                  <div className="truncate font-semibold text-[#18191c]">{step.terminal[0]}</div>
+                  <div className="truncate text-[10px] text-[#18191c]/60">{step.terminal[1]}</div>
                 </div>
-              </article>
-            );
-          })}
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Principle Strip Marquee */}
-        <div className="principle-strip mt-16 pt-8 border-t border-[#18191c]/10 flex flex-col md:flex-row items-start md:items-center gap-6">
+        {/* Principle Strip Marquee (Retained & Smoothly Animated) */}
+        <div className="principle-strip mt-14 pt-8 border-t border-[#18191c]/10 flex flex-col md:flex-row items-start md:items-center gap-6">
           <p className="font-mono text-xs uppercase tracking-widest text-[#18191c]/60 whitespace-nowrap font-bold">
             SOVEREIGN PRINCIPLES:
           </p>
