@@ -1,4 +1,4 @@
-// Deploys KentirLauncher to Hood mainnet (one-time, owner runs locally).
+// Deploys ArtemisLauncher to Hood mainnet (one-time, owner runs locally).
 // Usage: PRIVATE_KEY=0x... node scripts/deploy-launcher.mjs --mainnet
 // Prints the launcher address -> paste it into HOOD_MAINNET.launcher,
 // then verify sources on Blockscout.
@@ -53,7 +53,7 @@ if (onchainId !== CHAIN_ID) {
   process.exit(1);
 }
 
-console.log(`Deploying KentirLauncher to Hood mainnet (id ${CHAIN_ID})...`);
+console.log(`Deploying ArtemisLauncher to Hood mainnet (id ${CHAIN_ID})...`);
 console.log("router:", ROUTER);
 console.log("deployer:", account.address);
 console.log("rpc:", RPC);

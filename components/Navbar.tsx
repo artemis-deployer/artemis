@@ -32,9 +32,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenMenu }) => {
 
   return (
     <header className={`nav ${isLightNav ? 'light-nav' : ''}`}>
-      <TransitionLink href="/" className="brand" aria-label="Kentir home">
+      <TransitionLink href="/" className="brand" aria-label="Artemis home">
         <img src="/assets/logo.png" alt="" />
-        <span>Kentir</span>
+        <span>Artemis</span>
       </TransitionLink>
 
       <span className="nav-context">

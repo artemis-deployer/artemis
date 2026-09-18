@@ -88,7 +88,7 @@ export const ComparisonSection: React.FC = () => {
               opacity: Math.max(0, 1 - split)
             }}
           >
-            Kentir
+            Artemis
           </span>
         </h2>
 
@@ -144,14 +144,14 @@ export const ComparisonSection: React.FC = () => {
             </div>
           </article>
 
-          {/* Card 2: Kentir (Buttercream, Success) with darkpoolfi decorative notches */}
+          {/* Card 2: Artemis (Buttercream, Success) with darkpoolfi decorative notches */}
           <article className="rounded bg-[#fae8a4] text-[#18191c] p-7 md:p-8 shadow-2xl relative overflow-hidden border border-[#fae8a4]">
             {/* Subtle decorative geometry accents from darkpoolfi */}
             <div className="absolute top-0 left-0 w-12 h-7 bg-[#fae8a4]/40 pointer-events-none" />
             <div className="absolute bottom-[15%] right-0 w-4 h-20 bg-[#fae8a4]/40 pointer-events-none" />
 
             <h3 className="text-xl md:text-2xl font-light text-[#18191c] mb-2 tracking-tight">
-              Sovereign launch with Kentir
+              Sovereign launch with Artemis
             </h3>
             <p className="text-sm text-[#18191c]/70 mb-6 pb-6 border-b border-[#18191c]/15 leading-relaxed">
               Every parameter is immutable and executed directly through your personal Web3 wallet.

@@ -7,7 +7,7 @@ import {
 import type { Receipt } from "../lib/receipts";
 
 const DRAFT = {
-  name: "Kentir Spark",
+  name: "Artemis Spark",
   ticker: "SPARK",
   pooled: "500000000",
   liquidity: "0.5",

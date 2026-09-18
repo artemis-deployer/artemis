@@ -28,10 +28,10 @@ export const Footer: React.FC<FooterProps> = () => {
         <div className="footer-grid">
           {/* Col 1: Brand & Tagline */}
           <div>
-            <p className="label">&#123;KENTIR&#125;</p>
+            <p className="label">&#123;ARTEMIS&#125;</p>
             <Link className="brand" href="/">
               <img src="/assets/logo.png" alt="" />
-              <span>Kentir</span>
+              <span>Artemis</span>
             </Link>
             <p>
               Autonomous non-custodial token launcher.<br />
@@ -78,7 +78,7 @@ export const Footer: React.FC<FooterProps> = () => {
                 href="https://x.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Kentir on X"
+                aria-label="Artemis on X"
               >
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M18.9 2H22l-6.8 7.8L23.2 22h-6.3L12 14.6 5.5 22H2.3l8.2-9.4L1 2h6.5l5.8 7.7L18.9 2ZM17.8 20h1.7L6.5 4H4.7z" />
@@ -89,7 +89,7 @@ export const Footer: React.FC<FooterProps> = () => {
                 href="https://t.me"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Kentir on Telegram"
+                aria-label="Artemis on Telegram"
               >
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M21.7 3.3 18.1 21c-.3 1.2-1 1.5-2 .9l-5.5-4.1-2.7 2.6c-.3.3-.5.5-1 .5l.4-5.6L17.5 6c.5-.4-.1-.6-.7-.2L4.2 13.7.8 12.6c-1.2-.4-1.2-1.2.2-1.7L20.1 3c.9-.3 1.9.2 1.6.3Z" />
@@ -100,7 +100,7 @@ export const Footer: React.FC<FooterProps> = () => {
                 href="https://github.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Kentir on GitHub"
+                aria-label="Artemis on GitHub"
               >
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.2c-3.3.7-4-1.4-4-1.4-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3" />
@@ -112,14 +112,14 @@ export const Footer: React.FC<FooterProps> = () => {
 
         {/* Footer Bottom Row */}
         <div className="footer-bottom">
-          <span>© 2026 Kentir. All rights reserved.</span>
+          <span>© 2026 Artemis. All rights reserved.</span>
           <span>Non-custodial autonomous launch rails.</span>
         </div>
       </div>
 
       {/* Massive Gigantic Watermark Wordmark */}
       <div className="footer-wordmark" aria-hidden="true">
-        Kentir
+        Artemis
       </div>
 
       {/* Floating Animated Pixels */}

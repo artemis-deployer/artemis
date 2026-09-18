@@ -88,7 +88,7 @@ function MainApp() {
         {/* 8. Audiences Carousel Slider */}
         <AudiencesSection />
 
-        {/* 9. Pinned Scroll Comparison Scene (Custodial vs. Kentir) */}
+        {/* 9. Pinned Scroll Comparison Scene (Custodial vs. Artemis) */}
         <ComparisonSection />
 
         {/* 10. Execution Rails Toggle & Cards */}

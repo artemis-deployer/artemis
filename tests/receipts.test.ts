@@ -26,7 +26,7 @@ describe("receipts", () => {
   });
 
   it("returns empty list when storage is corrupt", () => {
-    (localStorage as Storage).setItem("kentir.receipts.v1", "not-json{{{");
+    (localStorage as Storage).setItem("artemis.receipts.v1", "not-json{{{");
     expect(listReceipts()).toEqual([]);
   });
 });

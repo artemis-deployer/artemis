@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { LAUNCHER_ABI, LAUNCHER_BYTECODE } from "../lib/launcher-artifact";
 
-const launcherSrc = readFileSync(new URL("../contracts/KentirLauncher.sol", import.meta.url), "utf8");
+const launcherSrc = readFileSync(new URL("../contracts/ArtemisLauncher.sol", import.meta.url), "utf8");
 const deploySrc = readFileSync(new URL("../scripts/deploy-launcher.mjs", import.meta.url), "utf8");
 
 describe("launcher artifact", () => {

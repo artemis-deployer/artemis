@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Overhaul the Kentir launchpad frontend into a beautiful, cohesive, and modern Web3 UI while preserving the signature warm paper and crimson editorial aesthetic, with clean Tailwind v4 styling, Lucide icons, Framer Motion animations, split-studio layout, and an enhanced showcase page.
+**Goal:** Overhaul the Artemis launchpad frontend into a beautiful, cohesive, and modern Web3 UI while preserving the signature warm paper and crimson editorial aesthetic, with clean Tailwind v4 styling, Lucide icons, Framer Motion animations, split-studio layout, and an enhanced showcase page.
 
 **Architecture:** Next.js 16 App Router client components with a centralized draft state, decoupled studio chat, modern launch configuration form, interactive 3D character stage, modular wallet connectors, and animated review dialog modal.
 
@@ -28,7 +28,7 @@
 - Refine `components/CharacterStage.tsx`: place the 3D character in a styled framed stage/pedestal, smooth out mouse drag and keyboard rotation, and provide clean control buttons.
 
 ### Task 4: Studio Workspace (Chat & Form Split)
-- Upgrade `components/StudioChat.tsx` with chat message bubbles, clear user vs Kentir distinction, character count, auto-expanding/comfortable textarea, and suggestion buttons.
+- Upgrade `components/StudioChat.tsx` with chat message bubbles, clear user vs Artemis distinction, character count, auto-expanding/comfortable textarea, and suggestion buttons.
 - Upgrade `components/LaunchForm.tsx` with visual chain selection cards, live ratio & price preview, clear validation highlights, and consent banner.
 - Organize `app/page.tsx` into a responsive two-column Studio Workspace.
 

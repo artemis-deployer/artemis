@@ -34,7 +34,7 @@ export const IntroSection: React.FC<IntroSectionProps> = () => {
           {/* Left Column: Manifesto Statement & Action */}
           <div className="lg:col-span-6 flex flex-col items-start text-left">
             <h2 className="font-unbounded text-2xl sm:text-3xl md:text-4xl lg:text-[2.65rem] font-bold tracking-tight leading-[1.1] text-[#18191c]">
-              Kentir puts token creation back in your hands.
+              Artemis puts token creation back in your hands.
             </h2>
 
             <p className="mt-4 text-sm sm:text-base text-[#18191c]/75 leading-relaxed font-sans max-w-xl">
@@ -46,7 +46,7 @@ export const IntroSection: React.FC<IntroSectionProps> = () => {
                 href="#studio"
                 className="dp-button dark-button min-w-[200px]"
               >
-                <span>MEET KENTIR STUDIO</span>
+                <span>MEET ARTEMIS STUDIO</span>
                 <span className="arrow-box">↘</span>
               </a>
               

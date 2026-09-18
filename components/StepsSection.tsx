@@ -29,8 +29,8 @@ const PROMPT_PRESETS: PresetPrompt[] = [
     id: 'meme',
     tag: 'Community Launch',
     prompt: 'Fair launched viral community token with locked LP and zero team allocation.',
-    name: 'Kentir Gold',
-    symbol: '$KENTIR',
+    name: 'Artemis Gold',
+    symbol: '$ARTEMIS',
     supply: '999,000,000',
     curve: 'Uniswap V2 Pool'
   },
@@ -161,7 +161,7 @@ export const StepsSection: React.FC = () => {
             From Spark to Onchain Liquidity.
           </h2>
           <p className="mt-3 text-sm sm:text-base text-[#18191c]/70 max-w-xl leading-relaxed font-sans text-center">
-            Explore how Kentir automates deterministic token synthesis, contract compilation, liquidity deployment, and local key signing.
+            Explore how Artemis automates deterministic token synthesis, contract compilation, liquidity deployment, and local key signing.
           </p>
         </div>
 
@@ -252,7 +252,7 @@ export const StepsSection: React.FC = () => {
             <div className="lg:col-span-6 p-6 sm:p-8 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-[#18191c]/10 bg-white">
               <div>
                 <div className="flex items-center gap-2 mb-2 font-mono text-[11px] text-[#18191c]/60 uppercase tracking-widest">
-                  <span>{STAGES[activeStage].roman} // Stage Inspector</span>
+                  <span>{STAGES[activeStage].roman} {"//"} Stage Inspector</span>
                 </div>
                 
                 <h3 className="font-unbounded text-xl sm:text-2xl font-bold text-[#18191c] mb-2 leading-tight">
@@ -435,7 +435,7 @@ export const StepsSection: React.FC = () => {
                 </button>
                 <div className="flex items-center gap-2 font-mono text-[10px] text-[#18191c]/50 tracking-wider">
                   <span className="hidden sm:inline">(Hover to pause)</span>
-                  <span>//</span>
+                  <span>{"//"}</span>
                   <span>{(!isPlaying || isHovered) ? 'STATUS: PAUSED' : 'STATUS: STREAMING'}</span>
                 </div>
               </div>
@@ -453,7 +453,7 @@ export const StepsSection: React.FC = () => {
                       <span className="w-2.5 h-2.5 rounded-full border border-white/25 bg-white/5 inline-block" />
                     </div>
                     <span className="tracking-wider uppercase font-semibold text-white/75 text-[10px] sm:text-[11px]">
-                      kentir@hood-node: ~/pipeline/{STAGES[activeStage].id}.sh
+                      artemis@hood-node: ~/pipeline/{STAGES[activeStage].id}.sh
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-[10px] font-mono">
@@ -469,7 +469,7 @@ export const StepsSection: React.FC = () => {
                 <div className="space-y-2.5 text-xs text-white/85 min-h-[220px]">
                   {activeStage === 0 && (
                     <>
-                      <div className="text-white/40">// [00:00.08] NLP Extraction Vector:</div>
+                      <div className="text-white/40">{"//"} [00:00.08] NLP Extraction Vector:</div>
                       <div className="text-[#fae8a4] flex items-center">
                         <span>&gt; copilot.parseNaturalPrompt(input)</span>
                         {progress < 25 && <span className="inline-block w-1.5 h-3.5 bg-[#fae8a4] animate-pulse ml-1.5" />}
@@ -501,7 +501,7 @@ export const StepsSection: React.FC = () => {
 
                   {activeStage === 1 && (
                     <>
-                      <div className="text-white/40">// [00:00.12] Smart Contract Bytecode Integrity:</div>
+                      <div className="text-white/40">{"//"} [00:00.12] Smart Contract Bytecode Integrity:</div>
                       <div className="text-[#fae8a4] flex items-center">
                         <span>&gt; solc.verifyBytecode(ERC20Sovereign.sol)</span>
                         {progress < 25 && <span className="inline-block w-1.5 h-3.5 bg-[#fae8a4] animate-pulse ml-1.5" />}
@@ -547,7 +547,7 @@ export const StepsSection: React.FC = () => {
 
                   {activeStage === 2 && (
                     <>
-                      <div className="text-white/40">// [00:00.15] Liquidity Settlement Routing:</div>
+                      <div className="text-white/40">{"//"} [00:00.15] Liquidity Settlement Routing:</div>
                       <div className="text-[#fae8a4] flex items-center">
                         <span>&gt; {activeNetwork === 'robinhood' ? 'UniswapV2Factory.createPair()' : 'pump.fun.initializeAMM()'}</span>
                         {progress < 25 && <span className="inline-block w-1.5 h-3.5 bg-[#fae8a4] animate-pulse ml-1.5" />}
@@ -579,7 +579,7 @@ export const StepsSection: React.FC = () => {
 
                   {activeStage === 3 && (
                     <>
-                      <div className="text-white/40">// [00:00.18] Local Cryptographic Signing:</div>
+                      <div className="text-white/40">{"//"} [00:00.18] Local Cryptographic Signing:</div>
                       <div className="text-[#fae8a4] flex items-center">
                         <span>&gt; window.ethereum.request(&#123; method: &apos;eth_sendRawTransaction&apos; &#125;)</span>
                         {progress < 25 && <span className="inline-block w-1.5 h-3.5 bg-[#fae8a4] animate-pulse ml-1.5" />}
@@ -612,7 +612,7 @@ export const StepsSection: React.FC = () => {
 
                 {/* Active Shell Prompt with Blinking Cursor */}
                 <div className="pt-3 mt-4 border-t border-white/10 flex items-center gap-2 text-[11px] font-mono">
-                  <span className="text-white/40">kentir@node:~$</span>
+                  <span className="text-white/40">artemis@node:~$</span>
                   <span className="text-[#fae8a4]">
                     {activeStage === 0 && `copilot.synthesize("${selectedPreset.tag}")`}
                     {activeStage === 1 && `solc.verify --fixed-supply`}
@@ -630,7 +630,7 @@ export const StepsSection: React.FC = () => {
                   <span>·</span>
                   <span>CONFIRMATION: INSTANT</span>
                 </div>
-                <div>KENTIR_KERNEL_V1</div>
+                <div>ARTEMIS_KERNEL_V1</div>
               </div>
             </div>
 

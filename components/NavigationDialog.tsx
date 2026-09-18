@@ -128,10 +128,10 @@ export const NavigationDialog: React.FC<NavigationDialogProps> = ({ isOpen, onCl
           className="brand"
           href="/"
           onClick={(e) => handleLinkClick(e, '/')}
-          aria-label="Kentir home"
+          aria-label="Artemis home"
         >
           <img src="/assets/logo.png" alt="" />
-          <span>Kentir</span>
+          <span>Artemis</span>
         </Link>
         <button
           ref={closeRef}

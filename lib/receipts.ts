@@ -7,7 +7,7 @@ export type Receipt = {
   ticker?: string;
 };
 
-const KEY = "kentir.receipts.v1";
+const KEY = "artemis.receipts.v1";
 
 function store(): Storage | null {
   try {

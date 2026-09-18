@@ -93,7 +93,7 @@ export const FeatureSection: React.FC = () => {
       {/* Centered Header with Telemetry Metadata and Arrow Controls */}
       <div className="max-w-[1400px] mx-auto px-[max(6.25vw,24px)] mb-12 text-center flex flex-col items-center">
         <div className="inline-flex items-center justify-center gap-2 font-mono text-[11px] tracking-[0.2em] uppercase text-[#18191c]/55 mb-3 border-b border-[#18191c]/15 pb-1">
-          <span>// PROTOCOL_SPEC</span>
+          <span>{"//"} PROTOCOL_SPEC</span>
           <span className="text-[#18191c]/25">/</span>
           <span>CORE CAPABILITIES</span>
         </div>
@@ -144,7 +144,7 @@ export const FeatureSection: React.FC = () => {
             >
               {/* Top Technical Metadata Header */}
               <div className="flex items-center justify-between border-b border-[#18191c]/15 pb-2.5 mb-3.5 font-mono text-[11px]">
-                <span className="font-bold tracking-wider text-[#18191c]">{card.index} // {card.rail}</span>
+                <span className="font-bold tracking-wider text-[#18191c]">{card.index} {"//"} {card.rail}</span>
                 <span className="border border-[#18191c]/20 bg-black/5 px-2 py-0.5 rounded-[2px] tracking-tight uppercase text-[#18191c]/70 text-[10px]">
                   {card.badge}
                 </span>

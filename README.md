@@ -1,4 +1,4 @@
-# Kentir — launch your coin
+# Artemis — launch your coin
 
 Chat an idea into a token draft, then launch it from your own wallet. Non-custodial: the server never signs and never holds funds.
 
@@ -37,7 +37,7 @@ npm run dev                  # http://localhost:3000
 
 ## Launch rails
 
-- **Hood Chain (4663):** 1 transaction via KentirLauncher — fixed-supply ERC20 deploy + Uniswap V2 pool funding atomically (falls back to the legacy 2-step flow until the launcher address is configured). Testnet (46630) rehearses the deploy; the pool step is stubbed there because no V2 exists on testnet. See `docs/TESTNET-PROOF.md`.
+- **Hood Chain (4663):** 1 transaction via ArtemisLauncher — fixed-supply ERC20 deploy + Uniswap V2 pool funding atomically (falls back to the legacy 2-step flow until the launcher address is configured). Testnet (46630) rehearses the deploy; the pool step is stubbed there because no V2 exists on testnet. See `docs/TESTNET-PROOF.md`.
 - **Solana pump.fun:** metadata upload + trade-local build + wallet signature. Devnet builds the transaction bytes but refuses broadcast by design.
 
 ## Docs

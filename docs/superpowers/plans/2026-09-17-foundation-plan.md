@@ -29,11 +29,11 @@
 - `next.config.ts` — default export, no custom config v1.
 - `postcss.config.mjs` — `@tailwindcss/postcss` plugin.
 - `app/globals.css` — tailwind import plus CSS vars for theme.
-- `app/layout.tsx` — html shell, metadata title "Kentir — launch your coin".
+- `app/layout.tsx` — html shell, metadata title "Artemis — launch your coin".
 - `app/page.tsx` — composes studio: StatusBadge, StudioChat, LaunchForm, CharacterStage.
 - `lib/chains.ts` — `CHAINS` list (Hood 4663, Solana mainnet, Hood testnet 46630, Solana devnet), `getChain(id)` lookup. No RPC calls here.
 - `lib/draft.ts` — `Draft` type plus `parseDraftReply(text)` extracting `{name, ticker, pooled, liquidity, route}` from model JSON, plus `validateDraft(d)` returning string errors.
-- `lib/receipts.ts` — `saveReceipt(r)`, `listReceipts()`, `clearReceipts()` over `localStorage` key `kentir.receipts.v1`.
+- `lib/receipts.ts` — `saveReceipt(r)`, `listReceipts()`, `clearReceipts()` over `localStorage` key `artemis.receipts.v1`.
 - `lib/webgl.ts` — `isWebGLAvailable()` probe used by CharacterStage fallback.
 - `components/StatusBadge.tsx` — client, GETs `/api/status`, renders online/offline.
 - `components/StudioChat.tsx` — client composer + log + suggestion buttons, POSTs `/api/chat`.
@@ -65,7 +65,7 @@ Later plans own: `lib/launcher-evm.ts` (Plan 2), `lib/launcher-solana.ts` (Plan 
 
 ```json
 {
-  "name": "kentir",
+  "name": "artemis",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -179,7 +179,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Kentir — launch your coin",
+  title: "Artemis — launch your coin",
   description: "Chat an idea into a token draft, then launch it from your own wallet.",
 };
 
@@ -198,7 +198,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 export default function Home() {
   return (
     <main>
-      <h1>Kentir</h1>
+      <h1>Artemis</h1>
       <p>Studio lands in Task 5.</p>
     </main>
   );
@@ -349,7 +349,7 @@ describe("receipts", () => {
   });
 
   it("returns empty list when storage is corrupt", () => {
-    (localStorage as Storage).setItem("kentir.receipts.v1", "not-json{{{");
+    (localStorage as Storage).setItem("artemis.receipts.v1", "not-json{{{");
     expect(listReceipts()).toEqual([]);
   });
 });
@@ -445,7 +445,7 @@ export type Receipt = {
   createdAt: string;
 };
 
-const KEY = "kentir.receipts.v1";
+const KEY = "artemis.receipts.v1";
 
 function store(): Storage | null {
   try {
@@ -618,7 +618,7 @@ export async function GET() {
 import { NextResponse } from "next/server";
 
 const SYSTEM_PROMPT = [
-  "You are Kentir, a coin launch copilot.",
+  "You are Artemis, a coin launch copilot.",
   "Help the user shape a token draft: name, ticker, pool tokens, starting liquidity, route.",
   "Always end your reply with one fenced JSON block holding draft keys:",
   '{"name": string, "ticker": string, "pooled": string, "liquidity": string, "route": "direct" | "pumpfun"}.',
@@ -792,11 +792,11 @@ export default function StudioChat() {
   }
 
   return (
-    <section aria-label="Talk to Kentir">
+    <section aria-label="Talk to Artemis">
       <div aria-live="polite">
         {log.map((l, i) => (
           <p key={i}>
-            <strong>{l.role === "user" ? "You" : "Kentir"}:</strong> {l.content}
+            <strong>{l.role === "user" ? "You" : "Artemis"}:</strong> {l.content}
           </p>
         ))}
       </div>
@@ -806,7 +806,7 @@ export default function StudioChat() {
           void send(input);
         }}
       >
-        <label htmlFor="chat-input">Tell Kentir about your coin</label>
+        <label htmlFor="chat-input">Tell Artemis about your coin</label>
         <textarea id="chat-input" rows={2} maxLength={1000} value={input} onChange={(e) => setInput(e.target.value)} />
         <button type="submit" disabled={busy}>
           Send
@@ -986,7 +986,7 @@ function Studio() {
   const chain = CHAINS.find((c) => c.id === draft.chainId) ?? CHAINS[2];
   return (
     <main>
-      <h1>Kentir</h1>
+      <h1>Artemis</h1>
       <StatusBadge />
       <StudioChat />
       <CharacterStage />
@@ -1030,7 +1030,7 @@ git commit -m 'feat: add launch form, review dialog, studio page'
 ### Task 6: Character stage with WebGL fallback
 
 **Files:**
-- Create: `lib/webgl.ts`, `components/CharacterStage.tsx`, `public/kentir.png` (placeholder binary, any small PNG)
+- Create: `lib/webgl.ts`, `components/CharacterStage.tsx`, `public/artemis.png` (placeholder binary, any small PNG)
 - Test: `tests/webgl.test.ts`
 - Deps: `three`, `@types/three` (dev)
 
@@ -1136,20 +1136,20 @@ export default function CharacterStage() {
   }, []);
 
   if (!ready && typeof window !== "undefined" && !isWebGLAvailable()) {
-    return <img src="/kentir.png" alt="Kentir character" />;
+    return <img src="/artemis.png" alt="Artemis character" />;
   }
   return (
     <div aria-label="Character stage">
       <div ref={mount} />
-      {!ready && <img src="/kentir.png" alt="Kentir character" />}
+      {!ready && <img src="/artemis.png" alt="Artemis character" />}
     </div>
   );
 }
 ```
 
-- [ ] **Step 6: Add public/kentir.png placeholder**
+- [ ] **Step 6: Add public/artemis.png placeholder**
 
-Any small PNG file saved as `public/kentir.png`. Replace with final art later; v1 only needs the fallback path to exist.
+Any small PNG file saved as `public/artemis.png`. Replace with final art later; v1 only needs the fallback path to exist.
 
 - [ ] **Step 7: Run tests plus build**
 
@@ -1162,7 +1162,7 @@ Expected: BUILD passes
 - [ ] **Step 8: Commit**
 
 ```bash
-git add lib/webgl.ts components/CharacterStage.tsx public/kentir.png tests/webgl.test.ts package.json package-lock.json
+git add lib/webgl.ts components/CharacterStage.tsx public/artemis.png tests/webgl.test.ts package.json package-lock.json
 git commit -m 'feat: add 3D character stage with PNG fallback'
 ```
 

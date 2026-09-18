@@ -80,7 +80,7 @@ export const WorksSection: React.FC<WorksSectionProps> = () => {
                   <span className="font-light text-[#18191c]/60">Keep every parameter yours.</span>
                 </h3>
                 <p className="text-sm md:text-base text-[#18191c]/80 leading-relaxed max-w-xl">
-                  Tokenize communities and protocols through natural-language prompts. Kentir&apos;s client copilot parses ticker, supply allocation, and metadata while leaving you with 100% manual review authority before signing.
+                  Tokenize communities and protocols through natural-language prompts. Artemis&apos;s client copilot parses ticker, supply allocation, and metadata while leaving you with 100% manual review authority before signing.
                 </p>
               </div>
 
@@ -272,7 +272,7 @@ export const WorksSection: React.FC<WorksSectionProps> = () => {
                   <span className="font-light text-[#18191c]/60">Transparent token showcase.</span>
                 </h3>
                 <p className="text-sm md:text-base text-[#18191c]/80 leading-relaxed max-w-xl">
-                  Your deployed token is immediately discoverable on Kentir&apos;s public community showcase. Anyone can verify creator receipts, audit contract bytecode on the explorer, and trade directly on DEX rails.
+                  Your deployed token is immediately discoverable on Artemis&apos;s public community showcase. Anyone can verify creator receipts, audit contract bytecode on the explorer, and trade directly on DEX rails.
                 </p>
               </div>
 

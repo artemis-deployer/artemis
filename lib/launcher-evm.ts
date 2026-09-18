@@ -206,7 +206,7 @@ export async function addLiquidity(args: {
 }
 
 /**
- * One-transaction launch via KentirLauncher: deploy token + fund pool atomically.
+ * One-transaction launch via ArtemisLauncher: deploy token + fund pool atomically.
  * Either everything lands or the whole call reverts (minus gas).
  */
 export async function launchOneTx(args: {

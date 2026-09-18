@@ -55,7 +55,7 @@ export const StudioSection: React.FC = () => {
           Create &amp; Deploy
         </h2>
         <p className="text-white/70 text-base md:text-lg leading-relaxed">
-          Co-create your coin with Kentir AI Copilot or fine-tune parameters directly before signing onchain.
+          Co-create your coin with Artemis AI Copilot or fine-tune parameters directly before signing onchain.
         </p>
       </div>
 

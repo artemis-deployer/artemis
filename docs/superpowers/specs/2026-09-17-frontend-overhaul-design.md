@@ -1,9 +1,9 @@
-# Frontend Overhaul Spec — Kentir Launchpad
+# Frontend Overhaul Spec — Artemis Launchpad
 
 Date: 2026-09-17. Status: Approved by user.
 
 ## 1. Objective
-Overhaul the frontend UI/UX of Kentir while preserving its signature warm paper (`#fff9f1`), deep crimson (`#b82535`), and rich ink (`#141210`) editorial aesthetic. Transform the messy layout into a cohesive, responsive, and polished Web3 launchpad with split-studio workflow, interactive 3D character pedestal, comprehensive status indicators, refined forms, and a complete token showcase.
+Overhaul the frontend UI/UX of Artemis while preserving its signature warm paper (`#fff9f1`), deep crimson (`#b82535`), and rich ink (`#141210`) editorial aesthetic. Transform the messy layout into a cohesive, responsive, and polished Web3 launchpad with split-studio workflow, interactive 3D character pedestal, comprehensive status indicators, refined forms, and a complete token showcase.
 
 ## 2. Design System & Tokens
 - **Backgrounds**: Canvas paper `#FFF9F1`, Surface card `#FFFFFF`, Subtle blush `#FBE9E4`, Dark card `#141210`.
@@ -18,7 +18,7 @@ Overhaul the frontend UI/UX of Kentir while preserving its signature warm paper 
 - **Top Navigation Bar**: Brand mark, links to Studio, Showcase, How It Works, Docs, Live AI status pill, and Network indicator.
 - **Hero & 3D Character**:
   - Balanced 2-column or centered hero layout.
-  - Interactive 3D Icosahedron/Kentir character inside a framed pedestal card with smooth drag-to-rotate, arrow controls, and reset view button.
+  - Interactive 3D Icosahedron/Artemis character inside a framed pedestal card with smooth drag-to-rotate, arrow controls, and reset view button.
   - Value proposition and jump links.
 - **Split Studio**:
   - Left column: Studio AI Chat with message bubbles, quick suggestions, character counter, typing indicator, and draft parser sync.

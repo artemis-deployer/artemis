@@ -9,7 +9,7 @@ const disclosures = [
   },
   {
     title: 'Direct DEX liquidity tokens are unlocked.',
-    desc: 'Upon funding Uniswap V2 on Robinhood Chain, the LP pair tokens are returned directly to your connected wallet. Kentir does not escrow or time-lock LP tokens; management remains sovereign to the creator.'
+    desc: 'Upon funding Uniswap V2 on Robinhood Chain, the LP pair tokens are returned directly to your connected wallet. Artemis does not escrow or time-lock LP tokens; management remains sovereign to the creator.'
   },
   {
     title: 'Free rehearsal on testnets is recommended.',
@@ -17,11 +17,11 @@ const disclosures = [
   },
   {
     title: 'Zero platform fees and zero transfer taxes.',
-    desc: 'Kentir takes 0% platform cut on launches. The smart contracts contain no transfer tax, no marketing tax, and no blacklist hooks.'
+    desc: 'Artemis takes 0% platform cut on launches. The smart contracts contain no transfer tax, no marketing tax, and no blacklist hooks.'
   },
   {
     title: 'Client-side custody only.',
-    desc: 'Kentir runs as a client-side interface and stateless API proxy. Private keys are never requested, stored, or transmitted. Every onchain interaction requires your explicit wallet signature.'
+    desc: 'Artemis runs as a client-side interface and stateless API proxy. Private keys are never requested, stored, or transmitted. Every onchain interaction requires your explicit wallet signature.'
   },
   {
     title: 'Trading pair creation guarantees no buyers.',

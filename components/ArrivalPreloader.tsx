@@ -56,7 +56,7 @@ export const ArrivalPreloader: React.FC = () => {
         <div className="arrival-masthead flex justify-between items-center text-[10px] tracking-[0.14em] text-[#18191c]/60">
           <span className="arrival-brand flex items-center gap-2.5 text-2xl font-bold tracking-tight text-[#18191c]">
             <img src="/assets/logo.png" className="w-7 h-7 rounded-full object-cover" alt="" />
-            Kentir
+            Artemis
           </span>
           <span>AUTONOMOUS LAUNCHPAD · ROBINHOOD & SOLANA</span>
         </div>
@@ -84,7 +84,7 @@ export const ArrivalPreloader: React.FC = () => {
 
         <div className="arrival-colophon flex justify-between gap-6 border-t border-[#18191c]/15 pt-4 text-[10px] tracking-[0.14em] text-[#18191c]/60">
           <span>FIXED 999M SUPPLY · ZERO TAXES</span>
-          <span>KENTIR PROTOCOL</span>
+          <span>ARTEMIS PROTOCOL</span>
         </div>
       </div>
     </div>

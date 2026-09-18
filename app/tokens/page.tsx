@@ -87,7 +87,7 @@ export default function TokensPage() {
         <div className="mx-auto flex min-h-[80px] max-w-[1800px] items-center justify-between gap-4 px-[max(6.25vw,24px)]">
           <TransitionLink href="/" className="flex items-center gap-3 no-underline text-inherit">
             <img src="/assets/logo.png" className="w-8 h-8 rounded-full object-cover" alt="" />
-            <span className="font-unbounded text-xl font-bold tracking-tight">kentir</span>
+            <span className="font-unbounded text-xl font-bold tracking-tight">artemis</span>
           </TransitionLink>
 
           <nav className="flex items-center gap-1" aria-label="Main Navigation">

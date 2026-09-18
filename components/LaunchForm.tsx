@@ -60,7 +60,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
         <div>
           <h3 className="m-0 text-lg font-bold font-unbounded text-white">Launch Parameters</h3>
           <p className="m-0 mt-0.5 text-xs text-white/50">
-            Configure parameters or let Kentir Copilot draft them
+            Configure parameters or let Artemis Copilot draft them
           </p>
         </div>
         <span className="rounded border border-white/15 px-2.5 py-1 text-xs font-mono text-[#cadcf0]">
@@ -168,7 +168,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
           <input
             id="token-name"
             className="min-h-11 w-full rounded-lg border border-white/15 bg-[#1a1b1f] px-3 py-2.5 text-sm text-white placeholder-white/30 focus:border-[#fae8a4] focus:bg-[#1b1924]"
-            placeholder="e.g. Kentir Spark"
+            placeholder="e.g. Artemis Spark"
             value={draft.name}
             maxLength={32}
             autoComplete="off"

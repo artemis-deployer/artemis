@@ -145,7 +145,7 @@ export default function StudioChat() {
   }
 
   return (
-    <section className="flex h-[640px] flex-col overflow-hidden rounded-xl border border-white/10 bg-[#131416] shadow-2xl max-sm:h-[560px]" aria-label="Talk to Kentir">
+    <section className="flex h-[640px] flex-col overflow-hidden rounded-xl border border-white/10 bg-[#131416] shadow-2xl max-sm:h-[560px]" aria-label="Talk to Artemis">
       <div className="flex items-center justify-between border-b border-white/10 bg-[#1a1b1f] px-5 py-3.5">
         <div className="flex items-center gap-2.5">
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#fae8a4] font-unbounded text-sm text-[#18191c]" aria-hidden="true">
@@ -153,7 +153,7 @@ export default function StudioChat() {
           </span>
           <div className="flex flex-col">
             <span className="font-mono text-xs font-bold tracking-[0.08em] text-white uppercase">
-              Kentir Copilot
+              Artemis Copilot
             </span>
             <span className="text-[11px] text-white/50">Apply suggestions to your draft</span>
           </div>
@@ -188,7 +188,7 @@ export default function StudioChat() {
                 l.role === "user" ? "text-[#18191c]/70" : "text-[#cadcf0]"
               }`}
             >
-              {l.role === "user" ? "You" : "Kentir"}
+              {l.role === "user" ? "You" : "Artemis"}
             </span>
             {l.role === "assistant" ? (
               <div className="md-body">
@@ -215,7 +215,7 @@ export default function StudioChat() {
         ))}
 
         {busy && (
-          <div className="flex items-center gap-1.5 self-start rounded-lg border border-white/10 bg-[#1a1b1f] px-4 py-3" aria-label="Kentir is thinking">
+          <div className="flex items-center gap-1.5 self-start rounded-lg border border-white/10 bg-[#1a1b1f] px-4 py-3" aria-label="Artemis is thinking">
             {[0, 1, 2].map((d) => (
               <span
                 key={d}

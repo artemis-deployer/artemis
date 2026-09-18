@@ -55,7 +55,7 @@ describe("loadWallet", () => {
 
   it("accepts well-formed stored wallets", () => {
     stubStorage({
-      "kentir.wallet.v1": JSON.stringify({ kind: "evm", id: "metamask", address: EVM_ADDR }),
+      "artemis.wallet.v1": JSON.stringify({ kind: "evm", id: "metamask", address: EVM_ADDR }),
     });
     expect(loadWallet()).toEqual({ kind: "evm", id: "metamask", address: EVM_ADDR });
   });
@@ -68,7 +68,7 @@ describe("loadWallet", () => {
       { kind: "evm", id: "evilwallet", address: EVM_ADDR },
       { kind: "solana", id: "phantom", address: "" },
     ]) {
-      stubStorage({ "kentir.wallet.v1": JSON.stringify(stored) });
+      stubStorage({ "artemis.wallet.v1": JSON.stringify(stored) });
       expect(loadWallet()).toBeNull();
     }
   });

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
-import "./KentirToken.sol";
+import "./ArtemisToken.sol";
 
 interface IV2Router {
   function addLiquidityETH(
@@ -14,11 +14,11 @@ interface IV2Router {
   ) external payable returns (uint amountToken, uint amountETH, uint liquidity);
 }
 
-/// @notice One-transaction launcher: deploys a fixed-supply KentirToken and
+/// @notice One-transaction launcher: deploys a fixed-supply ArtemisToken and
 /// funds its Uniswap V2 pool atomically. Either everything lands or all reverts
 /// (minus gas). LP tokens and leftover supply go straight to the creator.
 /// The launcher never holds funds after the call.
-contract KentirLauncher {
+contract ArtemisLauncher {
   address public immutable router;
 
   event Launched(
@@ -46,7 +46,7 @@ contract KentirLauncher {
     require(pooled > 0 && pooled <= supply, "pooled");
     require(deadline > block.timestamp, "deadline");
 
-    KentirToken t = new KentirToken(n, s, supply);
+    ArtemisToken t = new ArtemisToken(n, s, supply);
     token = address(t);
 
     require(t.approve(router, pooled), "approve");

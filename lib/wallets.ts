@@ -140,7 +140,7 @@ export function withTimeout<T>(p: Promise<T>, ms = 12000): Promise<T> {
   return Promise.race([p, timeout]).finally(() => clearTimeout(timer));
 }
 
-const STORE_KEY = "kentir.wallet.v1";
+const STORE_KEY = "artemis.wallet.v1";
 
 // ponytail: id allowlists shared by loadWallet validation
 const EVM_IDS: ReadonlySet<string> = new Set(EVM_WALLETS.map((w) => w.id));
