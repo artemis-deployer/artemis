@@ -27,9 +27,9 @@ export const AudiencesSection: React.FC = () => {
     <section
       id="who-its-for"
       data-theme="dark"
-      className="audiences-section py-28 px-6 md:px-12 w-full bg-[#121218] text-[#f5f3f7]"
+      className="audiences-section py-28 px-[max(6.25vw,24px)] w-full bg-[#121218] text-[#f5f3f7]"
     >
-      <div className="max-w-6xl mx-auto w-full">
+      <div className="max-w-[1800px] mx-auto w-full">
         <div className="flex justify-between items-end mb-12">
         <div>
           <h2 className="font-sans text-3xl sm:text-4xl md:text-5xl font-light tracking-tight text-white mb-4">

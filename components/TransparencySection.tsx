@@ -38,9 +38,9 @@ export const TransparencySection: React.FC<TransparencySectionProps> = () => {
     <section
       id="transparency"
       data-theme="light"
-      className="transparency-section py-28 px-6 md:px-12 bg-[#f8f7fa] text-[#17131f]"
+      className="transparency-section py-28 px-[max(6.25vw,24px)] w-full bg-[#f8f7fa] text-[#17131f]"
     >
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-[1800px] mx-auto w-full">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
           {/* Left Column: Heading & 3D Art Card */}
           <div className="lg:col-span-5 flex flex-col justify-between">

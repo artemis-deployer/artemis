@@ -54,7 +54,7 @@ export const FeatureSection: React.FC = () => {
       data-theme="light"
       className="feature-section py-28 bg-[#f8f7fa] text-[#17131f] overflow-hidden"
     >
-      <div className="max-w-6xl mx-auto px-6 md:px-12 mb-16 text-center">
+      <div className="max-w-[1800px] mx-auto px-[max(6.25vw,24px)] mb-16 text-center">
         <h2 className="font-sans text-3xl sm:text-4xl md:text-5xl font-light tracking-tight leading-tight text-[#17131f] max-w-3xl mx-auto">
           Everything You Need for<br />Autonomous Token Launches
         </h2>

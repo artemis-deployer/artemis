@@ -88,7 +88,7 @@ export default function TokensPage() {
   return (
     <div className="min-h-screen bg-[#121218] text-[#f5f3f7] font-sans">
       <header className="sticky top-0 z-50 border-b border-white/10 bg-[#121218]/90 backdrop-blur-md">
-        <div className="mx-auto flex min-h-[80px] max-w-[1800px] items-center justify-between gap-4 px-[max(4vw,24px)]">
+        <div className="mx-auto flex min-h-[80px] max-w-[1800px] items-center justify-between gap-4 px-[max(6.25vw,24px)]">
           <TransitionLink href="/" className="flex items-center gap-3 no-underline text-inherit">
             <img src="/assets/logo.png" className="w-8 h-8 rounded-full object-cover" alt="" />
             <span className="font-unbounded text-xl font-bold tracking-tight">kentir</span>
@@ -116,7 +116,7 @@ export default function TokensPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-[1800px] px-[max(4vw,24px)] pt-12 pb-24">
+      <main className="mx-auto max-w-[1800px] px-[max(6.25vw,24px)] pt-12 pb-24">
         <div className="mb-10 border-b border-white/10 pb-8">
           <p className="m-0 mb-2 text-xs font-mono uppercase tracking-[0.2em] text-[#e4cef7]">ONCHAIN CATALOG</p>
           <h1 className="font-unbounded m-0 mb-3 text-3xl sm:text-5xl font-extrabold tracking-tight text-white">

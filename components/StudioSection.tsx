@@ -19,10 +19,10 @@ export const StudioSection: React.FC = () => {
     <section
       id="studio"
       data-theme="dark"
-      className="studio-section py-28 px-6 md:px-12 w-full text-[#f5f3f7] relative z-10"
+      className="studio-section py-28 px-[max(6.25vw,24px)] w-full text-[#f5f3f7] relative z-10"
       aria-label="Token Studio"
     >
-      <div className="max-w-6xl mx-auto w-full">
+      <div className="max-w-[1800px] mx-auto w-full">
         <div className="text-center max-w-2xl mx-auto mb-12">
         <p className="text-xs font-mono uppercase tracking-[0.2em] text-[#e4cef7] mb-3">
           INTERACTIVE LAUNCHPAD STUDIO

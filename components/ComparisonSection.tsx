@@ -54,7 +54,7 @@ export const ComparisonSection: React.FC = () => {
       className="comparison-story scroll-scene relative bg-[#121218] text-[#f5f3f7]"
       style={{ height: '240vh' }}
     >
-      <div className="comparison-stage sticky top-20 h-[calc(100vh-80px)] min-h-[580px] flex flex-col justify-center items-center overflow-hidden px-6 md:px-12">
+      <div className="comparison-stage sticky top-20 h-[calc(100vh-80px)] min-h-[580px] flex flex-col justify-center items-center overflow-hidden px-[max(6.25vw,24px)]">
         {/* Splitting Title */}
         <h2 className="comparison-title font-sans absolute inset-0 flex items-center justify-center gap-4 text-4xl sm:text-5xl md:text-7xl font-light pointer-events-none z-10 select-none">
           <span
@@ -80,7 +80,7 @@ export const ComparisonSection: React.FC = () => {
 
         {/* Rising Comparison Cards Grid */}
         <div
-          className="compare-grid w-full max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 relative z-20"
+          className="compare-grid w-full max-w-[1800px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 relative z-20"
           style={{
             opacity: cardsProgress,
             transform: `translateY(${rise}px) scale(${scale})`,

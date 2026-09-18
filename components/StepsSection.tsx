@@ -51,9 +51,9 @@ export const StepsSection: React.FC = () => {
     <section
       ref={sectionRef}
       data-theme="light"
-      className="steps-section py-28 px-6 md:px-12 bg-[#f8f7fa] text-[#17131f] overflow-hidden"
+      className="steps-section py-28 px-[max(6.25vw,24px)] bg-[#f8f7fa] text-[#17131f] overflow-hidden w-full"
     >
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-[1800px] mx-auto w-full">
         {/* Section Top */}
         <div className="mb-16">
           <h2 className="font-sans text-3xl sm:text-4xl md:text-5xl font-light tracking-tight text-[#17131f] mb-4">

@@ -10,8 +10,8 @@ interface FooterProps {
 
 export const Footer: React.FC<FooterProps> = () => {
   return (
-    <footer className="footer relative bg-[#121218] text-[#f5f3f7] pt-24 pb-12 px-6 md:px-12 overflow-hidden border-t border-white/10">
-      <div className="max-w-6xl mx-auto relative z-10">
+    <footer className="footer relative bg-[#121218] text-[#f5f3f7] pt-24 pb-12 px-[max(6.25vw,24px)] w-full overflow-hidden border-t border-white/10">
+      <div className="max-w-[1800px] mx-auto w-full relative z-10">
         {/* Top CTA Banner */}
         <div className="footer-cta bg-[#e4cef7] text-[#17131f] p-8 md:p-16 mb-28 flex flex-col md:flex-row justify-between items-start md:items-center gap-8 shadow-2xl">
           <h2 className="font-sans text-3xl sm:text-4xl md:text-5xl font-light tracking-tight max-w-lg leading-tight">

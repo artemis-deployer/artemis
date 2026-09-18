@@ -34,9 +34,9 @@ export const WorksSection: React.FC<WorksSectionProps> = () => {
     <section
       id="how-it-works"
       data-theme="dark"
-      className="works-section py-28 px-6 md:px-12 w-full bg-[#121218] text-[#f5f3f7]"
+      className="works-section py-28 px-[max(6.25vw,24px)] w-full bg-[#121218] text-[#f5f3f7]"
     >
-      <div className="max-w-6xl mx-auto w-full">
+      <div className="max-w-[1800px] mx-auto w-full">
         {/* Section Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-16">
         <div>

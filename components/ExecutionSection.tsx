@@ -14,9 +14,9 @@ export const ExecutionSection: React.FC<ExecutionSectionProps> = () => {
     <section
       id="execution"
       data-theme="light"
-      className="execution-section py-28 px-6 md:px-12 bg-[#f8f7fa] text-[#17131f]"
+      className="execution-section py-28 px-[max(6.25vw,24px)] w-full bg-[#f8f7fa] text-[#17131f]"
     >
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-[1800px] mx-auto w-full">
         {/* Center Heading */}
         <div className="text-center max-w-3xl mx-auto mb-12">
           <h2 className="font-sans text-3xl sm:text-4xl md:text-5xl font-light tracking-tight text-[#17131f] mb-4">
