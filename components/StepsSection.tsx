@@ -49,7 +49,8 @@ const STAGES = [
   {
     id: 'synthesis',
     roman: 'STAGE I',
-    shortTitle: 'Synthesis',
+    shortTitle: 'Prompt',
+    tabTitle: 'Prompt Spec',
     title: 'Prompt Synthesis',
     badge: 'NATURAL LANGUAGE',
     icon: Cpu,
@@ -59,6 +60,7 @@ const STAGES = [
     id: 'tokenomics',
     roman: 'STAGE II',
     shortTitle: 'Genesis',
+    tabTitle: 'Genesis Mint',
     title: 'Genesis Mint',
     badge: 'FIXED CAP',
     icon: Coins,
@@ -67,7 +69,8 @@ const STAGES = [
   {
     id: 'liquidity',
     roman: 'STAGE III',
-    shortTitle: 'Settlement',
+    shortTitle: 'Pool',
+    tabTitle: 'Pool Deploy',
     title: 'Pool Settlement',
     badge: 'AUTOMATED AMM',
     icon: Layers,
@@ -76,7 +79,8 @@ const STAGES = [
   {
     id: 'runtime',
     roman: 'STAGE IV',
-    shortTitle: 'Runtime',
+    shortTitle: 'Signing',
+    tabTitle: 'Client Sign',
     title: 'Client Runtime',
     badge: 'ZERO CUSTODY',
     icon: KeyRound,
@@ -183,11 +187,12 @@ export const StepsSection: React.FC = () => {
                     </span>
                   </div>
 
-                  <div className="min-h-[2rem] flex items-center">
-                    <h3 className={`font-unbounded text-[11px] sm:text-xs lg:text-[13px] font-bold tracking-tight transition-colors leading-snug ${
+                  <div className="min-h-[1.5rem] flex items-center overflow-hidden">
+                    <h3 className={`font-unbounded text-[10px] sm:text-[11px] lg:text-xs font-bold tracking-tight transition-colors whitespace-nowrap overflow-hidden text-ellipsis ${
                       isActive ? 'text-[#18191c]' : 'text-[#18191c]/70'
                     }`}>
-                      {stage.title}
+                      <span className="md:hidden">{stage.shortTitle}</span>
+                      <span className="hidden md:inline">{stage.tabTitle}</span>
                     </h3>
                   </div>
 
