@@ -33,12 +33,6 @@ export const IntroSection: React.FC<IntroSectionProps> = () => {
           
           {/* Left Column: Manifesto Statement & Action */}
           <div className="lg:col-span-6 flex flex-col items-start text-left">
-            <div className="inline-flex items-center gap-2 font-mono text-[11px] tracking-[0.2em] uppercase text-[#18191c]/60 mb-3.5 border-b border-[#18191c]/15 pb-1.5">
-              <span>// ARCHITECTURE_01</span>
-              <span className="text-[#18191c]/25">/</span>
-              <span>SOVEREIGNTY IN EVERY LAUNCH</span>
-            </div>
-
             <h2 className="font-unbounded text-2xl sm:text-3xl md:text-4xl lg:text-[2.65rem] font-bold tracking-tight leading-[1.1] text-[#18191c]">
               Kentir puts token creation back in your hands.
             </h2>

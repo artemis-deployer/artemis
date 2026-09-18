@@ -737,22 +737,9 @@ details[open] summary::after {
   }
 }
 
-/* Intro Section Word Scrub & Background Shift */
+/* Intro Section Background */
 .intro {
-  padding: 76px 24px 200px;
-  min-height: 800px;
   background: #ece4d4;
-}
-
-.intro h2 {
-  font-size: 64px;
-  line-height: 1.07;
-  letter-spacing: -1.9px;
-}
-
-.intro .heading-word {
-  opacity: 0.22;
-  transition: opacity 0.15s ease-out;
 }
 
 /* Hero Section Ambient Shift */
