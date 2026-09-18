@@ -161,13 +161,11 @@ export const FeatureSection: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/15 to-transparent pointer-events-none" />
               </div>
 
-              {/* Title & Description - Strictly Capped at Maximum 2 Lines */}
+              {/* Title & Description */}
               <div className="flex-1 flex flex-col justify-start">
-                <div className="h-11 sm:h-12 flex flex-col justify-center mb-2">
-                  <h3 className="font-unbounded text-sm sm:text-[15px] font-bold tracking-tight text-[#18191c] leading-snug line-clamp-2">
-                    {card.title}
-                  </h3>
-                </div>
+                <h3 className="font-unbounded text-sm sm:text-[15px] font-bold tracking-tight text-[#18191c] leading-snug min-h-[2.6rem] flex items-start mb-2">
+                  {card.title}
+                </h3>
                 <p className="text-xs sm:text-[13px] text-[#18191c]/75 leading-relaxed">
                   {card.desc}
                 </p>
