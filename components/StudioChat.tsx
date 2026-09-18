@@ -1,11 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { SendHorizonal } from "lucide-react";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { RotateCcw, SendHorizonal, Sparkles } from "lucide-react";
 import { parseDraftReply } from "../lib/draft";
+import type { Draft } from "../lib/draft";
 import { useDraft } from "./DraftContext";
 
-type Line = { role: "user" | "assistant"; content: string };
+type Line = { role: "user" | "assistant"; content: string; kind?: "ok" | "error"; patched?: boolean; patch?: Partial<Draft> };
 
 const SUGGESTIONS = [
   "Community coin for a local arts club",
@@ -14,29 +17,79 @@ const SUGGESTIONS = [
 ];
 
 const OFFLINE_LINE = "AI offline · configure parameters in the form directly.";
+const LIMIT_LINE = "Message exceeds character limit or could not be processed. Try again with a shorter prompt.";
+const GREETING = "Tell me about your coin idea or community, and I'll draft the launch parameters for you.";
+
+/** Hide the machine-readable JSON draft block; humans read the prose. */
+function displayOf(reply: string, patched: boolean): string {
+  const stripped = reply
+    .replace(/```json\s*[\s\S]*?```/g, "")
+    .replace(/\{[^{}]*"ticker"[^{}]*\}\s*$/, "")
+    .trim();
+  if (stripped) return stripped;
+  return patched ? "Draft updated from your idea — review it in Manual Parameters." : reply;
+}
+
+function prefersReducedMotion(): boolean {
+  return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+const TYPE_STEP = 14;
+const TYPE_MS = 12;
 
 export default function StudioChat() {
   const { setDraft } = useDraft();
-  const [log, setLog] = useState<Line[]>([
-    {
-      role: "assistant",
-      content:
-        "Tell me about your coin idea or community, and I'll draft the launch parameters for you.",
-    },
-  ]);
+  const [log, setLog] = useState<Line[]>([{ role: "assistant", content: GREETING }]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
+  const [reveal, setReveal] = useState<{ i: number; n: number } | null>(null);
   const logRef = useRef<HTMLDivElement>(null);
+  const areaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: "smooth" });
-  }, [log, busy]);
+  }, [log, busy, reveal]);
+
+  useEffect(() => {
+    if (!reveal) return;
+    const id = setTimeout(() => {
+      setReveal((r) => {
+        if (!r) return r;
+        const full = log[r.i]?.content ?? "";
+        return r.n >= full.length ? null : { i: r.i, n: r.n + TYPE_STEP };
+      });
+    }, TYPE_MS);
+    return () => clearTimeout(id);
+  }, [reveal, log]);
+
+  useEffect(() => {
+    const el = areaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.overflowY = "hidden";
+    el.style.height = `${Math.min(el.scrollHeight, 110)}px`;
+    if (el.scrollHeight > 110) el.style.overflowY = "auto";
+  }, [input]);
+
+  function reset() {
+    if (busy) return;
+    setReveal(null);
+    setLog([{ role: "assistant", content: GREETING }]);
+    setInput("");
+  }
+
+  function applyPatch(i: number) {
+    const line = log[i];
+    if (!line?.patch || line.patched) return;
+    setDraft((prev) => ({ ...prev, ...line.patch }));
+    setLog((prev) => prev.map((l, j) => (j === i ? { ...l, patched: true } : l)));
+  }
 
   async function send(text: string) {
     const content = text.trim().slice(0, 1000);
     if (!content || busy) return;
     setBusy(true);
-    const next = [...log, { role: "user" as const, content }];
+    const next: Line[] = [...log, { role: "user" as const, content }];
     setLog(next);
     setInput("");
 
@@ -44,85 +97,132 @@ export default function StudioChat() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ messages: next }),
+        body: JSON.stringify({
+          messages: next.map(({ role, content: c }) => ({ role, content: c })),
+        }),
       });
 
       if (res.status === 400) {
-        setLog([
-          ...next,
-          {
-            role: "assistant" as const,
-            content: "Message exceeds character limit or could not be processed. Try again with a shorter prompt.",
-          },
-        ]);
+        setLog([...next, { role: "assistant" as const, content: LIMIT_LINE, kind: "error" }]);
         return;
       }
 
       const json = (await res.json()) as { reply?: string; error?: string };
-      const reply = json.reply ?? OFFLINE_LINE;
-      setLog([...next, { role: "assistant" as const, content: reply }]);
-
+      const reply = json.reply || OFFLINE_LINE;
       const patch = parseDraftReply(reply);
-      if (Object.keys(patch).length > 0) {
-        setDraft((prev) => ({ ...prev, ...patch }));
-      }
+      const hasPatch = Object.keys(patch).length > 0;
+      const shown = displayOf(reply, hasPatch);
+      const at = next.length;
+      setLog([...next, { role: "assistant" as const, content: shown, kind: reply === OFFLINE_LINE ? "error" : "ok", patched: false, patch: hasPatch ? patch : undefined }]);
+      if (!prefersReducedMotion()) setReveal({ i: at, n: 0 });
     } catch {
-      setLog([...next, { role: "assistant" as const, content: OFFLINE_LINE }]);
+      setLog([...next, { role: "assistant" as const, content: OFFLINE_LINE, kind: "error" }]);
     } finally {
       setBusy(false);
     }
   }
 
+  function visible(l: Line, i: number): string {
+    if (l.role !== "assistant" || !reveal || reveal.i !== i) return l.content;
+    return l.content.slice(0, reveal.n);
+  }
+
   return (
     <section className="flex h-[640px] flex-col overflow-hidden rounded-xl border border-white/10 bg-[#14131b] shadow-2xl max-sm:h-[560px]" aria-label="Talk to Kentir">
       <div className="flex items-center justify-between border-b border-white/10 bg-[#18171f] px-5 py-3.5">
-        <div className="text-xs font-bold tracking-[0.08em] text-white uppercase font-mono">
-          <span>Kentir Copilot</span>
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#e4cef7] font-unbounded text-sm text-[#17131f]" aria-hidden="true">
+            K
+          </span>
+          <div className="flex flex-col">
+            <span className="font-mono text-xs font-bold tracking-[0.08em] text-white uppercase">
+              Kentir Copilot
+            </span>
+            <span className="text-[11px] text-white/50">Apply suggestions to your draft</span>
+          </div>
         </div>
-        <span className="text-xs text-white/50">Draft fills as you chat</span>
+        <button
+          type="button"
+          onClick={reset}
+          disabled={busy || log.length <= 1}
+          title="Clear chat"
+          aria-label="Clear chat"
+          className="inline-flex min-h-9 min-w-9 cursor-pointer items-center justify-center rounded-lg border border-white/10 bg-white/5 p-2 text-white/60 transition-all hover:border-white/30 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          <RotateCcw size={14} />
+        </button>
       </div>
 
-      <div className="flex flex-1 flex-col gap-3.5 overflow-y-auto p-5" aria-live="polite" ref={logRef}>
+      <div className="chat-scroll flex flex-1 flex-col gap-3.5 overflow-y-auto p-5" aria-live="polite" ref={logRef}>
         {log.map((l, i) => (
           <div
             key={i}
             data-role={l.role}
             className={`max-w-[86%] rounded-lg px-4 py-3 text-sm leading-relaxed break-words ${
               l.role === "user"
-                ? "self-end bg-[#e4cef7] text-[#17131f] shadow-md font-medium"
-                : "self-start border border-white/10 bg-[#1b1924] text-[#f5f3f7]"
+                ? "self-end bg-[#e4cef7] font-medium text-[#17131f] shadow-md"
+                : l.kind === "error"
+                  ? "self-start border border-amber-300/30 bg-amber-300/10 text-[#f5f3f7]"
+                  : "self-start border border-white/10 bg-[#1b1924] text-[#f5f3f7]"
             }`}
           >
             <span
-              className={`mb-1 block text-[11px] font-bold tracking-[0.06em] uppercase font-mono ${
+              className={`mb-1 block font-mono text-[11px] font-bold tracking-[0.06em] uppercase ${
                 l.role === "user" ? "text-[#17131f]/70" : "text-[#b9e2f8]"
               }`}
             >
               {l.role === "user" ? "You" : "Kentir"}
             </span>
-            <p className="m-0 leading-relaxed whitespace-pre-wrap">{l.content}</p>
+            {l.role === "assistant" ? (
+              <div className="md-body">
+                <Markdown remarkPlugins={[remarkGfm]}>{visible(l, i)}</Markdown>
+              </div>
+            ) : (
+              <p className="m-0 leading-relaxed whitespace-pre-wrap">{l.content}</p>
+            )}
+            {l.patch && !l.patched && (!reveal || reveal.i !== i) && (
+              <button
+                type="button"
+                onClick={() => applyPatch(i)}
+                className="mt-2 inline-flex cursor-pointer items-center gap-1 rounded-full border border-[#e4cef7]/40 bg-[#e4cef7]/10 px-3 py-1 text-[11px] font-bold text-[#e4cef7] transition-all hover:bg-[#e4cef7]/20"
+              >
+                <Sparkles size={11} aria-hidden="true" /> Apply to form →
+              </button>
+            )}
+            {l.patched && (!reveal || reveal.i !== i) && (
+              <span className="mt-2 inline-flex items-center gap-1 rounded-full border border-emerald-300/30 bg-emerald-300/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-200">
+                <Sparkles size={11} aria-hidden="true" /> Draft updated
+              </span>
+            )}
           </div>
         ))}
 
         {busy && (
-          <div className="self-start rounded-lg border border-white/10 bg-[#1b1924] px-4 py-3 text-xs text-white/60">
-            <span>Thinking…</span>
+          <div className="flex items-center gap-1.5 self-start rounded-lg border border-white/10 bg-[#1b1924] px-4 py-3" aria-label="Kentir is thinking">
+            {[0, 1, 2].map((d) => (
+              <span
+                key={d}
+                className="h-1.5 w-1.5 animate-bounce rounded-full bg-white/60"
+                style={{ animationDelay: `${d * 0.15}s` }}
+              />
+            ))}
           </div>
         )}
       </div>
 
       <div className="flex items-center gap-2 overflow-x-auto border-t border-white/10 bg-[#18171f] px-5 py-2.5">
-        <span className="text-xs font-semibold tracking-wider text-white/40 uppercase font-mono">
+        <span className="font-mono text-xs font-semibold tracking-wider text-white/40 uppercase">
           Suggestions:
         </span>
         {SUGGESTIONS.map((s) => (
           <button
             key={s}
             type="button"
-            className="min-h-9 shrink-0 cursor-pointer rounded border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-medium whitespace-nowrap text-white/80 transition-all hover:border-white/30 hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex min-h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-medium whitespace-nowrap text-white/80 transition-all hover:border-white/30 hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
             disabled={busy}
             onClick={() => void send(s)}
           >
+            <Sparkles size={12} className="text-[#e4cef7]" aria-hidden="true" />
             {s}
           </button>
         ))}
@@ -136,13 +236,18 @@ export default function StudioChat() {
         }}
       >
         <div className="flex items-end gap-2.5">
+          <div className="flex min-h-11 flex-1 items-center gap-2 rounded-lg border border-white/15 bg-[#18171f] px-3.5 transition-colors focus-within:border-[#e4cef7] focus-within:bg-[#1b1924]">
           <textarea
             id="chat-input"
-            rows={2}
+            ref={areaRef}
+            rows={1}
             maxLength={1000}
             value={input}
             placeholder="Type your coin idea..."
-            className="max-h-[110px] min-h-12 flex-1 resize-none rounded-lg border border-white/15 bg-[#18171f] px-3.5 py-2.5 font-[inherit] text-sm leading-snug text-white placeholder-white/30 focus:border-[#e4cef7] focus:bg-[#1b1924]"
+            aria-label="Type your coin idea"
+            autoComplete="off"
+            style={{ outline: "none", boxShadow: "none" }}
+            className="max-h-[110px] w-full flex-1 resize-none overflow-y-auto border-0 bg-transparent py-[9px] font-[inherit] text-sm leading-snug text-white placeholder-white/30"
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
@@ -151,10 +256,12 @@ export default function StudioChat() {
               }
             }}
           />
+          </div>
           <button
             type="submit"
             disabled={busy || !input.trim()}
-            className="inline-flex h-12 cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-[#e4cef7] px-5 text-[13px] font-bold whitespace-nowrap text-[#17131f] transition-all hover:bg-[#f1d2e8] disabled:cursor-not-allowed disabled:border disabled:border-white/10 disabled:bg-white/5 disabled:text-white/30"
+            title="Send (Enter)"
+            className="inline-flex h-11 shrink-0 cursor-pointer items-center justify-center gap-1.5 self-end rounded-lg bg-[#e4cef7] px-5 text-[13px] font-bold whitespace-nowrap text-[#17131f] transition-all hover:bg-[#f1d2e8] disabled:cursor-not-allowed disabled:border disabled:border-white/10 disabled:bg-white/5 disabled:text-white/30"
             aria-label="Send message"
           >
             <SendHorizonal size={16} />

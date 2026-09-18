@@ -15,6 +15,38 @@ describe("parseDraftReply", () => {
   it("returns empty object on broken JSON", () => {
     expect(parseDraftReply('{"ticker":')).toEqual({});
   });
+
+  it("extracts JSON from a fenced multi-block reply", () => {
+    const reply = [
+      "Nice idea! Here is a table:",
+      "| Field | Value |",
+      "|---|---|",
+      "| Ticker | ARTS |",
+      "",
+      "```json",
+      '{"name":"Community Canvas","ticker":"arts","pooled":"500000000","liquidity":"1.5","route":"pumpfun"}',
+      "```",
+      "Tell me if you want tweaks!",
+    ].join("\n");
+    expect(parseDraftReply(reply)).toEqual({
+      name: "Community Canvas",
+      ticker: "ARTS",
+      pooled: "500000000",
+      liquidity: "1.5",
+      route: "pumpfun",
+    });
+  });
+
+  it("prefers the last valid block when several exist", () => {
+    expect(parseDraftReply('First {"ticker":"OLD"} then final {"ticker":"new","route":"direct"} ok')).toMatchObject({
+      ticker: "NEW",
+      route: "direct",
+    });
+  });
+
+  it("ignores unknown keys such as image", () => {
+    expect(parseDraftReply('{"ticker":"X","image":"https://x/y.png","foo":1}')).toEqual({ ticker: "X" });
+  });
 });
 
 describe("validateDraft", () => {

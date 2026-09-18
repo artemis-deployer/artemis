@@ -53,14 +53,14 @@ export default function WalletModal({
 
   return (
     <div
-      className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+      className="wallet-overlay-in fixed inset-0 z-[120] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
       role="dialog"
       aria-modal="true"
       aria-label={kind === "evm" ? "Connect Ethereum wallet" : "Connect Solana wallet"}
       onClick={onClose}
     >
       <div
-        className="flex max-h-[85vh] w-full max-w-[420px] flex-col gap-1 overflow-hidden rounded-2xl border border-white/15 bg-[#18171f] p-6 shadow-2xl text-white"
+        className="wallet-panel-in flex max-h-[85vh] w-full max-w-[420px] flex-col gap-1 overflow-hidden rounded-2xl border border-white/15 bg-[#18171f] p-6 text-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-3 flex items-center justify-between border-b border-white/10 pb-3">
@@ -97,9 +97,8 @@ export default function WalletModal({
                 }`}
               >
                 <span className="flex items-center gap-3">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 font-unbounded text-sm font-bold text-[#e4cef7]" aria-hidden="true">
-                    {o.name.charAt(0)}
-                  </span>
+                  {/* eslint-disable-next-line @next/next/no-img-element -- local wallet brand icons */}
+                  <img src={o.icon} alt="" aria-hidden="true" className="h-9 w-9 rounded-full bg-white object-contain p-0.5" />
                   <span className="text-sm font-bold text-white">{o.name}</span>
                 </span>
                 <span className="text-xs font-semibold text-white/50 font-mono">

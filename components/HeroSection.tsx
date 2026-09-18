@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import { HOOD_MAINNET } from '../lib/launcher-evm';
 import { FloatingPixels } from './FloatingPixels';
 
 interface HeroSectionProps {
@@ -9,7 +10,7 @@ interface HeroSectionProps {
 
 export const HeroSection: React.FC<HeroSectionProps> = () => {
   const [copied, setCopied] = useState(false);
-  const routerAddress = '0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24'; // Verified Uniswap V2 Router on Robinhood Chain
+  const routerAddress = HOOD_MAINNET.router ?? ""; // single source: audited Uniswap V2 router
 
   const handleCopy = () => {
     if (typeof navigator !== 'undefined' && navigator.clipboard) {

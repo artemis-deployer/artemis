@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { HOOD_MAINNET } from '../lib/launcher-evm';
 import { TransitionLink } from './PageTransition';
 import { FloatingPixels } from './FloatingPixels';
 
@@ -60,7 +61,7 @@ export const Footer: React.FC<FooterProps> = () => {
               Solana Devnet ↗
             </a>
             <a
-              href="https://robinhoodchain.blockscout.com/address/0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24"
+              href={`${HOOD_MAINNET.explorer}/address/${HOOD_MAINNET.router ?? ""}`}
               target="_blank"
               rel="noreferrer"
             >

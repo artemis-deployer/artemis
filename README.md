@@ -27,12 +27,12 @@ npm run dev                  # http://localhost:3000
 | `npm run build` | Production build (runs tsc) |
 | `npm test` | Vitest suite |
 | `npm run lint` | ESLint, 0 errors required |
-| `node scripts/compile-token.mjs` | Rebuild `lib/token-artifact.ts` from `contracts/KentirToken.sol` |
+| `node scripts/compile-token.mjs` | Rebuild `lib/token-artifact.ts` + `lib/launcher-artifact.ts` from `contracts/` |
 | `psql "$DATABASE_URL" -f migrations/0001_init.sql` | Create the showcase table once |
 
 ## Launch rails
 
-- **Hood Chain (4663):** 2 honest transactions — deploy fixed-supply ERC20, then fund a Uniswap V2 pool. Testnet (46630) rehearses the deploy; the pool step is stubbed there because no V2 exists on testnet. See `docs/TESTNET-PROOF.md`.
+- **Hood Chain (4663):** 1 transaction via KentirLauncher — fixed-supply ERC20 deploy + Uniswap V2 pool funding atomically (falls back to the legacy 2-step flow until the launcher address is configured). Testnet (46630) rehearses the deploy; the pool step is stubbed there because no V2 exists on testnet. See `docs/TESTNET-PROOF.md`.
 - **Solana pump.fun:** metadata upload + trade-local build + wallet signature. Devnet builds the transaction bytes but refuses broadcast by design.
 
 ## Docs

@@ -22,22 +22,23 @@ export type WalletOption = {
   kind: WalletKind;
   name: string;
   installUrl: string;
+  icon: string;
 };
 
 export const EVM_WALLETS: WalletOption[] = [
-  { id: "metamask", kind: "evm", name: "MetaMask", installUrl: "https://metamask.io/download/" },
-  { id: "rabby", kind: "evm", name: "Rabby", installUrl: "https://rabby.io/" },
-  { id: "coinbase", kind: "evm", name: "Coinbase Wallet", installUrl: "https://www.coinbase.com/wallet/downloads" },
-  { id: "okx", kind: "evm", name: "OKX Wallet", installUrl: "https://www.okx.com/web3" },
-  { id: "trust", kind: "evm", name: "Trust Wallet", installUrl: "https://trustwallet.com/download" },
-  { id: "phantom", kind: "evm", name: "Phantom (EVM)", installUrl: "https://phantom.app/download" },
+  { id: "metamask", kind: "evm", name: "MetaMask", installUrl: "https://metamask.io/download/", icon: "/wallets/metamask.svg" },
+  { id: "rabby", kind: "evm", name: "Rabby", installUrl: "https://rabby.io/", icon: "/wallets/rabby.svg" },
+  { id: "coinbase", kind: "evm", name: "Coinbase Wallet", installUrl: "https://www.coinbase.com/wallet/downloads", icon: "/wallets/coinbase.svg" },
+  { id: "okx", kind: "evm", name: "OKX Wallet", installUrl: "https://www.okx.com/web3", icon: "/wallets/okx.svg" },
+  { id: "trust", kind: "evm", name: "Trust Wallet", installUrl: "https://trustwallet.com/download", icon: "/wallets/trust.svg" },
+  { id: "phantom", kind: "evm", name: "Phantom (EVM)", installUrl: "https://phantom.app/download", icon: "/wallets/phantom.svg" },
 ];
 
 export const SOLANA_WALLETS: WalletOption[] = [
-  { id: "phantom", kind: "solana", name: "Phantom", installUrl: "https://phantom.app/download" },
-  { id: "solflare", kind: "solana", name: "Solflare", installUrl: "https://solflare.com/download" },
-  { id: "backpack", kind: "solana", name: "Backpack", installUrl: "https://www.backpack.app/" },
-  { id: "nightly", kind: "solana", name: "Nightly", installUrl: "https://nightly.app/download" },
+  { id: "phantom", kind: "solana", name: "Phantom", installUrl: "https://phantom.app/download", icon: "/wallets/phantom.svg" },
+  { id: "solflare", kind: "solana", name: "Solflare", installUrl: "https://solflare.com/download", icon: "/wallets/solflare.svg" },
+  { id: "backpack", kind: "solana", name: "Backpack", installUrl: "https://www.backpack.app/", icon: "/wallets/backpack.svg" },
+  { id: "nightly", kind: "solana", name: "Nightly", installUrl: "https://nightly.app/download", icon: "/wallets/nightly.svg" },
 ];
 
 type Win = typeof window & {
@@ -266,6 +267,38 @@ export function getActiveSolanaProvider(): SolanaProviderLike | null {
   return (
     asSolana(w.phantom?.solana) ?? asSolana(w.solflare) ?? asSolana(w.backpack) ?? asSolana(w.solana)
   );
+}
+
+/** Native balance of an EVM account, formatted (e.g. "1.2345"). Null when unreadable. */
+export async function getEvmBalance(provider: EvmProvider, address: string): Promise<string | null> {
+  try {
+    const hex = (await withTimeout(provider.request({ method: "eth_getBalance", params: [address, "latest"] }), 8000)) as string;
+    const wei = BigInt(hex);
+    const whole = wei / 10n ** 18n;
+    const frac = ((wei % 10n ** 18n) / 10n ** 14n).toString().padStart(4, "0").replace(/0+$/, "");
+    return frac ? `${whole}.${frac}` : `${whole}`;
+  } catch {
+    return null;
+  }
+}
+
+/** Native SOL balance of an account via public RPC. Null when unreadable. */
+export async function getSolanaBalance(address: string, rpc = "https://api.mainnet-beta.solana.com"): Promise<string | null> {
+  try {
+    const res = await fetch(rpc, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "getBalance", params: [address] }),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { result?: { value?: number } };
+    const lamports = data.result?.value;
+    if (typeof lamports !== "number") return null;
+    const sol = lamports / 1e9;
+    return sol >= 1000 ? sol.toLocaleString("en-US", { maximumFractionDigits: 2 }) : String(Math.round(sol * 1e4) / 1e4);
+  } catch {
+    return null;
+  }
 }
 
 export function walletLabel(e: unknown): string {

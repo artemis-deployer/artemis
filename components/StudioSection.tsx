@@ -69,7 +69,9 @@ export const StudioSection: React.FC = () => {
 
       {/* Main Studio Frame */}
       <div className="rounded-xl border border-white/15 bg-[#18171f] shadow-2xl p-4 sm:p-8">
-        {tab === 'copilot' ? (
+        {/* Both panes stay mounted so the conversation survives tab switches.
+            Only the reset button inside Copilot Chat clears it. */}
+        <div hidden={tab !== 'copilot'}>
           <div>
             <StudioChat />
             <div className="mt-8 flex flex-col items-center gap-3">
@@ -91,13 +93,14 @@ export const StudioSection: React.FC = () => {
               )}
             </div>
           </div>
-        ) : (
+        </div>
+        <div hidden={tab !== 'manual'}>
           <LaunchForm
             onReview={() => {
               ref.current?.showModal();
             }}
           />
-        )}
+        </div>
 
         <ReviewDialog ref={ref} draft={draft} mainnet={!chain.testnet} />
       </div>

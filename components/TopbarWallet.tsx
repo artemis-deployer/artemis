@@ -1,5 +1,6 @@
 "use client";
 
+import { DEVNET_RPC, MAINNET_RPC } from "../lib/launcher-solana";
 import { useDraft } from "./DraftContext";
 import SolanaButton from "./SolanaButton";
 import WalletButton from "./WalletButton";
@@ -12,7 +13,7 @@ export default function TopbarWallet() {
       {id === 4663 || id === 46630 ? (
         <WalletButton chainId={id} />
       ) : typeof id === "string" && id.startsWith("solana") ? (
-        <SolanaButton />
+        <SolanaButton rpc={id === "solana-devnet" ? DEVNET_RPC : MAINNET_RPC} />
       ) : (
         <WalletButton chainId={46630} />
       )}

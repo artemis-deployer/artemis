@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import { HOOD_MAINNET } from '../lib/launcher-evm';
 import { TransitionLink } from './PageTransition';
 
 interface ExecutionSectionProps {
@@ -100,7 +101,7 @@ export const ExecutionSection: React.FC<ExecutionSectionProps> = () => {
 
               <ul className="space-y-3 text-xs sm:text-sm text-[#17131f]/90 border-l border-[#17131f]/15 pl-4 sm:pl-6 my-auto list-none p-0">
                 <li className="flex items-center gap-2">⊙ Fixed 999M total supply</li>
-                <li className="flex items-center gap-2">⊙ Router 0x4752...aD24</li>
+                <li className="flex items-center gap-2">⊙ Router {(HOOD_MAINNET.router ?? "").slice(0, 6)}...{(HOOD_MAINNET.router ?? "").slice(-4)}</li>
                 <li className="flex items-center gap-2">⊙ Paired with native ETH</li>
                 <li className="flex items-center gap-2">⊙ Free testnet rehearsal</li>
                 <li className="flex items-center gap-2">⊙ Unlocked LP tokens to creator</li>

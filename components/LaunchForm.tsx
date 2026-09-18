@@ -1,14 +1,43 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { useRef, useState } from "react";
+import { ArrowRight, ImagePlus, X } from "lucide-react";
 import { CHAINS, DIRECT_SUPPLY } from "../lib/chains";
 import { validateDraft } from "../lib/draft";
 import { useDraft } from "./DraftContext";
 
+/** Downscale an image file to a small data URL (max 512px, JPEG). */
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(1, 512 / Math.max(img.width, img.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(img.width * scale));
+      canvas.height = Math.max(1, Math.round(img.height * scale));
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        reject(new Error("image_failed"));
+        return;
+      }
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL("image/jpeg", 0.85));
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("image_failed"));
+    };
+    img.src = url;
+  });
+}
+
 export default function LaunchForm({ onReview }: { onReview: () => void }) {
   const { draft, setDraft } = useDraft();
   const [consent, setConsent] = useState(false);
+  const [imageError, setImageError] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
   const errors = validateDraft(draft);
   const chain = CHAINS.find((c) => c.id === draft.chainId) ?? CHAINS[2];
   const mainnet = !chain.testnet;
@@ -40,6 +69,10 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
       {/* Live Token Stamp Preview */}
       <div className="flex items-center justify-between gap-3 rounded-lg border border-white/15 bg-[#18171f] px-[18px] py-3.5 max-sm:flex-wrap">
         <div className="flex items-baseline gap-2">
+          {draft.image && (
+            /* eslint-disable-next-line @next/next/no-img-element -- local data-URL preview, never remote */
+            <img src={draft.image} alt="" aria-hidden="true" className="h-7 w-7 self-center rounded-full border border-white/15 object-cover" />
+          )}
           <span className="font-unbounded text-[24px] font-bold leading-none text-[#e4cef7] max-sm:text-xl">
             {draft.ticker ? `$${draft.ticker}` : "$TICKER"}
           </span>
@@ -83,6 +116,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
                 }`}
                 role="button"
                 tabIndex={0}
+                aria-pressed={active}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     setDraft({ ...draft, chainId: c.id, route: sol ? "pumpfun" : "direct" });
@@ -90,12 +124,27 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
                   }
                 }}
               >
-                <div className="flex items-center justify-between text-sm font-bold text-white">
-                  <span>{c.name}</span>
-                  <span className={`rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase font-mono ${
-                    c.testnet ? "border-emerald-500/30 text-emerald-400 bg-emerald-500/10" : "border-purple-500/30 text-purple-300 bg-purple-500/10"
-                  }`}>
-                    {c.testnet ? "Testnet" : "Mainnet"}
+                <div className="flex items-center justify-between gap-2 text-sm font-bold text-white">
+                  <span className="inline-flex items-center gap-2">
+                    <span
+                      aria-hidden="true"
+                      className={`flex h-4 w-4 items-center justify-center rounded-full border text-[10px] leading-none ${
+                        active ? "border-[#e4cef7] bg-[#e4cef7] text-[#17131f]" : "border-white/25 text-transparent"
+                      }`}
+                    >
+                      ✓
+                    </span>
+                    <span>{c.name}</span>
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-[10px] font-bold text-[#b9e2f8]">
+                      {c.currency}
+                    </span>
+                    <span className={`rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase font-mono ${
+                      c.testnet ? "border-emerald-500/30 text-emerald-400 bg-emerald-500/10" : "border-purple-500/30 text-purple-300 bg-purple-500/10"
+                    }`}>
+                      {c.testnet ? "Testnet" : "Mainnet"}
+                    </span>
                   </span>
                 </div>
                 <span className="text-[11px] text-white/50">
@@ -116,10 +165,12 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
           </label>
           <input
             id="token-name"
-            className="w-full rounded-lg border border-white/15 bg-[#18171f] px-3 py-2.5 text-sm text-white placeholder-white/30 focus:border-[#e4cef7] focus:bg-[#1b1924]"
+            className="min-h-11 w-full rounded-lg border border-white/15 bg-[#18171f] px-3 py-2.5 text-sm text-white placeholder-white/30 focus:border-[#e4cef7] focus:bg-[#1b1924]"
             placeholder="e.g. Kentir Spark"
             value={draft.name}
             maxLength={32}
+            autoComplete="off"
+            spellCheck={false}
             onChange={(e) => setDraft({ ...draft, name: e.target.value })}
           />
         </div>
@@ -131,10 +182,14 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
           </label>
           <input
             id="token-ticker"
-            className="w-full rounded-lg border border-white/15 bg-[#18171f] px-3 py-2.5 font-mono text-sm font-bold tracking-wider text-white uppercase placeholder-white/30 focus:border-[#e4cef7] focus:bg-[#1b1924]"
+            className="min-h-11 w-full rounded-lg border border-white/15 bg-[#18171f] px-3 py-2.5 font-mono text-sm font-bold tracking-wider text-white uppercase placeholder-white/30 focus:border-[#e4cef7] focus:bg-[#1b1924]"
             placeholder="e.g. SPARK"
             value={draft.ticker}
             maxLength={12}
+            autoComplete="off"
+            autoCapitalize="characters"
+            spellCheck={false}
+            aria-required="true"
             onChange={(e) => setDraft({ ...draft, ticker: e.target.value.toUpperCase() })}
           />
         </div>
@@ -142,15 +197,21 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
         <div className="flex flex-col gap-[5px]">
           <label className="flex items-center justify-between text-xs font-bold tracking-[0.02em] text-white/90" htmlFor="pool-tokens">
             <span>Tokens for Liquidity Pool</span>
-            <span className="text-[11px] font-medium text-white/40">Max {totalSupply.toLocaleString()}</span>
+            <span className="text-[11px] font-medium text-white/40">
+              {isSolana ? "Direct pools only" : `Max ${totalSupply.toLocaleString("en-US")}`}
+            </span>
           </label>
           <input
             id="pool-tokens"
-            className="w-full rounded-lg border border-white/15 bg-[#18171f] px-3 py-2.5 font-mono text-sm text-white placeholder-white/30 focus:border-[#e4cef7] focus:bg-[#1b1924]"
+            className="min-h-11 w-full rounded-lg border border-white/15 bg-[#18171f] px-3 py-2.5 font-mono text-sm text-white placeholder-white/30 focus:border-[#e4cef7] focus:bg-[#1b1924]"
             inputMode="decimal"
             placeholder="e.g. 500000000"
             value={draft.pooled}
-            onChange={(e) => setDraft({ ...draft, pooled: e.target.value })}
+            maxLength={30}
+            autoComplete="off"
+            spellCheck={false}
+            aria-required={!isSolana}
+            onChange={(e) => setDraft({ ...draft, pooled: e.target.value.replace(/[,\\s]/g, "") })}
           />
         </div>
 
@@ -161,13 +222,74 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
           </label>
           <input
             id="initial-liquidity"
-            className="w-full rounded-lg border border-white/15 bg-[#18171f] px-3 py-2.5 font-mono text-sm text-white placeholder-white/30 focus:border-[#e4cef7] focus:bg-[#1b1924]"
+            className="min-h-11 w-full rounded-lg border border-white/15 bg-[#18171f] px-3 py-2.5 font-mono text-sm text-white placeholder-white/30 focus:border-[#e4cef7] focus:bg-[#1b1924]"
             inputMode="decimal"
             placeholder="e.g. 0.5"
             value={draft.liquidity}
-            onChange={(e) => setDraft({ ...draft, liquidity: e.target.value })}
+            maxLength={20}
+            autoComplete="off"
+            spellCheck={false}
+            aria-required="true"
+            onChange={(e) => setDraft({ ...draft, liquidity: e.target.value.replace(/[,\\s]/g, "") })}
           />
         </div>
+      </div>
+
+      {/* Coin Image */}
+      <div className="flex flex-col gap-[5px]">
+        <span className="flex items-center justify-between text-xs font-bold tracking-[0.02em] text-white/90">
+          <span>Coin Image</span>
+          <span className="text-[11px] font-medium text-white/40">Solana launches · optional</span>
+        </span>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/gif"
+          className="hidden"
+          aria-label="Upload coin image"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            e.target.value = "";
+            if (!file) return;
+            setImageError("");
+            void fileToDataUrl(file).then(
+              (url) => setDraft({ ...draft, image: url }),
+              () => setImageError("Could not read that image. Try a PNG or JPEG."),
+            );
+          }}
+        />
+        {draft.image ? (
+          <div className="flex items-center gap-3 rounded-lg border border-white/15 bg-[#18171f] p-3">
+            {/* eslint-disable-next-line @next/next/no-img-element -- local data-URL preview, never remote */}
+            <img src={draft.image} alt="Coin preview" className="h-14 w-14 rounded-lg border border-white/15 object-cover" />
+            <div className="flex flex-1 flex-col">
+              <span className="text-xs font-semibold text-white">Image attached</span>
+              <span className="text-[11px] text-white/40">Uploaded with Solana metadata</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setDraft({ ...draft, image: undefined })}
+              aria-label="Remove coin image"
+              className="cursor-pointer rounded-md border border-white/15 p-2 text-white/60 hover:border-white/30 hover:text-white"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            className="flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-white/20 bg-[#18171f] px-3 py-2.5 text-sm font-semibold text-white/70 transition-all hover:border-[#e4cef7] hover:text-white"
+          >
+            <ImagePlus size={16} aria-hidden="true" />
+            <span>Upload image (PNG/JPEG)</span>
+          </button>
+        )}
+        {imageError && (
+          <p role="alert" className="m-0 text-xs font-medium text-red-300">
+            {imageError}
+          </p>
+        )}
       </div>
 
       {/* Economics Preview */}
@@ -184,7 +306,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
         <div className="flex justify-between gap-3 text-[13px]">
           <span className="text-white/50">Pool Allocation:</span>
           <span className="text-right font-mono font-semibold break-words text-white">
-            {pooledNumber.toLocaleString()} ({pooledPercent}%)
+            {pooledNumber.toLocaleString("en-US")} ({pooledPercent}%)
           </span>
         </div>
         {estimatedPrice && (

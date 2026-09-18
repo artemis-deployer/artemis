@@ -11,6 +11,7 @@ import {
   type WalletClient,
 } from "viem";
 import { TOKEN_ABI, TOKEN_BYTECODE } from "./token-artifact";
+import { LAUNCHER_ABI } from "./launcher-artifact";
 import { getActiveEvmProvider } from "./wallets";
 
 export type HoodConfig = {
@@ -21,6 +22,8 @@ export type HoodConfig = {
   router: Address | null;
   factory: Address | null;
   weth: Address;
+  /** One-tx factory. Null until deployed (see scripts/deploy-launcher.mjs). */
+  launcher: Address | null;
 };
 
 export const HOOD_MAINNET: HoodConfig = {
@@ -31,6 +34,7 @@ export const HOOD_MAINNET: HoodConfig = {
   router: "0x89e5db8b5aa49aa85ac63f691524311aeb649eba",
   factory: "0x8bceaa40b9acdfaedf85adf4ff01f5ad6517937f",
   weth: "0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73",
+  launcher: null,
 };
 
 export const HOOD_TESTNET: HoodConfig = {
@@ -41,6 +45,7 @@ export const HOOD_TESTNET: HoodConfig = {
   router: null,
   factory: null,
   weth: "0x0000000000000000000000000000000000000000",
+  launcher: null,
 };
 
 export function getHoodConfig(chainId: number): HoodConfig | undefined {
@@ -149,6 +154,7 @@ export async function deployToken(args: {
     chain: hoodChain(cfg),
   });
   const receipt = await publicClientFor(cfg).waitForTransactionReceipt({ hash });
+  if (receipt.status === "reverted") throw new Error("tx_failed");
   if (!receipt.contractAddress) throw new Error("no_contract_address");
   return { hash, token: receipt.contractAddress };
 }
@@ -172,7 +178,9 @@ export async function addLiquidity(args: {
     account: args.account as unknown as Account,
     chain: hoodChain(cfg),
   });
-  await pub.waitForTransactionReceipt({ hash: approveHash });
+  await pub.waitForTransactionReceipt({ hash: approveHash }).then((r) => {
+    if (r.status === "reverted") throw new Error("tx_failed");
+  });
   const deadline = BigInt(Math.floor(Date.now() / 1000) + 20 * 60);
   const hash = await wallet.writeContract({
     address: cfg.router,
@@ -183,6 +191,64 @@ export async function addLiquidity(args: {
     account: args.account as unknown as Account,
     chain: hoodChain(cfg),
   });
-  await pub.waitForTransactionReceipt({ hash });
+  const liqReceipt = await pub.waitForTransactionReceipt({ hash });
+  if (liqReceipt.status === "reverted") throw new Error("tx_failed");
   return { hash };
+}
+
+/**
+ * One-transaction launch via KentirLauncher: deploy token + fund pool atomically.
+ * Either everything lands or the whole call reverts (minus gas).
+ */
+export async function launchOneTx(args: {
+  chainId: 4663 | 46630;
+  account: Address;
+  name: string;
+  ticker: string;
+  supply: bigint;
+  pooled: bigint;
+  ethAmount: bigint;
+}): Promise<{ hash: `0x${string}`; token: Address }> {
+  const cfg = getHoodConfig(args.chainId);
+  if (!cfg || !cfg.launcher) throw new Error("launcher_unavailable");
+  if (args.pooled <= 0n || args.pooled > args.supply) throw new Error("bad_pool_amount");
+  if (args.ethAmount <= 0n) throw new Error("bad_eth_amount");
+  await validateRouter(cfg);
+  const wallet: WalletClient = createWalletClient({ chain: hoodChain(cfg), transport: custom(ethProvider() as never) });
+  const pub = publicClientFor(cfg);
+  const deadline = BigInt(Math.floor(Date.now() / 1000) + 20 * 60);
+  const hash = await wallet.writeContract({
+    address: cfg.launcher,
+    abi: LAUNCHER_ABI,
+    functionName: "launch",
+    args: [args.name || args.ticker, args.ticker, args.supply, args.pooled, 0n, deadline],
+    value: args.ethAmount,
+    account: args.account as unknown as Account,
+    chain: hoodChain(cfg),
+  });
+  const receipt = await pub.waitForTransactionReceipt({ hash });
+  if (receipt.status === "reverted") throw new Error("tx_failed");
+  const token = decodeLaunchedToken(
+    receipt.logs as { address: string; topics: `0x${string}`[]; data: `0x${string}` }[],
+    cfg.launcher,
+  );
+  if (!token) throw new Error("no_contract_address");
+  return { hash, token };
+}
+
+function decodeLaunchedToken(
+  logs: { address: string; topics: `0x${string}`[]; data: `0x${string}` }[],
+  launcher: Address,
+): Address | null {
+  // Launched(address,address,uint256,uint256,uint256): token is the first indexed topic.
+  // The launcher-address check filters out Transfer logs emitted by the token itself.
+  for (const log of logs) {
+    if (log.topics.length >= 3 && log.address.toLowerCase() === launcher.toLowerCase()) {
+      const token = `0x${log.topics[1].slice(-40)}` as Address;
+      if (/^0x[0-9a-fA-F]{40}$/.test(token) && token !== "0x0000000000000000000000000000000000000000") {
+        return token;
+      }
+    }
+  }
+  return null;
 }

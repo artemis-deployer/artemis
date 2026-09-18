@@ -6,11 +6,13 @@ import { ensureChain } from "../lib/launcher-evm";
 import {
   clearWallet,
   detectEvm,
+  getEvmBalance,
   loadWallet,
   silentEvmAccount,
   walletLabel,
   type EvmWalletId,
 } from "../lib/wallets";
+import { getChain } from "../lib/chains";
 import WalletModal from "./WalletModal";
 
 function short(addr: string): string {
@@ -19,13 +21,16 @@ function short(addr: string): string {
 
 export default function WalletButton({ chainId }: { chainId: 4663 | 46630 }) {
   const [account, setAccount] = useState<Address | null>(null);
+  const [balance, setBalance] = useState<string | null>(null);
   const [modal, setModal] = useState(false);
   const [error, setError] = useState("");
+  const currency = getChain(chainId)?.currency ?? "ETH";
 
   const refresh = useCallback(async () => {
     const stored = loadWallet();
     if (!stored || stored.kind !== "evm") {
       setAccount(null);
+      setBalance(null);
       return;
     }
     try {
@@ -34,7 +39,14 @@ export default function WalletButton({ chainId }: { chainId: 4663 | 46630 }) {
       setError(walletLabel(e));
       return;
     }
-    setAccount((await silentEvmAccount(stored.id as EvmWalletId)) as Address | null);
+    const addr = await silentEvmAccount(stored.id as EvmWalletId);
+    setAccount(addr as Address | null);
+    if (addr) {
+      const provider = detectEvm(stored.id as EvmWalletId);
+      setBalance(provider ? await getEvmBalance(provider, addr) : null);
+    } else {
+      setBalance(null);
+    }
   }, [chainId]);
 
   useEffect(() => {
@@ -77,6 +89,7 @@ export default function WalletButton({ chainId }: { chainId: 4663 | 46630 }) {
   function disconnect() {
     clearWallet();
     setAccount(null);
+    setBalance(null);
     setError("");
   }
 
@@ -89,9 +102,9 @@ export default function WalletButton({ chainId }: { chainId: 4663 | 46630 }) {
             setError("");
             setModal(true);
           }}
-          className="inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5 rounded border border-white/20 bg-white/5 px-3.5 py-1.5 text-xs font-semibold whitespace-nowrap text-white transition-all hover:border-white/40 hover:bg-white/10"
+          className="nav-wallet-btn"
         >
-          <span>Connect Ethereum</span>
+          <span>Connect Wallet</span> <span>↗</span>
         </button>
         {error && (
           <p role="alert" className="m-0 text-xs font-medium text-red-400">
@@ -104,16 +117,12 @@ export default function WalletButton({ chainId }: { chainId: 4663 | 46630 }) {
   }
 
   return (
-    <div className="inline-flex items-center gap-1.5">
-      <div className="inline-flex items-center gap-2 rounded border border-white/20 bg-white/5 px-3 py-1.5 text-xs font-mono text-white/90">
-        <span>Connected: {short(account)}</span>
-      </div>
-      <button
-        type="button"
-        onClick={disconnect}
-        title="Disconnect wallet"
-        className="cursor-pointer rounded border border-white/20 bg-white/5 px-2 py-1.5 text-xs font-semibold text-white/60 hover:border-white/40 hover:text-white"
-      >
+    <div className="nav-connected">
+      <span>
+        {short(account)}
+        {balance !== null && ` · ${balance} ${currency}`}
+      </span>
+      <button type="button" onClick={disconnect} title="Disconnect wallet" aria-label="Disconnect wallet">
         ×
       </button>
     </div>

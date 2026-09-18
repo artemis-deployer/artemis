@@ -5,9 +5,11 @@ import {
   clearWallet,
   detectSolana,
   getActiveSolanaProvider,
+  getSolanaBalance,
   loadWallet,
   type SolanaWalletId,
 } from "../lib/wallets";
+import { DEVNET_RPC } from "../lib/launcher-solana";
 import WalletModal from "./WalletModal";
 
 export type SolanaProvider = {
@@ -20,48 +22,60 @@ export function getSolanaProvider(): SolanaProvider | null {
   return getActiveSolanaProvider() as SolanaProvider | null;
 }
 
-export default function SolanaButton({ onConnect }: { onConnect?: (p: SolanaProvider) => void }) {
+function short(addr: string): string {
+  return `${addr.slice(0, 4)}…${addr.slice(-4)}`;
+}
+
+export default function SolanaButton({
+  onConnect,
+  rpc,
+}: {
+  onConnect?: (p: SolanaProvider) => void;
+  rpc?: string;
+}) {
   const [account, setAccount] = useState<string | null>(null);
+  const [balance, setBalance] = useState<string | null>(null);
   const [modal, setModal] = useState(false);
 
-  const refresh = useCallback(() => {
+  const refresh = useCallback(async () => {
     const stored = loadWallet();
     if (!stored || stored.kind !== "solana") {
       setAccount(null);
+      setBalance(null);
       return;
     }
     const p = detectSolana(stored.id as SolanaWalletId);
+    let addr = stored.address;
     try {
-      setAccount(p ? p.publicKey.toBase58() : stored.address);
+      if (p) addr = p.publicKey.toBase58();
     } catch {
-      setAccount(stored.address);
+      // extension locked: fall back to the stored address
     }
+    setAccount(addr);
     if (p && onConnect) onConnect(p as unknown as SolanaProvider);
+    setBalance((await getSolanaBalance(addr)) ?? (rpc === DEVNET_RPC ? await getSolanaBalance(addr, DEVNET_RPC) : null));
     // eslint-disable-next-line react-hooks/exhaustive-deps -- onConnect is a stable-ish dialog callback
-  }, []);
+  }, [rpc]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- mount-only hydrate from wallet extension
-    refresh();
+    void refresh();
   }, [refresh]);
 
   function disconnect() {
     clearWallet();
     setAccount(null);
+    setBalance(null);
   }
 
   if (account) {
     return (
-      <div className="inline-flex items-center gap-1.5">
-        <div className="inline-flex items-center gap-2 rounded border border-white/20 bg-white/5 px-3 py-1.5 text-xs font-mono text-white/90">
-          <span>Connected: {account.slice(0, 4)}…{account.slice(-4)}</span>
-        </div>
-        <button
-          type="button"
-          onClick={disconnect}
-          title="Disconnect wallet"
-          className="cursor-pointer rounded border border-white/20 bg-white/5 px-2 py-1.5 text-xs font-semibold text-white/60 hover:border-white/40 hover:text-white"
-        >
+      <div className="nav-connected">
+        <span>
+          {short(account)}
+          {balance !== null && ` · ${balance} SOL`}
+        </span>
+        <button type="button" onClick={disconnect} title="Disconnect wallet" aria-label="Disconnect wallet">
           ×
         </button>
       </div>
@@ -70,14 +84,10 @@ export default function SolanaButton({ onConnect }: { onConnect?: (p: SolanaProv
 
   return (
     <div className="flex flex-col gap-2">
-      <button
-        type="button"
-        onClick={() => setModal(true)}
-        className="inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5 rounded border border-white/20 bg-white/5 px-3.5 py-1.5 text-xs font-semibold whitespace-nowrap text-white transition-all hover:border-white/40 hover:bg-white/10"
-      >
-        <span>Connect Solana</span>
+      <button type="button" onClick={() => setModal(true)} className="nav-wallet-btn">
+        <span>Connect Wallet</span> <span>↗</span>
       </button>
-      <WalletModal kind="solana" open={modal} onClose={() => setModal(false)} onConnected={refresh} />
+      <WalletModal kind="solana" open={modal} onClose={() => setModal(false)} onConnected={() => void refresh()} />
     </div>
   );
 }

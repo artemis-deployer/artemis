@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 import { TransitionLink } from './PageTransition';
-import StatusBadge from './StatusBadge';
 import TopbarWallet from './TopbarWallet';
 
 interface NavbarProps {
@@ -43,8 +42,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenMenu }) => {
       </span>
 
       <div className="nav-actions">
-        <StatusBadge />
-
         <TopbarWallet />
 
         <TransitionLink

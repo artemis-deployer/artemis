@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getHoodConfig, HOOD_MAINNET, HOOD_TESTNET, toTokenUnits } from "../lib/launcher-evm";
+import { getHoodConfig, HOOD_MAINNET, HOOD_TESTNET, launchOneTx, toTokenUnits } from "../lib/launcher-evm";
 
 describe("hood config", () => {
   it("pins mainnet router, factory, weth", () => {
@@ -27,5 +27,32 @@ describe("toTokenUnits", () => {
     expect(() => toTokenUnits("")).toThrow();
     expect(() => toTokenUnits("abc")).toThrow();
     expect(() => toTokenUnits("-5")).toThrow();
+  });
+});
+
+describe("launchOneTx guards", () => {
+  const base = {
+    chainId: 4663 as const,
+    account: "0x0000000000000000000000000000000000000001" as const,
+    name: "T",
+    ticker: "T",
+    supply: 999000000000000000000000000n,
+  };
+
+  it("refuses when no launcher is configured", async () => {
+    await expect(launchOneTx({ ...base, pooled: 1n, ethAmount: 1n })).rejects.toThrow("launcher_unavailable");
+  });
+
+  it("refuses bad amounts before touching a wallet", async () => {
+    HOOD_MAINNET.launcher = "0x0000000000000000000000000000000000000001";
+    try {
+      await expect(launchOneTx({ ...base, pooled: 0n, ethAmount: 1n })).rejects.toThrow("bad_pool_amount");
+      await expect(
+        launchOneTx({ ...base, pooled: 999000001000000000000000000n, ethAmount: 1n }),
+      ).rejects.toThrow("bad_pool_amount");
+      await expect(launchOneTx({ ...base, pooled: 1n, ethAmount: 0n })).rejects.toThrow("bad_eth_amount");
+    } finally {
+      HOOD_MAINNET.launcher = null;
+    }
   });
 });

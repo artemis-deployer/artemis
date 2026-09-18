@@ -12,6 +12,7 @@ import {
   deployToken,
   ensureChain,
   getHoodConfig,
+  launchOneTx,
   toTokenUnits,
   validateRouter,
 } from "../lib/launcher-evm";
@@ -62,10 +63,28 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
     : undefined;
   const chainObj = getChain(draft.chainId);
   const explorer = chainObj?.explorer ?? "https://solscan.io";
+  const singleTx = chainId !== null && (getHoodConfig(chainId)?.launcher ?? null) !== null;
 
   function fail(message: string): void {
     setNote(message);
     setHood("error");
+  }
+
+  async function launchSingle(acc: Address, launcher: Address) {
+    const one = await launchOneTx({
+      chainId: chainId as 4663 | 46630,
+      account: acc,
+      name: draft.name || draft.ticker,
+      ticker: draft.ticker,
+      supply: toTokenUnits(String(DIRECT_SUPPLY)),
+      pooled: toTokenUnits(draft.pooled || "0"),
+      ethAmount: parseEther(draft.liquidity || "0"),
+    });
+    setToken(one.token);
+    saveReceipt({ chainId: chainId as 4663 | 46630, token: one.token, hash: one.hash, createdAt: new Date().toISOString(), ticker: draft.ticker });
+    void submitShowcase({ chainId: chainId as 4663 | 46630, address: one.token, creator: acc, name: draft.name || draft.ticker, symbol: draft.ticker, txHash: one.hash });
+    setHood("pool-done");
+    setNote(`One transaction: token deployed and pool funded together (${launcher.slice(0, 10)}…).`);
   }
 
   async function launch() {
@@ -78,6 +97,10 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       setAccount(acc);
       const cfg = getHoodConfig(chainId);
       if (!cfg) return fail("Unsupported chain.");
+      if (cfg.launcher) {
+        await launchSingle(acc, cfg.launcher);
+        return;
+      }
       if (cfg.router) await validateRouter(cfg);
       const dep = await deployToken({
         chainId,
@@ -145,6 +168,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
         name: draft.name || draft.ticker,
         symbol: draft.ticker,
         description: draft.ticker,
+        image: draft.image,
       });
     } catch (e: unknown) {
       setPumpNote(e instanceof Error ? e.message : "bad_metadata");
@@ -321,10 +345,14 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
               onClick={() => void launch()}
               className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-[#e4cef7] px-6 py-3 text-sm font-bold text-[#17131f] transition-all hover:bg-[#f1d2e8] disabled:cursor-not-allowed disabled:border disabled:border-white/10 disabled:bg-white/5 disabled:text-white/30"
             >
-              {hood === "working" ? "Deploying & Funding…" : "Confirm & Launch on Hood"}
+              {hood === "working"
+                ? "Deploying & Funding…"
+                : singleTx
+                  ? "Confirm & Launch (1 Transaction)"
+                  : "Confirm & Launch on Hood"}
             </button>
 
-            {token && (hood === "token-done" || hood === "error") && (
+            {!singleTx && token && (hood === "token-done" || hood === "error") && (
               <button
                 type="button"
                 onClick={() => void resumePool()}

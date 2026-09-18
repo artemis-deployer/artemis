@@ -7,6 +7,7 @@ export type Draft = {
   liquidity: string;
   route: "direct" | "pumpfun";
   chainId: number | string;
+  image?: string;
 };
 
 export const EMPTY_DRAFT: Draft = {
@@ -18,22 +19,44 @@ export const EMPTY_DRAFT: Draft = {
   chainId: 46630,
 };
 
+function sanitizeDraft(raw: Record<string, unknown>): Partial<Draft> {
+  const out: Partial<Draft> = {};
+  if (typeof raw.name === "string") out.name = raw.name.slice(0, 32);
+  if (typeof raw.ticker === "string") out.ticker = raw.ticker.replace(/[^A-Za-z0-9]/g, "").slice(0, 12).toUpperCase();
+  if (typeof raw.pooled === "string") out.pooled = raw.pooled;
+  if (typeof raw.liquidity === "string") out.liquidity = raw.liquidity;
+  if (raw.route === "pumpfun" || raw.route === "direct") out.route = raw.route;
+  return out;
+}
+
+function tryParse(slice: string): Partial<Draft> | null {
+  try {
+    const raw = JSON.parse(slice) as Record<string, unknown>;
+    if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return null;
+    const out = sanitizeDraft(raw);
+    return Object.keys(out).length > 0 ? out : null;
+  } catch {
+    return null;
+  }
+}
+
 export function parseDraftReply(text: string): Partial<Draft> {
+  // Fast path: single JSON object spanning first "{" to last "}".
   const start = text.indexOf("{");
   const end = text.lastIndexOf("}");
-  if (start === -1 || end === -1 || end <= start) return {};
-  try {
-    const raw = JSON.parse(text.slice(start, end + 1)) as Record<string, unknown>;
-    const out: Partial<Draft> = {};
-    if (typeof raw.name === "string") out.name = raw.name.slice(0, 32);
-    if (typeof raw.ticker === "string") out.ticker = raw.ticker.replace(/[^A-Za-z0-9]/g, "").slice(0, 12).toUpperCase();
-    if (typeof raw.pooled === "string") out.pooled = raw.pooled;
-    if (typeof raw.liquidity === "string") out.liquidity = raw.liquidity;
-    if (raw.route === "pumpfun" || raw.route === "direct") out.route = raw.route;
-    return out;
-  } catch {
-    return {};
+  if (start !== -1 && end > start) {
+    const direct = tryParse(text.slice(start, end + 1));
+    if (direct) return direct;
   }
+  // Fallback: replies with several fenced blocks/tables. Scan flat {...}
+  // candidates mentioning a ticker, newest first.
+  const inners = text.match(/\{[^{}]*\}/g) ?? [];
+  for (let i = inners.length - 1; i >= 0; i--) {
+    if (!inners[i].includes("ticker")) continue;
+    const parsed = tryParse(inners[i]);
+    if (parsed) return parsed;
+  }
+  return {};
 }
 
 export function validateDraft(d: Partial<Draft>): string[] {
