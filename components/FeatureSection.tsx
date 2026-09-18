@@ -51,7 +51,7 @@ const features = [
     index: '05',
     badge: 'TOLL_FREE',
     rail: 'PLATFORM PROTOCOL',
-    title: '0% PLATFORM FEES',
+    title: 'ZERO-FEE PROTOCOL',
     theme: 'bg-[#ece4d4]',
     img: '/assets/orbital.png',
     alt: 'Faceted orbital geometry',
