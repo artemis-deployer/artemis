@@ -938,3 +938,235 @@ textarea:focus:not(:focus-visible) {
     transform: translateY(8px);
   }
 }
+
+/* Navigation & Hamburger directly from darkpoolfi.tech */
+.nav {
+  height: 80px;
+  gap: 30px;
+  padding: 0 max(6.25vw, 24px);
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: rgba(18, 18, 24, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #f5f3f7;
+  z-index: 50;
+  transition: background 0.5s ease, color 0.5s ease, border-color 0.5s ease;
+}
+
+.nav.light-nav {
+  background: rgba(250, 248, 252, 0.95);
+  color: #21172d;
+  border-bottom-color: rgba(33, 23, 45, 0.1);
+}
+
+.nav .brand {
+  font-size: 24px;
+  gap: 9px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  font-family: var(--font-unbounded), sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.05em;
+  text-decoration: none;
+  color: inherit;
+}
+
+.nav .brand img, .nav-dialog-top .brand img {
+  width: 26px;
+  height: 26px;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.nav-context {
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  opacity: 0.5;
+  margin-right: auto;
+  font-family: monospace;
+  text-transform: uppercase;
+}
+
+.nav-context i {
+  margin: 0 12px;
+  font-style: normal;
+}
+
+.nav-actions {
+  display: flex;
+  gap: 30px;
+  align-items: center;
+}
+
+.nav-cta {
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 7px 14px;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  text-decoration: none;
+  color: inherit;
+  letter-spacing: 0.04em;
+  font-weight: 500;
+  transition: background 0.2s ease, opacity 0.2s ease, border-color 0.2s ease;
+}
+
+.nav-cta:hover {
+  background: rgba(255, 255, 255, 0.08);
+  opacity: 0.9;
+}
+
+.nav.light-nav .nav-cta:hover {
+  background: rgba(33, 23, 45, 0.06);
+}
+
+.menu-toggle {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  background: transparent;
+  color: inherit;
+  border: 0;
+  padding: 12px 0 12px 12px;
+  cursor: pointer;
+  font-family: inherit;
+  outline: none;
+}
+
+.menu-label {
+  font-size: 12px;
+  letter-spacing: 0.07em;
+  font-weight: 600;
+}
+
+.hamburger {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 26px;
+}
+
+.hamburger i {
+  height: 2px;
+  width: 26px;
+  background: currentColor;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  display: block;
+}
+
+.hamburger i:nth-child(2) {
+  width: 18px;
+  margin-left: auto;
+}
+
+.menu-toggle:hover .hamburger i:nth-child(2) {
+  transform: translateX(-8px);
+}
+
+.navigation-dialog-animate {
+  animation: navUnfold 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes navUnfold {
+  from {
+    clip-path: inset(0 0 100%);
+    transform: translateY(-20px);
+  }
+  to {
+    clip-path: inset(0);
+    transform: none;
+  }
+}
+
+.nav-dialog-top {
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.menu-close {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  color: inherit;
+  background: none;
+  border: 0;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  padding: 10px 0;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.2s ease;
+}
+
+.menu-close:hover {
+  opacity: 0.75;
+}
+
+.menu-close span {
+  font-size: 28px;
+  line-height: 1;
+}
+
+@media (max-width: 1100px) {
+  .nav-context {
+    display: none;
+  }
+  .nav-actions {
+    margin-left: auto;
+    gap: 20px;
+  }
+}
+
+@media (max-width: 700px) {
+  .nav {
+    padding: 0 20px;
+    gap: 14px;
+  }
+  .nav .brand {
+    font-size: 22px;
+  }
+  .nav-actions {
+    gap: 14px;
+  }
+  .nav-cta {
+    font-size: 11px;
+    padding: 6px 10px;
+    gap: 0;
+  }
+  .nav-cta span:last-child {
+    display: none;
+  }
+  .menu-label {
+    display: none;
+  }
+  .menu-toggle {
+    padding: 10px 0;
+  }
+  .hamburger {
+    width: 23px;
+  }
+  .hamburger i {
+    width: 23px;
+  }
+  .hamburger i:nth-child(2) {
+    width: 16px;
+  }
+  .menu-toggle:hover .hamburger i:nth-child(2) {
+    transform: translateX(-7px);
+  }
+  .navigation-dialog-animate {
+    animation-duration: 0.4s;
+  }
+}

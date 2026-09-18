@@ -64,23 +64,24 @@ export const NavigationDialog: React.FC<NavigationDialogProps> = ({ isOpen, onCl
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-[#121218]/95 backdrop-blur-md flex flex-col justify-between p-6 md:p-12 overflow-y-auto">
+    <div className="navigation-dialog-animate fixed inset-0 z-[100] bg-[#15121e] text-[#f7f3fa] flex flex-col justify-between overflow-y-auto">
       {/* Top bar */}
-      <div className="flex justify-between items-center pb-8 border-b border-white/10">
-        <div className="flex items-center gap-3 text-2xl font-bold tracking-tight text-white">
-          <img src="/assets/logo.png" className="w-8 h-8 rounded-full object-cover" alt="" />
-          <span className="font-unbounded">Kentir</span>
+      <div className="nav-dialog-top px-[max(6.25vw,24px)]">
+        <div className="brand flex items-center gap-[9px] text-[24px] font-bold tracking-tight text-white font-unbounded">
+          <img src="/assets/logo.png" className="w-[26px] h-[26px] rounded-full object-cover" alt="" />
+          <span>Kentir</span>
         </div>
         <button
           onClick={onClose}
-          className="flex items-center gap-2 text-sm tracking-wider uppercase border border-white/20 px-4 py-2 rounded text-white/80 hover:text-white hover:border-white transition-colors"
+          className="menu-close"
+          aria-label="Close navigation"
         >
-          CLOSE <span className="text-lg">×</span>
+          CLOSE <span>×</span>
         </button>
       </div>
 
       {/* Main navigation experience */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 my-auto py-8">
+      <div className="w-full max-w-[1700px] mx-auto px-[max(6.25vw,24px)] grid grid-cols-1 lg:grid-cols-12 gap-12 my-auto py-8">
         {/* Left column: links */}
         <div className="lg:col-span-7 flex flex-col justify-center space-y-6">
           <p className="text-xs uppercase tracking-[0.2em] text-[#dac2ee]/70 font-mono">AUTONOMOUS DIRECTORY</p>
@@ -136,9 +137,9 @@ export const NavigationDialog: React.FC<NavigationDialogProps> = ({ isOpen, onCl
       </div>
 
       {/* Bottom bar */}
-      <div className="flex justify-between border-t border-white/10 pt-6 text-xs text-white/50 tracking-wider">
+      <div className="nav-dialog-bottom mx-[max(6.25vw,24px)] flex justify-between border-t border-white/10 py-5 text-[11px] text-[#aa96ba] tracking-wider">
         <span>Non-custodial sovereign liquidity.</span>
-        <span>100% CLIENT SIGNATURES</span>
+        <span className="uppercase">100% CLIENT SIGNATURES</span>
       </div>
     </div>
   );
