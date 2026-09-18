@@ -141,7 +141,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
                       {c.currency}
                     </span>
                     <span className={`rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase font-mono ${
-                      c.testnet ? "border-emerald-500/30 text-emerald-400 bg-emerald-500/10" : "border-purple-500/30 text-purple-300 bg-purple-500/10"
+                      c.testnet ? "border-emerald-500/30 text-emerald-400 bg-emerald-500/10" : "border-[#fae8a4]/30 text-[#fae8a4] bg-[#fae8a4]/10"
                     }`}>
                       {c.testnet ? "Testnet" : "Mainnet"}
                     </span>

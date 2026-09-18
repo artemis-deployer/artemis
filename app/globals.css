@@ -741,7 +741,7 @@ details[open] summary::after {
 .intro {
   padding: 76px 24px 200px;
   min-height: 800px;
-  background: rgb(calc(229 - var(--intro-shift, 0) * 10) calc(192 + var(--intro-shift, 0) * 22) calc(239 + var(--intro-shift, 0) * 10));
+  background: #ece4d4;
 }
 
 .intro h2 {
@@ -757,9 +757,9 @@ details[open] summary::after {
 
 /* Hero Section Ambient Shift */
 @keyframes cosmicTone {
-  0%, 100% { background-color: rgb(18, 18, 24); }
-  33% { background-color: rgb(20, 19, 33); }
-  66% { background-color: rgb(29, 20, 33); }
+  0%, 100% { background-color: rgb(19, 20, 22); }
+  33% { background-color: rgb(21, 22, 24); }
+  66% { background-color: rgb(24, 25, 28); }
 }
 
 /* ==========================================================
@@ -1020,7 +1020,7 @@ textarea:focus:not(:focus-visible) {
 }
 
 .nav.light-nav .nav-cta:hover {
-  background: rgba(33, 23, 45, 0.06);
+  background: rgba(24, 25, 28, 0.06);
 }
 
 /* Wallet connect button: same chrome as .nav-cta, adapts via currentColor */
@@ -1051,7 +1051,7 @@ textarea:focus:not(:focus-visible) {
 }
 
 .nav.light-nav .nav-wallet-btn:hover {
-  background: rgba(33, 23, 45, 0.06);
+  background: rgba(24, 25, 28, 0.06);
 }
 
 .nav-wallet-btn:active {
