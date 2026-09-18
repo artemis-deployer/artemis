@@ -79,10 +79,14 @@ export const InkTrail: React.FC = () => {
       renderer.setClearColor(0x000000, 1);
       renderer.clear(true, false, false);
       renderer.setRenderTarget(prev);
+      renderer.setClearColor(0x000000, 0);
     };
 
     clearRT(rtA);
     clearRT(rtB);
+    renderer.setRenderTarget(null);
+    renderer.setClearColor(0x000000, 0);
+    renderer.clear();
 
     const NOISE_GLSL = `
       float hash21(vec2 p){ p = fract(p * vec2(123.34, 345.45)); p += dot(p, p + 34.345); return fract(p.x * p.y); }
@@ -201,40 +205,9 @@ export const InkTrail: React.FC = () => {
     let pPrev = { x: 0.5, y: 0.5 };
     let movedFrame = false;
     let lastMove = -10;
-    let lastInput = performance.now();
-
-    const onPointerMove = (e: PointerEvent) => {
-      if (e.pointerType === 'touch') return;
-      const x = e.clientX / window.innerWidth;
-      const y = 1.0 - e.clientY / window.innerHeight;
-      const now = performance.now() / 1000;
-      if (now - lastMove > 0.12) pPrev = { x, y };
-      pCur = { x, y };
-      lastMove = now;
-      movedFrame = true;
-      lastInput = performance.now();
-    };
-
-    window.addEventListener('pointermove', onPointerMove, { passive: true });
-
+    let lastInput = 0;
     let animationFrameId = 0;
     let lastT = performance.now() / 1000;
-
-    const resize = () => {
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      renderer.setSize(w, h, false);
-      const ndpr = Math.min(1, 1100 / w);
-      simW = Math.max(2, Math.round(w * ndpr));
-      simH = Math.max(2, Math.round(h * ndpr));
-      rtA.setSize(simW, simH);
-      rtB.setSize(simW, simH);
-      updateUniforms.uResolution.value.set(simW, simH);
-      displayUniforms.uResolution.value.set(simW, simH);
-    };
-
-    window.addEventListener('resize', resize);
-    resize();
 
     const animate = () => {
       const t = performance.now() / 1000;
@@ -242,7 +215,7 @@ export const InkTrail: React.FC = () => {
       lastT = t;
       const dtn = dt * 60.0;
 
-      if (performance.now() - lastInput < 2000) {
+      if (performance.now() - lastInput < 1500) {
         const speed = Math.hypot(pCur.x - pPrev.x, pCur.y - pPrev.y);
         const active = movedFrame ? 1 : 0;
 
@@ -271,17 +244,56 @@ export const InkTrail: React.FC = () => {
         displayUniforms.uTime.value = t;
 
         renderer.setRenderTarget(null);
+        renderer.setClearColor(0x000000, 0);
         renderer.render(scene, camera);
+
+        animationFrameId = requestAnimationFrame(animate);
       } else {
         renderer.setRenderTarget(null);
         renderer.setClearColor(0x000000, 0);
         renderer.clear();
+        animationFrameId = 0;
       }
-
-      animationFrameId = requestAnimationFrame(animate);
     };
 
-    animate();
+    const onPointerMove = (e: PointerEvent) => {
+      if (e.pointerType === 'touch') return;
+      const x = e.clientX / window.innerWidth;
+      const y = 1.0 - e.clientY / window.innerHeight;
+      const now = performance.now() / 1000;
+      if (now - lastMove > 0.12) pPrev = { x, y };
+      pCur = { x, y };
+      lastMove = now;
+      movedFrame = true;
+      lastInput = performance.now();
+      if (!animationFrameId) {
+        lastT = performance.now() / 1000;
+        animationFrameId = requestAnimationFrame(animate);
+      }
+    };
+
+    window.addEventListener('pointermove', onPointerMove, { passive: true });
+
+    const resize = () => {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      renderer.setSize(w, h, false);
+      const ndpr = Math.min(1, 1100 / w);
+      simW = Math.max(2, Math.round(w * ndpr));
+      simH = Math.max(2, Math.round(h * ndpr));
+      rtA.setSize(simW, simH);
+      rtB.setSize(simW, simH);
+      clearRT(rtA);
+      clearRT(rtB);
+      updateUniforms.uResolution.value.set(simW, simH);
+      displayUniforms.uResolution.value.set(simW, simH);
+      renderer.setRenderTarget(null);
+      renderer.setClearColor(0x000000, 0);
+      renderer.clear();
+    };
+
+    window.addEventListener('resize', resize);
+    resize();
 
     return () => {
       cancelAnimationFrame(animationFrameId);
@@ -296,7 +308,7 @@ export const InkTrail: React.FC = () => {
   return (
     <canvas
       ref={canvasRef}
-      className="ink-trail pointer-events-none fixed inset-0 z-40"
+      className="ink-trail pointer-events-none fixed inset-0 z-40 bg-transparent"
       aria-hidden="true"
     />
   );
