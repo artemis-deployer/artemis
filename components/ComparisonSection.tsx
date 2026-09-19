@@ -111,35 +111,41 @@ export const ComparisonSection: React.FC = () => {
               Your community token is trapped in someone else&apos;s smart contract infrastructure.
             </p>
 
-            <div className="space-y-5">
-              <div className="relative pl-11 pt-1">
-                <span className="absolute left-0 top-0 w-7 h-7 rounded-full border border-white/20 text-[#e4d9ec] flex items-center justify-center text-sm font-medium">
+            <div className="space-y-4 sm:space-y-5">
+              <div className="flex items-start gap-3.5">
+                <span className="w-7 h-7 rounded-full border border-white/20 text-[#e4d9ec] flex items-center justify-center text-sm font-medium shrink-0 mt-0.5">
                   ×
                 </span>
-                <h4 className="text-base font-normal text-white/95">Platform holds the keys</h4>
-                <p className="text-xs text-[#a99daf] leading-relaxed mt-1">
-                  Servers custody your liquidity, sign on your behalf, or lock contract ownership behind centralized databases.
-                </p>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-base font-normal text-white/95">Platform holds the keys</h4>
+                  <p className="text-xs text-[#a99daf] leading-relaxed mt-1">
+                    Servers custody your liquidity, sign on your behalf, or lock contract ownership behind centralized databases.
+                  </p>
+                </div>
               </div>
 
-              <div className="relative pl-11 pt-1 border-t border-white/10 pt-5">
-                <span className="absolute left-0 top-5 w-7 h-7 rounded-full border border-white/20 text-[#e4d9ec] flex items-center justify-center text-sm font-medium">
+              <div className="flex items-start gap-3.5 pt-4 sm:pt-5 border-t border-white/10">
+                <span className="w-7 h-7 rounded-full border border-white/20 text-[#e4d9ec] flex items-center justify-center text-sm font-medium shrink-0 mt-0.5">
                   ×
                 </span>
-                <h4 className="text-base font-normal text-white/95">Hidden mint traps</h4>
-                <p className="text-xs text-[#a99daf] leading-relaxed mt-1">
-                  Contracts with mutable owner roles, pause mechanisms, or undisclosed mint privileges that dilute holders.
-                </p>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-base font-normal text-white/95">Hidden mint traps</h4>
+                  <p className="text-xs text-[#a99daf] leading-relaxed mt-1">
+                    Contracts with mutable owner roles, pause mechanisms, or undisclosed mint privileges that dilute holders.
+                  </p>
+                </div>
               </div>
 
-              <div className="relative pl-11 pt-1 border-t border-white/10 pt-5">
-                <span className="absolute left-0 top-5 w-7 h-7 rounded-full border border-white/20 text-[#e4d9ec] flex items-center justify-center text-sm font-medium">
+              <div className="flex items-start gap-3.5 pt-4 sm:pt-5 border-t border-white/10">
+                <span className="w-7 h-7 rounded-full border border-white/20 text-[#e4d9ec] flex items-center justify-center text-sm font-medium shrink-0 mt-0.5">
                   ×
                 </span>
-                <h4 className="text-base font-normal text-white/95">Tolls and listing cuts</h4>
-                <p className="text-xs text-[#a99daf] leading-relaxed mt-1">
-                  Hefty creator tax, transaction fees, and arbitrary gatekeeping before your coin can reach open DEX liquidity.
-                </p>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-base font-normal text-white/95">Tolls and listing cuts</h4>
+                  <p className="text-xs text-[#a99daf] leading-relaxed mt-1">
+                    Hefty creator tax, transaction fees, and arbitrary gatekeeping before your coin can reach open DEX liquidity.
+                  </p>
+                </div>
               </div>
             </div>
           </article>
@@ -157,35 +163,41 @@ export const ComparisonSection: React.FC = () => {
               Every parameter is immutable and executed directly through your personal Web3 wallet.
             </p>
 
-            <div className="space-y-5">
-              <div className="relative pl-11 pt-1">
-                <span className="absolute left-0 top-0 w-7 h-7 rounded-full border border-[#18191c]/30 text-[#18191c] flex items-center justify-center text-xs font-bold">
+            <div className="space-y-4 sm:space-y-5">
+              <div className="flex items-start gap-3.5">
+                <span className="w-7 h-7 rounded-full border border-[#18191c]/30 text-[#18191c] flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
                   ✓
                 </span>
-                <h4 className="text-base font-semibold text-[#18191c]">100% Non-Custodial</h4>
-                <p className="text-xs text-[#18191c]/80 leading-relaxed mt-1">
-                  Private keys never leave your browser. MetaMask, Phantom, and Solflare sign every deployment call directly.
-                </p>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-base font-semibold text-[#18191c]">100% Non-Custodial</h4>
+                  <p className="text-xs text-[#18191c]/80 leading-relaxed mt-1">
+                    Private keys never leave your browser. MetaMask, Phantom, and Solflare sign every deployment call directly.
+                  </p>
+                </div>
               </div>
 
-              <div className="relative pl-11 pt-1 border-t border-[#18191c]/15 pt-5">
-                <span className="absolute left-0 top-5 w-7 h-7 rounded-full border border-[#18191c]/30 text-[#18191c] flex items-center justify-center text-xs font-bold">
+              <div className="flex items-start gap-3.5 pt-4 sm:pt-5 border-t border-[#18191c]/15">
+                <span className="w-7 h-7 rounded-full border border-[#18191c]/30 text-[#18191c] flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
                   ✓
                 </span>
-                <h4 className="text-base font-semibold text-[#18191c]">Fixed 999M Supply</h4>
-                <p className="text-xs text-[#18191c]/80 leading-relaxed mt-1">
-                  Minted once in deployment. No mint functions, no administrative owner privileges, no transfer taxes.
-                </p>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-base font-semibold text-[#18191c]">Fixed 999M Supply</h4>
+                  <p className="text-xs text-[#18191c]/80 leading-relaxed mt-1">
+                    Minted once in deployment. No mint functions, no administrative owner privileges, no transfer taxes.
+                  </p>
+                </div>
               </div>
 
-              <div className="relative pl-11 pt-1 border-t border-[#18191c]/15 pt-5">
-                <span className="absolute left-0 top-5 w-7 h-7 rounded-full border border-[#18191c]/30 text-[#18191c] flex items-center justify-center text-xs font-bold">
+              <div className="flex items-start gap-3.5 pt-4 sm:pt-5 border-t border-[#18191c]/15">
+                <span className="w-7 h-7 rounded-full border border-[#18191c]/30 text-[#18191c] flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
                   ✓
                 </span>
-                <h4 className="text-base font-semibold text-[#18191c]">$0 Platform Fees</h4>
-                <p className="text-xs text-[#18191c]/80 leading-relaxed mt-1">
-                  Zero cuts, zero protocol taxes. You pay standard network gas and whatever liquidity you choose to fund.
-                </p>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-base font-semibold text-[#18191c]">$0 Platform Fees</h4>
+                  <p className="text-xs text-[#18191c]/80 leading-relaxed mt-1">
+                    Zero cuts, zero protocol taxes. You pay standard network gas and whatever liquidity you choose to fund.
+                  </p>
+                </div>
               </div>
             </div>
           </article>
