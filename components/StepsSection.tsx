@@ -149,8 +149,6 @@ const getStageLogs = (
 };
 
 const STAGE_DURATION_MS = 4500; // 4.5s per stage
-const TICK_MS = 40; // 25fps smooth tick
-const progressStep = (TICK_MS / STAGE_DURATION_MS) * 100;
 
 export const StepsSection: React.FC = () => {
   const [activeStage, setActiveStage] = useState<number>(0);
@@ -200,22 +198,28 @@ export const StepsSection: React.FC = () => {
     setActiveLogIdx(0);
   }, [activeStage]);
 
-  // Auto-advance loop: pauses only stage transitioning, never stops terminal
+  // Auto-advance loop: deterministic elapsed timer modeled after helios2 Architecture.tsx
   useEffect(() => {
     if (!isAutoAdvance) return;
 
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev + progressStep >= 100) {
-          setActiveStage((current) => (current + 1) % STAGES.length);
-          return 0;
-        }
-        return prev + progressStep;
-      });
-    }, TICK_MS);
+    const interval = 50; // ms
+    const duration = STAGE_DURATION_MS;
+    let elapsed = 0;
 
-    return () => clearInterval(interval);
-  }, [isAutoAdvance]);
+    const timer = setInterval(() => {
+      elapsed += interval;
+      const pct = Math.min((elapsed / duration) * 100, 100);
+      setProgress(pct);
+
+      if (elapsed >= duration) {
+        clearInterval(timer);
+        setProgress(0);
+        setActiveStage((prev) => (prev + 1) % STAGES.length);
+      }
+    }, interval);
+
+    return () => clearInterval(timer);
+  }, [isAutoAdvance, activeStage]);
 
   const handleStageSelect = (index: number) => {
     setActiveStage(index);
