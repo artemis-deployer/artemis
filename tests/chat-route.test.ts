@@ -74,6 +74,73 @@ describe("chat route", () => {
     expect(SYSTEM_PROMPT).toContain("private keys");
     expect(SYSTEM_PROMPT).toContain("sign transactions");
     expect(SYSTEM_PROMPT).toContain("User:");
+    expect(SYSTEM_PROMPT).toContain("digits");
+    expect(SYSTEM_PROMPT).toContain("chainId");
+    expect(SYSTEM_PROMPT).toContain("sensible defaults");
+  });
+
+  it("retries once and applies the corrected draft", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          choices: [
+            {
+              message: {
+                content:
+                  'Meme coin!\n```json\n{"name":"Prabowo Meme Coin","ticker":"PROBO","pooled":"1 SOL","liquidity":"locked","route":"SOL-USDC"}\n```',
+              },
+            },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          choices: [
+            {
+              message: {
+                content:
+                  'Fixed!\n```json\n{"name":"Prabowo Meme Coin","ticker":"PROBO","pooled":"799200000","liquidity":"0.5","route":"direct","chainId":46630}\n```',
+              },
+            },
+          ],
+        }),
+      });
+    vi.stubGlobal("fetch", fetchMock);
+    const req = new Request("http://x/api/chat", {
+      method: "POST",
+      body: JSON.stringify({ messages: [{ role: "user", content: "prabowo meme" }] }),
+    });
+    const res = await chatPOST(req);
+    expect(res.status).toBe(200);
+    const json = (await res.json()) as {
+      draft: { ticker: string; pooled: string; chainId: number } | null;
+      draftErrors: string[];
+    };
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(json.draft).toMatchObject({ ticker: "PROBO", pooled: "799200000", chainId: 46630 });
+    expect(json.draftErrors).toEqual([]);
+  });
+
+  it("returns first-reply errors when retry also fails", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        choices: [{ message: { content: "Nope\n```json\n{\"ticker\":\n```" } }],
+      }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const req = new Request("http://x/api/chat", {
+      method: "POST",
+      body: JSON.stringify({ messages: [{ role: "user", content: "hi" }] }),
+    });
+    const res = await chatPOST(req);
+    const json = (await res.json()) as { draft: unknown; draftErrors: string[] };
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(json.draft).toBeNull();
+    expect(json.draftErrors.length).toBeGreaterThan(0);
   });
 
   it("sends low temperature and token cap upstream", async () => {

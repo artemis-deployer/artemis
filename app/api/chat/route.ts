@@ -5,9 +5,11 @@ import { checkRateLimit, clientIp } from "../../../lib/rate-limit";
 export const SYSTEM_PROMPT = [
   "You are Artemis, a coin launch copilot.",
   "Help the user shape a token draft: name, ticker, pool tokens, starting liquidity, route.",
-  "Strict output contract: reply with short prose of max 80 words, then exactly ONE fenced ```json block LAST.",
-  "That block must be the last thing in the reply and hold exactly these keys: {name, ticker, pooled, liquidity, route}.",
-  "Field rules: ticker must be uppercase alphanumeric, max 12 chars; pooled must be a numeric string > 0 and <= 999000000 for direct only; liquidity must be a numeric string > 0; route must be only direct or pumpfun.",
+  "Strict output contract: reply with a short prose conclusion of max 80 words (summarize the concept first), then exactly ONE fenced ```json block LAST.",
+  "That block must be the last thing in the reply and hold exactly these keys: {name, ticker, pooled, liquidity, route, chainId}.",
+  "Numbers are digits with optional decimal point ONLY, never units or words: pooled example \"799200000\" (NOT \"1 SOL\"), liquidity example \"0.5\" (NOT \"locked\").",
+  "Field rules: ticker must be uppercase alphanumeric, max 12 chars; pooled must be a numeric string > 0 and <= 999000000 for direct only; liquidity must be a numeric string > 0; route must be only direct or pumpfun (direct for EVM/Robinhood, pumpfun for Solana); chainId must be a known chain id.",
+  "If the user gives no numbers, choose sensible defaults instead of words: pooled 799200000, liquidity 0.5. Never emit placeholders like locked, TBD, or N/A.",
   "Supply is fixed and never editable: 999000000 for direct, 1000000000 for pumpfun.",
   "Revise incrementally from Current draft: replace only what user changed, always return FULL draft JSON.",
   "Chain inference: Robinhood, Hood, or EVM keywords keep or switch EVM chain; Solana keyword uses solana chain id from CHAINS; defaulting to current chain when unclear.",
@@ -17,6 +19,9 @@ export const SYSTEM_PROMPT = [
   "Assistant: Great pick for the arts club! I set ARTS with 500000000 pooled and 1.5 liquidity on direct.",
   '```json {"name":"Arts Club","ticker":"ARTS","pooled":"500000000","liquidity":"1.5","route":"direct"} ```',
 ].join(" ");
+
+const RETRY_NOTE =
+  "Correction: your last reply broke the output contract (non-numeric pooled/liquidity, bad route, or missing keys). Reply again: short prose conclusion first, then ONE valid fenced json block LAST with digits-only numbers and full keys.";
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
@@ -153,28 +158,55 @@ export async function POST(req: Request) {
 
   let upstream: Response;
   try {
-    upstream = await fetch(url, {
-      method: "POST",
-      headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
-      body: JSON.stringify({
-        model,
-        messages: [{ role: "system", content: systemContent }, ...trimmed],
-        temperature: 0.2,
-        max_tokens: 500,
-      }),
-    });
+    upstream = await callUpstream(url, key, model, [{ role: "system", content: systemContent }, ...trimmed]);
   } catch {
     return NextResponse.json({ error: "chat_offline" }, { status: 502 });
   }
   if (!upstream.ok) return NextResponse.json({ error: "chat_offline" }, { status: 502 });
+  let reply = await readReply(upstream);
+  if (!reply) return NextResponse.json({ error: "chat_offline" }, { status: 502 });
+  let parsed = extractServerDraft(reply);
+  // One self-correction round: models often emit units/words on the first try.
+  if (!parsed.draft) {
+    try {
+      const retry = await callUpstream(url, key, model, [
+        { role: "system", content: systemContent },
+        ...trimmed,
+        { role: "system", content: RETRY_NOTE },
+      ]);
+      if (retry.ok) {
+        const second = await readReply(retry);
+        if (second) {
+          reply = second;
+          parsed = extractServerDraft(second);
+        }
+      }
+    } catch {
+      // Keep first reply and its errors.
+    }
+  }
+  return NextResponse.json({ reply, draft: parsed.draft, draftErrors: parsed.draftErrors });
+}
+
+async function callUpstream(
+  url: string,
+  key: string,
+  model: string,
+  messages: { role: string; content: string }[],
+): Promise<Response> {
+  return fetch(url, {
+    method: "POST",
+    headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
+    body: JSON.stringify({ model, messages, temperature: 0.2, max_tokens: 500 }),
+  });
+}
+
+async function readReply(upstream: Response): Promise<string> {
   let data: { choices?: { message?: { content?: string } }[] };
   try {
     data = (await upstream.json()) as { choices?: { message?: { content?: string } }[] };
   } catch {
-    return NextResponse.json({ error: "chat_offline" }, { status: 502 });
+    return "";
   }
-  const reply = data.choices?.[0]?.message?.content ?? "";
-  if (!reply) return NextResponse.json({ error: "chat_offline" }, { status: 502 });
-  const { draft, draftErrors } = extractServerDraft(reply);
-  return NextResponse.json({ reply, draft, draftErrors });
+  return data.choices?.[0]?.message?.content ?? "";
 }
