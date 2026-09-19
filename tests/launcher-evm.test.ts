@@ -68,6 +68,11 @@ describe("formatEth", () => {
     expect(formatEth(1500000000000000n)).toBe("0.0015");
     expect(formatEth(0n)).toBe("0");
   });
+
+  it("keeps tiny values instead of zeroing them", () => {
+    expect(formatEth(200000000000n)).toBe("0.0000002");
+    expect(formatEth(100000000000000000000n)).toBe("100");
+  });
 });
 
 describe("estimateLaunchCost guards", () => {

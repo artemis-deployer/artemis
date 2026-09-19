@@ -37,10 +37,10 @@ export function calcEthMin(ethAmount: bigint): bigint {
   return result;
 }
 
-export function formatEth(value: bigint, digits = 6): string {
+export function formatEth(value: bigint, maxDecimals = 8): string {
   const [head, tail = ""] = formatEther(value).split(".");
-  const frac = tail.slice(0, digits).replace(/0+$/, "");
-  return frac ? `${head}.${frac}` : (head || "0");
+  const frac = tail.replace(/0+$/, "").slice(0, maxDecimals);
+  return frac ? `${head || "0"}.${frac}` : head || "0";
 }
 
 export type LaunchCost = { gas: bigint; gasPrice: bigint; fee: bigint; steps: 1 | 2 };

@@ -51,6 +51,10 @@ function safeEthAmount(value: string): bigint | null {
   }
 }
 
+function trimSol(value: number): string {
+  return String(Number(value.toFixed(9)));
+}
+
 const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: boolean }>(function ReviewDialog(
   { draft, mainnet },
   ref,
@@ -97,6 +101,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       return;
     }
     setCostLoading(true);
+    let alive = true;
     const id = setTimeout(() => {
       (async () => {
         try {
@@ -109,15 +114,18 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
             pooled: toTokenUnits(draft.pooled || "0"),
             ethAmount: parseEther(draft.liquidity || "0"),
           });
-          setCost(estimate);
+          if (alive) setCost(estimate);
         } catch {
-          setCost(null);
+          if (alive) setCost(null);
         } finally {
-          setCostLoading(false);
+          if (alive) setCostLoading(false);
         }
       })();
     }, 500);
-    return () => clearTimeout(id);
+    return () => {
+      alive = false;
+      clearTimeout(id);
+    };
   }, [isPump, chainId, account, draft.name, draft.ticker, draft.pooled, draft.liquidity]);
 
   function fail(message: string): void {
@@ -456,7 +464,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
               <div className="flex justify-between gap-3">
                 <span className="text-white/50">Network fee{cost && cost.steps === 2 ? " (deploy only)" : ""}:</span>
                 <span className="text-right font-mono font-semibold break-all text-white">
-                  {costLoading ? "estimating…" : cost ? `~${formatEth(cost.fee)} ${chainObj?.currency}` : "connect wallet"}
+                  {costLoading ? "estimating…" : cost ? `~${formatEth(cost.fee)} ${chainObj?.currency}` : account ? "estimate unavailable" : "connect wallet"}
                 </span>
               </div>
               {(() => {
@@ -531,13 +539,13 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
               <div className="flex justify-between gap-3">
                 <span className="text-white/50">Creation + priority fee:</span>
                 <span className="text-right font-mono font-semibold break-all text-white">
-                  ~{PUMP_FEE_SOL + PUMP_PRIORITY_FEE} SOL
+                  ~{trimSol(PUMP_FEE_SOL + PUMP_PRIORITY_FEE)} SOL
                 </span>
               </div>
               <div className="flex justify-between gap-3 border-t border-white/10 pt-1.5">
                 <span className="text-white/50">Total spend:</span>
                 <span className="text-right font-mono font-bold break-all text-[#fae8a4]">
-                  ~{(Number.isFinite(Number(draft.liquidity)) && Number(draft.liquidity) > 0 ? Number(draft.liquidity) : 0) + PUMP_FEE_SOL + PUMP_PRIORITY_FEE} SOL
+                  ~{trimSol((Number.isFinite(Number(draft.liquidity)) && Number(draft.liquidity) > 0 ? Number(draft.liquidity) : 0) + PUMP_FEE_SOL + PUMP_PRIORITY_FEE)} SOL
                 </span>
               </div>
               <p className="m-0 text-[11px] text-white/50">Plus small rent deposits for new accounts. Only actual onchain costs apply.</p>
