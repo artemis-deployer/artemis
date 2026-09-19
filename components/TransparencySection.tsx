@@ -1,6 +1,8 @@
 "use client";
 
 import React from 'react';
+import { ChevronDown, ArrowUpRight, ArrowDownRight, ShieldCheck } from 'lucide-react';
+import { usePageTransition } from './PageTransition';
 
 const disclosures = [
   {
@@ -34,28 +36,42 @@ interface TransparencySectionProps {
 }
 
 export const TransparencySection: React.FC<TransparencySectionProps> = () => {
+  const { navigate } = usePageTransition();
+
+  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (href.startsWith('/')) {
+      e.preventDefault();
+      navigate(href);
+    }
+  };
+
   return (
     <section
       id="transparency"
       data-theme="light"
-      className="transparency-section py-28 px-[max(6.25vw,24px)] w-full bg-[#f8f6f0] text-[#18191c]"
+      className="transparency-section py-28 px-[max(6.25vw,24px)] w-full bg-[#f8f6f0] text-[#18191c] border-t border-[#18191c]/10"
     >
       <div className="max-w-[1800px] mx-auto w-full">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
           {/* Left Column: Heading & 3D Art Card */}
           <div className="lg:col-span-5 flex flex-col justify-between">
             <div>
-              <h2 className="font-sans text-3xl sm:text-4xl md:text-5xl font-light tracking-tight text-[#18191c] mb-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#18191c]/5 border border-[#18191c]/10 text-[#18191c] font-mono text-[10px] tracking-widest uppercase mb-4 w-fit">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#18191c]" />
+                <span>RADICAL TRANSPARENCY</span>
+              </div>
+
+              <h2 className="font-unbounded text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-[#18191c] mb-4 leading-[1.15]">
                 What We<br />Do Not Hide
               </h2>
-              <p className="text-[#18191c]/70 text-base sm:text-lg leading-relaxed max-w-sm">
+              <p className="font-sans text-[#18191c]/70 text-sm sm:text-base leading-relaxed max-w-sm">
                 A non-custodial launchpad must be radically honest regarding contract mechanics, liquidity parameters, and operational boundaries.
               </p>
             </div>
 
             <a
               href="#studio"
-              className="mt-12 group text-left block rounded-lg overflow-hidden border border-[#18191c]/10 bg-white shadow-md hover:shadow-xl transition-all no-underline text-inherit"
+              className="mt-10 group text-left block rounded-2xl overflow-hidden border border-[#18191c]/10 bg-white shadow-sm hover:shadow-xl transition-all duration-300 no-underline text-inherit"
             >
               <div className="h-56 overflow-hidden bg-black/5">
                 <img
@@ -64,9 +80,11 @@ export const TransparencySection: React.FC<TransparencySectionProps> = () => {
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
               </div>
-              <div className="p-5 bg-[#fae8a4] flex justify-between items-center text-sm font-semibold text-[#18191c]">
-                <span>Launch in the studio now.</span>
-                <span className="text-base group-hover:translate-x-1 transition-transform">↘</span>
+              <div className="p-5 bg-[#fae8a4] flex justify-between items-center text-sm font-bold text-[#18191c]">
+                <span>Launch in the studio now</span>
+                <div className="w-7 h-7 rounded-full bg-[#18191c]/10 flex items-center justify-center text-[#18191c] group-hover:translate-x-0.5 group-hover:translate-y-0.5 transition-transform">
+                  <ArrowDownRight className="w-4 h-4" />
+                </div>
               </div>
             </a>
           </div>
@@ -79,10 +97,13 @@ export const TransparencySection: React.FC<TransparencySectionProps> = () => {
                 className="group py-5 first:pt-0 cursor-pointer"
                 open={idx === 0}
               >
-                <summary className="text-lg md:text-xl font-light tracking-tight flex items-center justify-between gap-4 select-none list-none text-[#18191c] hover:opacity-75 transition-opacity">
+                <summary className="text-base sm:text-lg font-semibold tracking-tight flex items-center justify-between gap-4 select-none list-none text-[#18191c] hover:opacity-80 transition-opacity">
                   <span>{item.title}</span>
+                  <div className="w-6 h-6 rounded-full bg-[#18191c]/5 group-hover:bg-[#18191c]/10 flex items-center justify-center text-[#18191c]/60 group-open:rotate-180 group-open:bg-[#18191c] group-open:text-white transition-all duration-200 shrink-0">
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  </div>
                 </summary>
-                <p className="mt-3 text-sm text-[#18191c]/75 leading-relaxed pr-8">
+                <p className="mt-3 text-xs sm:text-sm text-[#18191c]/75 leading-relaxed pr-6 font-sans">
                   {item.desc}
                 </p>
               </details>
@@ -91,27 +112,27 @@ export const TransparencySection: React.FC<TransparencySectionProps> = () => {
         </div>
 
         {/* Go Deeper Section Navigation */}
-        <div className="mt-28 pt-12 border-t border-[#18191c]/10">
-          <p className="text-xs uppercase tracking-[0.2em] text-[#18191c]/50 mb-6 font-semibold font-mono">
-            GO A LITTLE DEEPER
-          </p>
+        <div className="mt-24 pt-12 border-t border-[#18191c]/10">
+          <div className="flex items-center justify-between mb-6">
+            <span className="text-xs uppercase tracking-[0.2em] text-[#18191c]/50 font-semibold font-mono">
+              GO A LITTLE DEEPER
+            </span>
+          </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[
-              { num: '01', label: 'Studio', href: '#studio' },
-              { num: '02', label: 'How it works', href: '#how-it-works' },
-              { num: '03', label: 'Rails', href: '#rails' },
-              { num: '04', label: 'Showcase', href: '/tokens' }
+              { label: 'Launch Studio', href: '#studio' },
+              { label: 'Lifecycle Engine', href: '#how-it-works' },
+              { label: 'Verified Rails', href: '#rails' },
+              { label: 'Public Showcase', href: '/tokens' }
             ].map((link) => (
               <a
-                key={link.num}
+                key={link.label}
                 href={link.href}
-                className="p-4 border border-[#18191c]/10 rounded bg-white/50 hover:bg-[#fae8a4] hover:border-[#fae8a4] transition-all flex justify-between items-center text-sm font-medium text-[#18191c] no-underline"
+                onClick={(e) => handleLinkClick(e, link.href)}
+                className="p-4 border border-[#18191c]/10 rounded-xl bg-white/60 hover:bg-[#fae8a4] hover:border-[#fae8a4] transition-all duration-300 flex justify-between items-center text-xs sm:text-sm font-semibold text-[#18191c] no-underline group shadow-sm"
               >
-                <span className="flex items-center gap-2">
-                  <small className="font-mono text-xs opacity-50">{link.num}</small>
-                  <span>{link.label}</span>
-                </span>
-                <span>↗</span>
+                <span>{link.label}</span>
+                <ArrowUpRight className="w-4 h-4 text-[#18191c]/50 group-hover:text-[#18191c] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
               </a>
             ))}
           </div>
