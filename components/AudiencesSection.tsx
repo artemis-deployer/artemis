@@ -1,98 +1,269 @@
 "use client";
 
 import React, { useState } from 'react';
+import { 
+  Users, 
+  Terminal, 
+  Cpu, 
+  ArrowUpRight, 
+  ShieldCheck, 
+  Check, 
+  Layers,
+  Sparkles
+} from 'lucide-react';
+import { usePageTransition } from './PageTransition';
 
-const audiences = [
+interface BuilderSegment {
+  id: string;
+  tabLabel: string;
+  tag: string;
+  title: string;
+  desc: string;
+  icon: React.ComponentType<{ className?: string }>;
+  img: string;
+  badge: string;
+  accentColor: string;
+  borderColor: string;
+  metrics: Array<{ label: string; value: string }>;
+  cliCommand: string;
+  href: string;
+}
+
+const BUILDER_SEGMENTS: BuilderSegment[] = [
   {
-    theme: 'bg-[#1a1b1f] border-[#cadcf0]/30',
-    tag: 'COMMUNITY CREATORS & CULTS',
-    title: 'Turn inside jokes and\nmovements into real onchain\nliquidity without custody.',
-    img: '/assets/walkways.png'
+    id: 'creators',
+    tabLabel: 'Community Creators',
+    tag: 'VIRAL MOVEMENTS',
+    title: 'Turn Cultural Movements into Sovereign Onchain Liquidity',
+    desc: 'Launch community tokens and meme movements with permanently locked liquidity, fair genesis minting, and zero developer backdoors. Your community retains true economic sovereignty from block zero.',
+    icon: Users,
+    img: '/assets/walkways.png',
+    badge: 'FAIR LAUNCH VERIFIED',
+    accentColor: 'text-[#cadcf0]',
+    borderColor: 'border-[#cadcf0]/40',
+    metrics: [
+      { label: 'GENESIS MODEL', value: 'Fair Launch' },
+      { label: 'DEV TAX', value: 'Zero (0.00%)' },
+      { label: 'LP DESTINATION', value: 'Burnt 0xdead' },
+      { label: 'MINT FUNCTION', value: 'Non-Existent' }
+    ],
+    cliCommand: 'artemis.deploy({ archetype: "community", lpLock: true, devTax: 0 })',
+    href: '#how-it-works'
   },
   {
-    theme: 'bg-[#1a1b1f] border-[#fae8a4]/30',
-    tag: 'WEB3 DEVELOPERS & PROTOCOLS',
-    title: 'Deploy verified ERC20\ntokens directly to DEX pools\nwith zero admin backdoors.',
-    img: '/assets/terrain.png'
+    id: 'developers',
+    tabLabel: 'Web3 Developers',
+    tag: 'DEFI ARCHITECTS',
+    title: 'Deploy Verified Contracts Directly to Automated DEX Pools',
+    desc: 'Synthesize non-custodial smart contracts compiled deterministically on Robinhood Chain or Solana Mainnet. Ownership is renounced at construction, guaranteeing permanent anti-rug compliance.',
+    icon: Terminal,
+    img: '/assets/terrain.png',
+    badge: 'BYTECODE AUDITED',
+    accentColor: 'text-[#fae8a4]',
+    borderColor: 'border-[#fae8a4]/40',
+    metrics: [
+      { label: 'COMPILER', value: 'solc 0.8.26' },
+      { label: 'OWNERSHIP', value: 'address(0x0)' },
+      { label: 'ROUTER', value: 'Uniswap V2' },
+      { label: 'PLATFORM TOLL', value: '0.00% Immutable' }
+    ],
+    cliCommand: 'solc.compile({ contract: "ERC20Sovereign", renounceOnDeploy: true })',
+    href: '#how-it-works'
+  },
+  {
+    id: 'agents',
+    tabLabel: 'Autonomous AI Agents',
+    tag: 'PROGRAMMATIC DAEMONS',
+    title: 'Deterministic Liquidity Rails for Autonomous Agents',
+    desc: 'Empower autonomous AI agents, compute DAOs, and algorithmic agents to strike programmatic assets, automate liquidity routing, and seed token economics with zero human custodial intervention.',
+    icon: Cpu,
+    img: '/assets/pyramids.png',
+    badge: 'NON-CUSTODIAL RPC',
+    accentColor: 'text-[#ece4d4]',
+    borderColor: 'border-[#ece4d4]/40',
+    metrics: [
+      { label: 'RUNTIME', value: 'Injected RPC' },
+      { label: 'SIGNING', value: 'Client EIP-712' },
+      { label: 'KEY STORAGE', value: '0 Bytes Server' },
+      { label: 'DISPATCH', value: 'Autonomous' }
+    ],
+    cliCommand: 'agentKernel.dispatch({ mode: "autonomous", eip712Sign: "local" })',
+    href: '/tokens'
   }
 ];
 
 export const AudiencesSection: React.FC = () => {
-  const [index, setIndex] = useState(0);
+  const [activeIdx, setActiveIdx] = useState<number>(0);
+  const { navigate } = usePageTransition();
 
-  const prev = () => setIndex(0);
-  const next = () => setIndex(1);
+  const current = BUILDER_SEGMENTS[activeIdx];
+  const CurrentIcon = current.icon;
+
+  const handleActionClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (href.startsWith('/')) {
+      e.preventDefault();
+      navigate(href);
+    }
+  };
 
   return (
     <section
       id="who-its-for"
       data-theme="dark"
-      className="audiences-section py-28 px-[max(6.25vw,24px)] w-full bg-[#131416] text-[#f8f6f0]"
+      className="audiences-section py-24 sm:py-32 px-[max(6.25vw,24px)] w-full bg-[#111215] text-[#f8f6f0] border-t border-white/10 relative overflow-hidden"
     >
-      <div className="max-w-[1800px] mx-auto w-full">
-        <div className="flex justify-between items-end mb-12">
-        <div>
-          <h2 className="font-sans text-3xl sm:text-4xl md:text-5xl font-light tracking-tight text-white mb-4">
+      {/* Ambient background glow */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_40%,rgba(250,232,164,0.03),transparent_70%)] pointer-events-none" />
+
+      <div className="max-w-[1360px] mx-auto w-full relative z-10">
+        
+        {/* Section Header */}
+        <div className="mb-14 sm:mb-16 text-center flex flex-col items-center">
+          <h2 className="font-unbounded text-2xl sm:text-4xl lg:text-[2.6rem] font-bold tracking-tight text-white leading-[1.15]">
             Built for Sovereign Builders
           </h2>
-          <p className="text-white/60 text-base md:text-lg max-w-lg leading-relaxed">
-            One transparent deployment pipeline, whether launching an experimental meme or seeding DAO governance.
+          <p className="mt-4 text-sm sm:text-base text-white/65 max-w-2xl leading-relaxed font-sans text-center">
+            One transparent, non-custodial deployment pipeline designed for viral cultural movements, decentralized protocol architects, and autonomous AI agents.
           </p>
         </div>
 
-        {/* Carousel controls */}
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={prev}
-            disabled={index === 0}
-            className="w-12 h-12 rounded border border-white/20 bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-xl transition-colors cursor-pointer text-white"
-            aria-label="Previous audience"
-          >
-            ←
-          </button>
-          <button
-            type="button"
-            onClick={next}
-            disabled={index === 1}
-            className="w-12 h-12 rounded border border-white/20 bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-xl transition-colors cursor-pointer text-white"
-            aria-label="Next audience"
-          >
-            →
-          </button>
+        {/* Interactive Segment Navigation Tabs */}
+        <div className="flex items-center justify-center gap-2 sm:gap-3 mb-8 flex-wrap">
+          {BUILDER_SEGMENTS.map((seg, idx) => {
+            const Icon = seg.icon;
+            const isSelected = activeIdx === idx;
+            return (
+              <button
+                key={seg.id}
+                type="button"
+                onClick={() => setActiveIdx(idx)}
+                className={`inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-[2px] font-mono text-xs sm:text-sm font-semibold transition-all border cursor-pointer ${
+                  isSelected
+                    ? 'bg-white text-[#111215] border-white shadow-[0_0_20px_rgba(255,255,255,0.15)]'
+                    : 'bg-white/5 text-white/70 border-white/10 hover:border-white/30 hover:bg-white/10'
+                }`}
+              >
+                <Icon className={`w-4 h-4 ${isSelected ? 'text-[#111215]' : 'text-[#fae8a4]'}`} />
+                <span>{seg.tabLabel}</span>
+              </button>
+            );
+          })}
         </div>
-      </div>
 
-      <div className="audience-viewport overflow-hidden">
-        <div
-          className="flex gap-6 transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
-          style={{ transform: `translateX(calc(-${index * 100}% - ${index * 24}px))` }}
-        >
-          {audiences.map((aud, i) => (
-            <article
-              key={i}
-              className={`flex-none w-full min-h-[480px] grid grid-cols-1 md:grid-cols-5 border rounded-lg overflow-hidden shadow-2xl ${aud.theme}`}
-            >
-              <div className="md:col-span-2 h-64 md:h-full bg-black/40 overflow-hidden">
-                <img
-                  src={aud.img}
-                  alt=""
-                  className="w-full h-full object-cover"
-                />
-              </div>
+        {/* Master Bento Card Display Area */}
+        <div className={`rounded-[4px] border transition-all duration-500 overflow-hidden bg-[#16181c] ${current.borderColor} shadow-[0_20px_60px_rgba(0,0,0,0.5)]`}>
+          <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch min-h-[460px]">
+            
+            {/* Left Content Column */}
+            <div className="lg:col-span-7 p-6 sm:p-10 md:p-12 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-white/10">
+              <div>
+                <div className="flex items-center justify-between gap-3 mb-4">
+                  <span className={`font-mono text-[10px] tracking-widest uppercase font-bold ${current.accentColor}`}>
+                    {current.tag}
+                  </span>
+                  <span className="font-mono text-[9px] tracking-widest px-2 py-0.5 rounded-[2px] bg-white/5 border border-white/10 text-white/70">
+                    {current.badge}
+                  </span>
+                </div>
 
-              <div className="md:col-span-3 p-8 md:p-14 flex flex-col justify-between">
-                <h3 className="font-sans text-2xl sm:text-3xl md:text-4xl font-light tracking-tight leading-snug whitespace-pre-line text-white">
-                  {aud.title}
+                <h3 className="font-unbounded text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight leading-snug mb-4">
+                  {current.title}
                 </h3>
-                <p className="text-xs md:text-sm font-mono tracking-widest text-[#fae8a4] uppercase text-right pt-8 border-t border-white/10">
-                  {aud.tag}
+
+                <p className="text-sm sm:text-base text-white/70 leading-relaxed font-sans mb-8">
+                  {current.desc}
                 </p>
+
+                {/* 4 Micro-Metric Grid */}
+                <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-6">
+                  {current.metrics.map((m, i) => (
+                    <div key={i} className="p-3 bg-white/[0.03] border border-white/10 rounded-[2px] font-mono">
+                      <div className="text-[10px] text-white/40 tracking-wider uppercase mb-1">
+                        {m.label}
+                      </div>
+                      <div className={`text-xs sm:text-sm font-semibold truncate ${current.accentColor}`}>
+                        {m.value}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </article>
-          ))}
+
+              {/* CLI Command & CTA Button */}
+              <div className="pt-6 border-t border-white/10 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+                <div className="p-2.5 bg-black/50 border border-white/10 rounded-[2px] font-mono text-[11px] text-white/70 flex items-center gap-2 overflow-x-auto">
+                  <span className="text-[#fae8a4] shrink-0">&gt;</span>
+                  <span className="truncate">{current.cliCommand}</span>
+                </div>
+
+                <a
+                  href={current.href}
+                  onClick={(e) => handleActionClick(e, current.href)}
+                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#fae8a4] text-[#111215] font-mono text-xs font-bold rounded-[2px] hover:bg-white transition-colors shrink-0 shadow-xs cursor-pointer"
+                >
+                  <span>Launch Rails</span>
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                </a>
+              </div>
+            </div>
+
+            {/* Right Image Feature Column */}
+            <div className="lg:col-span-5 relative bg-black/60 min-h-[280px] lg:min-h-full overflow-hidden flex items-center justify-center group">
+              <img
+                src={current.img}
+                alt={current.title}
+                className="absolute inset-0 w-full h-full object-cover object-center opacity-80 group-hover:scale-105 transition-transform duration-700 ease-out"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#16181c] via-transparent to-black/30" />
+              <div className="absolute inset-0 bg-gradient-to-r from-[#16181c] via-transparent to-transparent hidden lg:block" />
+
+              <div className="relative z-10 p-6 sm:p-8 flex flex-col items-center justify-center text-center">
+                <div className="w-12 h-12 rounded-[2px] bg-black/70 border border-white/20 backdrop-blur-md flex items-center justify-center mb-3 shadow-lg">
+                  <CurrentIcon className={`w-6 h-6 ${current.accentColor}`} />
+                </div>
+                <span className="font-mono text-xs tracking-wider uppercase text-white/90 font-bold bg-black/60 px-3 py-1 rounded-[2px] border border-white/15 backdrop-blur-sm">
+                  {current.badge}
+                </span>
+              </div>
+            </div>
+
+          </div>
         </div>
-      </div>
+
+        {/* 3 Quick-Select Cards Below */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+          {BUILDER_SEGMENTS.map((seg, idx) => {
+            const Icon = seg.icon;
+            const isSelected = activeIdx === idx;
+            return (
+              <button
+                key={seg.id}
+                type="button"
+                onClick={() => setActiveIdx(idx)}
+                className={`p-4 rounded-[2px] border text-left transition-all duration-300 flex items-center gap-3 cursor-pointer ${
+                  isSelected
+                    ? 'bg-white/10 border-[#fae8a4] shadow-[0_0_15px_rgba(250,232,164,0.06)]'
+                    : 'bg-white/[0.02] border-white/10 hover:border-white/20 hover:bg-white/[0.05]'
+                }`}
+              >
+                <div className={`p-2 rounded-[2px] border ${
+                  isSelected ? 'bg-[#fae8a4] text-[#111215] border-[#fae8a4]' : 'bg-white/5 text-white/60 border-white/10'
+                }`}>
+                  <Icon className="w-4 h-4" />
+                </div>
+                <div className="overflow-hidden">
+                  <div className="font-unbounded text-xs font-bold text-white truncate">
+                    {seg.tabLabel}
+                  </div>
+                  <div className="font-mono text-[10px] text-white/40 truncate mt-0.5">
+                    {seg.tag}
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
       </div>
     </section>
   );
