@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, ImagePlus, X } from "lucide-react";
+import { ArrowRight, Check, ChevronDown, ImagePlus, X } from "lucide-react";
 import { CHAINS, DIRECT_SUPPLY } from "../lib/chains";
 import { stripNumericSeparators, validateDraft } from "../lib/draft";
 import { isSafeImageSrc, useDraft } from "./DraftContext";
+import ChainLogo from "./ChainLogo";
 
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 
@@ -13,7 +14,25 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
   const [imageError, setImageError] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [networkOpen, setNetworkOpen] = useState(false);
+  const networkRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!networkOpen) return;
+    function onDown(e: MouseEvent) {
+      if (networkRef.current && !networkRef.current.contains(e.target as Node)) setNetworkOpen(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setNetworkOpen(false);
+    }
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [networkOpen]);
 
   useEffect(() => {
     return () => {
@@ -115,65 +134,62 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
           <span>Target Network</span>
           <span className="text-[11px] font-medium text-white/50">Testnet recommended for rehearsal</span>
         </label>
-        <div className="grid grid-cols-2 gap-2.5 max-sm:grid-cols-1">
-          {CHAINS.map((c) => {
-            const active = draft.chainId === c.id;
-            const sol = String(c.id).startsWith("solana");
-            return (
-              <div
-                key={String(c.id)}
-                onClick={() => {
-                  setDraft({
-                    ...draft,
-                    chainId: c.id,
-                    route: sol ? "pumpfun" : "direct",
-                  });
-                  setConsent(false);
-                }}
-                className={`flex cursor-pointer flex-col gap-1 rounded-lg border p-3 transition-all ${
-                  active
-                    ? "border-[#fae8a4] bg-[#1e1c28] shadow-md"
-                    : "border-white/10 bg-[#1a1b1f] hover:border-white/20"
-                }`}
-                role="button"
-                tabIndex={0}
-                aria-pressed={active}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    setDraft({ ...draft, chainId: c.id, route: sol ? "pumpfun" : "direct" });
-                    setConsent(false);
-                  }
-                }}
-              >
-                <div className="flex items-center justify-between gap-2 text-sm font-bold text-white">
-                  <span className="inline-flex items-center gap-2">
-                    <span
-                      aria-hidden="true"
-                      className={`flex h-4 w-4 items-center justify-center rounded-full border text-[10px] leading-none ${
-                        active ? "border-[#fae8a4] bg-[#fae8a4] text-[#18191c]" : "border-white/25 text-transparent"
-                      }`}
+        <div className="relative" ref={networkRef}>
+          <button
+            type="button"
+            aria-haspopup="listbox"
+            aria-expanded={networkOpen}
+            aria-label="Choose target network"
+            onClick={() => setNetworkOpen((o) => !o)}
+            className="flex min-h-11 w-full cursor-pointer items-center gap-2.5 rounded-lg border border-white/15 bg-[#1a1b1f] px-3 py-2.5 text-sm text-white transition-all hover:border-white/30"
+          >
+            <span className="inline-flex shrink-0 text-[#fae8a4]" aria-hidden="true">
+              <ChainLogo kind={chain.logo} />
+            </span>
+            <span className="flex-1 text-left font-bold">{chain.name}</span>
+            <span className="font-mono text-[11px] text-white/50">{chain.currency}</span>
+            <span className={`rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase font-mono ${
+              chain.testnet ? "border-emerald-500/30 text-emerald-400 bg-emerald-500/10" : "border-[#fae8a4]/30 text-[#fae8a4] bg-[#fae8a4]/10"
+            }`}>
+              {chain.testnet ? "Testnet" : "Mainnet"}
+            </span>
+            <ChevronDown size={14} aria-hidden="true" className="text-white/50" />
+          </button>
+          {networkOpen && (
+            <ul
+              role="listbox"
+              aria-label="Target networks"
+              className="absolute right-0 left-0 z-20 mt-1.5 overflow-hidden rounded-lg border border-white/15 bg-[#1a1b1f] shadow-2xl"
+            >
+              {CHAINS.map((c) => {
+                const active = draft.chainId === c.id;
+                const sol = String(c.id).startsWith("solana");
+                return (
+                  <li key={String(c.id)} role="option" aria-selected={active}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDraft({ ...draft, chainId: c.id, route: sol ? "pumpfun" : "direct" });
+                        setConsent(false);
+                        setNetworkOpen(false);
+                      }}
+                      className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm text-white/80 transition-all hover:bg-white/10 hover:text-white"
                     >
-                      ✓
-                    </span>
-                    <span>{c.name}</span>
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <span className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-[10px] font-bold text-[#cadcf0]">
-                      {c.currency}
-                    </span>
-                    <span className={`rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase font-mono ${
-                      c.testnet ? "border-emerald-500/30 text-emerald-400 bg-emerald-500/10" : "border-[#fae8a4]/30 text-[#fae8a4] bg-[#fae8a4]/10"
-                    }`}>
-                      {c.testnet ? "Testnet" : "Mainnet"}
-                    </span>
-                  </span>
-                </div>
-                <span className="text-[11px] text-white/50">
-                  {sol ? "Solana · pump.fun" : "Robinhood Chain · V2 Router"}
-                </span>
-              </div>
-            );
-          })}
+                      <span className="inline-flex shrink-0 text-[#fae8a4]" aria-hidden="true">
+                        <ChainLogo kind={c.logo} />
+                      </span>
+                      <span className="flex-1 font-bold text-white">{c.name}</span>
+                      <span className="font-mono text-[11px] text-white/50">{c.currency}</span>
+                      <span className="text-[11px] text-white/50">
+                        {sol ? "Solana · pump.fun" : "Robinhood Chain · V2 Router"}
+                      </span>
+                      {active && <Check size={13} aria-hidden="true" className="shrink-0 text-[#fae8a4]" />}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </div>
       </div>
 
