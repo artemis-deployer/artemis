@@ -4,15 +4,25 @@ import React from 'react';
 import Link from 'next/link';
 import { HOOD_MAINNET } from '../lib/launcher-evm';
 import { TransitionLink } from './PageTransition';
-import { FloatingPixels } from './FloatingPixels';
+import { CandleBars } from './CandleBars';
 
 interface FooterProps {
   onOpenSoon?: (feature: string) => void;
 }
 
 export const Footer: React.FC<FooterProps> = () => {
+  const handleHomeClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (typeof window !== 'undefined' && window.location.pathname === '/') {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   return (
     <footer className="footer" data-theme="dark">
+      {/* Background DEX Candlestick & Market Depth Animation (matching Hero) */}
+      <CandleBars className="opacity-35" />
+
       <div className="max-w-[1800px] mx-auto w-full relative z-10">
         {/* Footer CTA Banner with Animated Pixel Notch and Stepped Tabs */}
         <div className="footer-cta">
@@ -29,8 +39,8 @@ export const Footer: React.FC<FooterProps> = () => {
           {/* Col 1: Brand & Tagline */}
           <div>
             <p className="label">&#123;ARTEMIS&#125;</p>
-            <Link className="brand" href="/">
-              <img src="/assets/logo.png" alt="" />
+            <Link className="brand" href="/" onClick={handleHomeClick}>
+              <img src="/assets/logo.png" alt="Artemis Logo" />
               <span>Artemis</span>
             </Link>
             <p>
@@ -42,7 +52,7 @@ export const Footer: React.FC<FooterProps> = () => {
           {/* Col 2: Navigation Links */}
           <div>
             <p className="label">&#123;NAVIGATION&#125;</p>
-            <Link href="/">Home</Link>
+            <Link href="/" onClick={handleHomeClick}>Home</Link>
             <a href="#how-it-works">How it works</a>
             <a href="#rails">Execution Rails</a>
             <a href="#studio">Launch Studio</a>
@@ -57,8 +67,8 @@ export const Footer: React.FC<FooterProps> = () => {
             <a href="https://robinhoodchain.blockscout.com" target="_blank" rel="noreferrer">
               Robinhood Chain ↗
             </a>
-            <a href="https://solscan.io?cluster=devnet" target="_blank" rel="noreferrer">
-              Solana Devnet ↗
+            <a href="https://solscan.io" target="_blank" rel="noreferrer">
+              Solana Explorer ↗
             </a>
             <a
               href={`${HOOD_MAINNET.explorer}/address/${HOOD_MAINNET.router ?? ""}`}
@@ -121,9 +131,6 @@ export const Footer: React.FC<FooterProps> = () => {
       <div className="footer-wordmark" aria-hidden="true">
         Artemis
       </div>
-
-      {/* Floating Animated Pixels */}
-      <FloatingPixels className="pixels" />
     </footer>
   );
 };
