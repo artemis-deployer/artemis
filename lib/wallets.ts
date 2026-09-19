@@ -30,7 +30,7 @@ export const EVM_WALLETS: WalletOption[] = [
   { id: "rabby", kind: "evm", name: "Rabby", installUrl: "https://rabby.io/", icon: "/wallets/rabby.svg" },
   { id: "coinbase", kind: "evm", name: "Coinbase Wallet", installUrl: "https://www.coinbase.com/wallet/downloads", icon: "/wallets/coinbase.svg" },
   { id: "okx", kind: "evm", name: "OKX Wallet", installUrl: "https://www.okx.com/web3", icon: "/wallets/okx.svg" },
-  { id: "trust", kind: "evm", name: "Trust Wallet", installUrl: "https://trustwallet.com/download", icon: "/wallets/trust.svg" },
+  { id: "trust", kind: "evm", name: "Trust Wallet", installUrl: "https://trustwallet.com/download", icon: "/wallets/trust.png" },
   { id: "phantom", kind: "evm", name: "Phantom (EVM)", installUrl: "https://phantom.app/download", icon: "/wallets/phantom.svg" },
 ];
 

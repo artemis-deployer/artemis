@@ -16,7 +16,7 @@ describe("wallet registry", () => {
     for (const w of EVM_WALLETS) {
       expect(w.name.length).toBeGreaterThan(0);
       expect(w.installUrl).toMatch(/^https:\/\//);
-      expect(w.icon).toMatch(/^\/wallets\/.+\.svg$/);
+      expect(w.icon).toMatch(/^\/wallets\/.+\.(svg|png)$/);
     }
   });
 
@@ -25,7 +25,7 @@ describe("wallet registry", () => {
     for (const w of SOLANA_WALLETS) {
       expect(w.name.length).toBeGreaterThan(0);
       expect(w.installUrl).toMatch(/^https:\/\//);
-      expect(w.icon).toMatch(/^\/wallets\/.+\.svg$/);
+      expect(w.icon).toMatch(/^\/wallets\/.+\.(svg|png)$/);
     }
   });
 
