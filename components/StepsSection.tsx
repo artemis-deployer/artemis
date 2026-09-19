@@ -257,11 +257,6 @@ export const StepsSection: React.FC = () => {
         
         {/* Section Header */}
         <div className="mb-12 text-center flex flex-col items-center">
-          <div className="inline-flex items-center justify-center gap-2 font-mono text-[11px] tracking-[0.2em] uppercase text-[#18191c]/55 mb-3 border-b border-[#18191c]/15 pb-1">
-            <span>PROTOCOL LIFECYCLE</span>
-            <span className="text-[#18191c]/25">/</span>
-            <span>END-TO-END PIPELINE</span>
-          </div>
           <h2 className="font-unbounded text-2xl sm:text-4xl lg:text-[2.5rem] font-bold tracking-tight text-[#18191c] leading-[1.15]">
             From Spark to Onchain Liquidity.
           </h2>

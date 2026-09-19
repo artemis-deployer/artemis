@@ -92,12 +92,6 @@ export const FeatureSection: React.FC = () => {
     >
       {/* Centered Header with Telemetry Metadata and Arrow Controls */}
       <div className="max-w-[1400px] mx-auto px-[max(6.25vw,24px)] mb-12 text-center flex flex-col items-center">
-        <div className="inline-flex items-center justify-center gap-2 font-mono text-[11px] tracking-[0.2em] uppercase text-[#18191c]/55 mb-3 border-b border-[#18191c]/15 pb-1">
-          <span>{"//"} PROTOCOL_SPEC</span>
-          <span className="text-[#18191c]/25">/</span>
-          <span>CORE CAPABILITIES</span>
-        </div>
-
         <h2 className="font-unbounded text-2xl sm:text-3xl md:text-4xl lg:text-[2.35rem] font-bold tracking-tight leading-[1.14] text-[#18191c] max-w-4xl mx-auto">
           Everything You Need for<br />
           <span className="text-[#18191c]/50 font-light">Autonomous Token Launches</span>
@@ -106,7 +100,7 @@ export const FeatureSection: React.FC = () => {
         {/* Centered Controls: Spec Index + Smooth Nudge Buttons */}
         <div className="mt-8 flex items-center justify-center gap-3 font-mono text-xs">
           <span className="hidden sm:inline-block px-3 py-1.5 border border-[#18191c]/15 bg-white/60 text-[#18191c]/70 rounded-sm">
-            06 MODULES ACTIVE
+            MODULES ACTIVE
           </span>
           <div className="flex items-center gap-1.5">
             <button

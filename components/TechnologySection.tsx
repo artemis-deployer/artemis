@@ -64,11 +64,6 @@ export const TechnologySection: React.FC = () => {
       <div className="max-w-[1440px] mx-auto w-full relative z-10">
         {/* Section Header */}
         <div className="center-heading text-center mb-16 sm:mb-20">
-          <div className="inline-flex items-center justify-center gap-2 font-mono text-[10px] sm:text-[11px] tracking-[0.25em] uppercase text-white/50 mb-3 border-b border-white/15 pb-1">
-            <span>CORE ARCHITECTURE</span>
-            <span className="text-white/20">/</span>
-            <span>AUTONOMOUS INVARIANTS</span>
-          </div>
           <h2 className="font-unbounded text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white leading-[1.15]">
             The Mechanics of<br />Autonomous Launch Rails
           </h2>
