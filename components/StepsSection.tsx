@@ -88,6 +88,80 @@ const STAGES = [
   }
 ];
 
+interface TerminalLogItem {
+  tag: string;
+  text: string;
+  color: string;
+}
+
+const getTimestamp = () => {
+  const d = new Date();
+  const h = String(d.getHours()).padStart(2, '0');
+  const m = String(d.getMinutes()).padStart(2, '0');
+  const s = String(d.getSeconds()).padStart(2, '0');
+  const ms = String(d.getMilliseconds()).padStart(3, '0').slice(0, 2);
+  return `${h}:${m}:${s}.${ms}`;
+};
+
+const getStageLogs = (
+  stage: number,
+  preset: PresetPrompt,
+  audit: 'idle' | 'mint' | 'owner',
+  network: 'robinhood' | 'solana',
+  routerAddr: string
+): TerminalLogItem[] => {
+  if (stage === 0) {
+    return [
+      { tag: 'COPILOT', text: `parsing natural intent: "${preset.tag}"`, color: 'text-[#fae8a4]' },
+      { tag: 'LEX_TOKEN', text: 'tokenized 14 lexical nodes from natural spec', color: 'text-white/70' },
+      { tag: 'SYMBOL', text: `extracted symbol=${preset.symbol} name="${preset.name}"`, color: 'text-[#cadcf0]' },
+      { tag: 'SUPPLY', text: 'fixed cap configured: 999,000,000 (0 mint reserve)', color: 'text-white' },
+      { tag: 'CURVE_AST', text: `bonding model: ${preset.curve} validated`, color: 'text-white/80' },
+      { tag: 'COLLISION', text: '0 namespace collisions detected across Hood nodes', color: 'text-white/70' },
+      { tag: 'PEER_SYNC', text: '18 validator peers synchronized on compilation schema', color: 'text-white/80' },
+      { tag: 'PAYLOAD', text: '[OK] parameters compiled into immutable genesis payload', color: 'text-emerald-400' }
+    ];
+  }
+  if (stage === 1) {
+    return [
+      { tag: 'SOLC', text: 'solc 0.8.26 --optimize --runs=200 ERC20Sovereign.sol', color: 'text-[#fae8a4]' },
+      { tag: 'BYTECODE', text: 'compiled 1,482 bytes immutable EVM instructions', color: 'text-white/80' },
+      { tag: 'SLOT_0', text: 'constructor_supply = 999,000,000 * 10^18 locked', color: 'text-[#cadcf0]' },
+      { tag: 'OWNER_SLOT', text: 'ownership_status: address(0x0) [RENOUNCED AT GENESIS]', color: 'text-white' },
+      { tag: 'VTABLE', text: 'mint() selector 0x00000000 not present in vtable', color: 'text-[#fae8a4]' },
+      { tag: 'TAX_RATE', text: 'platform_tax: 0.00% immutable hard-coded constant', color: 'text-white' },
+      audit === 'mint'
+        ? { tag: 'REVERT', text: 'execute: mint(to, 1000000) ↳ REVERT: 0x4e487b71', color: 'text-red-300' }
+        : audit === 'owner'
+        ? { tag: 'REVERT', text: 'execute: setTaxFee(0.05) ↳ REVERT: Caller is not owner', color: 'text-amber-200' }
+        : { tag: 'AUDIT', text: '[PASS] 0 backdoors detected in compiled bytecode', color: 'text-emerald-400' },
+      { tag: 'CODEHASH', text: 'codehash: 0x8a3f91c0 verified deterministic across nodes', color: 'text-white/70' }
+    ];
+  }
+  if (stage === 2) {
+    return [
+      { tag: 'AMM_ROUTER', text: network === 'robinhood' ? 'UniswapV2Factory.createPair(token, WETH)' : 'pump.fun.initializeAMM(token, SOL)', color: 'text-[#fae8a4]' },
+      { tag: 'NETWORK', text: `target_chain: ${network === 'robinhood' ? 'Robinhood EVM (ID 4663)' : 'Solana Mainnet'}`, color: 'text-white/80' },
+      { tag: 'ROUTER', text: `router: ${network === 'robinhood' ? routerAddr.slice(0, 18) + '...' : 'pump...4M5u'}`, color: 'text-[#cadcf0]' },
+      { tag: 'LP_BURN', text: 'lp_destination: 0x000000000000000000000000000000000000dead', color: 'text-[#fae8a4]' },
+      { tag: 'RUGGUARD', text: 'liquidity permanently locked to burn address', color: 'text-white' },
+      { tag: 'ORDERBOOK', text: 'constant product invariant: x * y = k initialized', color: 'text-white/70' },
+      { tag: 'SWAP_TICK', text: 'pool state active: liquidity ready for trading', color: 'text-white/80' },
+      { tag: 'POOL_LIVE', text: '[ACTIVE] sovereign pair verified on block explorer', color: 'text-emerald-400' }
+    ];
+  }
+  return [
+    { tag: 'CLIENT_RPC', text: 'window.ethereum.request({ method: "eth_sendRawTransaction" })', color: 'text-[#fae8a4]' },
+    { tag: 'PROVIDER', text: 'injected browser wallet provider session verified', color: 'text-white/80' },
+    { tag: 'NON_CUSTODIAL', text: 'private keys strictly isolated in client memory', color: 'text-[#fae8a4]' },
+    { tag: 'ZERO_SERVER', text: 'server_data_transit: 0 bytes private key data dispatched', color: 'text-white' },
+    { tag: 'GAS_POLL', text: 'gas_estimate: ~0.00084 ETH (priorityFee: 0.0001 gwei)', color: 'text-[#cadcf0]' },
+    { tag: 'ECDSA', text: 'secp256k1 ECDSA signature validated locally', color: 'text-white/80' },
+    { tag: 'BROADCAST', text: 'raw transaction broadcasted directly to peer node', color: 'text-white/75' },
+    { tag: 'CONFIRMED', text: '[BROADCAST] tx confirmed onchain (receipt #4663-8102)', color: 'text-emerald-400' }
+  ];
+};
+
 const STAGE_DURATION_MS = 4500; // 4.5s per stage
 const TICK_MS = 40; // 25fps smooth tick
 const progressStep = (TICK_MS / STAGE_DURATION_MS) * 100;
@@ -110,7 +184,47 @@ export const StepsSection: React.FC = () => {
   const [isDryRunning, setIsDryRunning] = useState<boolean>(false);
   const [dryRunDone, setDryRunDone] = useState<boolean>(false);
 
-  // Auto-advance loop: pauses only stage transitioning, never cuts off terminal
+  // Live continuous scrolling terminal feed (NEVER stops when stage transition is paused)
+  const [streamLogs, setStreamLogs] = useState<Array<{ id: number; time: string; tag: string; text: string; color: string }>>([]);
+  const logCounterRef = useRef<number>(0);
+  const streamStepRef = useRef<number>(0);
+
+  useEffect(() => {
+    const routerAddr = HOOD_MAINNET.router ?? '0x89e5db8b5aa49aa85ac63f691524311aeb649eba';
+    const pool = getStageLogs(activeStage, selectedPreset, auditTest, activeNetwork, routerAddr);
+
+    // Initial 4 lines seed
+    const seed = pool.slice(0, 4).map((item) => ({
+      id: logCounterRef.current++,
+      time: getTimestamp(),
+      tag: item.tag,
+      text: item.text,
+      color: item.color
+    }));
+    setStreamLogs(seed);
+    streamStepRef.current = 4;
+
+    // Endless interval adds a line every 850ms, looping line by line continuously
+    const streamInterval = setInterval(() => {
+      const idx = streamStepRef.current % pool.length;
+      const item = pool[idx];
+      streamStepRef.current++;
+
+      const nextEntry = {
+        id: logCounterRef.current++,
+        time: getTimestamp(),
+        tag: item.tag,
+        text: item.text,
+        color: item.color
+      };
+
+      setStreamLogs((prev) => [...prev.slice(-6), nextEntry]);
+    }, 850);
+
+    return () => clearInterval(streamInterval);
+  }, [activeStage, selectedPreset, auditTest, activeNetwork]);
+
+  // Auto-advance loop: pauses only stage transitioning, never stops terminal
   useEffect(() => {
     if (!isAutoAdvance) return;
 
@@ -138,6 +252,16 @@ export const StepsSection: React.FC = () => {
     setTimeout(() => {
       setIsDryRunning(false);
       setDryRunDone(true);
+      setStreamLogs((prev) => [
+        ...prev.slice(-6),
+        {
+          id: logCounterRef.current++,
+          time: getTimestamp(),
+          tag: 'LOCAL_SIGN',
+          text: 'Signature verified locally (0 server exposure) hash=0x7f83b2...a891',
+          color: 'text-emerald-400'
+        }
+      ]);
     }, 500);
   };
 
@@ -147,6 +271,15 @@ export const StepsSection: React.FC = () => {
       data-theme="light"
       className="steps-section py-20 sm:py-24 px-[max(6.25vw,24px)] bg-[#f8f6f0] text-[#18191c] overflow-hidden w-full border-t border-[#18191c]/10"
     >
+      <style>{`
+        @keyframes termLineSlideIn {
+          0% { opacity: 0; transform: translateY(4px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        .term-stream-line {
+          animation: termLineSlideIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+      `}</style>
       <div className="max-w-[1360px] mx-auto w-full">
         
         {/* Section Header */}
@@ -458,105 +591,19 @@ export const StepsSection: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Live Real Terminal Logs (Always fully visible for the active stage) */}
-                <div key={`${activeStage}-${selectedPreset.id}-${auditTest}-${activeNetwork}-${dryRunDone}`} className="space-y-2.5 text-xs text-white/85 min-h-[220px]">
-                  {activeStage === 0 && (
-                    <>
-                      <div className="term-line-1 text-white/40">{"//"} [00:00.08] NLP Extraction Vector:</div>
-                      <div className="term-line-1 text-[#fae8a4] flex items-center">
-                        <span>&gt; copilot.parseNaturalPrompt(input)</span>
-                      </div>
-
-                      <div className="term-line-2 pl-3 border-l border-white/15 py-1 space-y-1 text-white/70">
-                        <div>name: <span className="text-white font-semibold">&quot;{selectedPreset.name}&quot;</span></div>
-                        <div>symbol: <span className="text-[#cadcf0] font-semibold">{selectedPreset.symbol}</span></div>
-                        <div>target_supply: <span className="text-white">{selectedPreset.supply}</span></div>
-                        <div>curve_model: <span className="text-white">{selectedPreset.curve}</span></div>
-                      </div>
-
-                      <div className="term-line-3 text-white/95 text-[11px] mt-2 flex items-center gap-1.5 font-semibold">
-                        <Check className="w-3.5 h-3.5 text-[#fae8a4]" />
-                        <span>[OK] Parameters compiled into immutable genesis payload</span>
-                      </div>
-                    </>
-                  )}
-
-                  {activeStage === 1 && (
-                    <>
-                      <div className="term-line-1 text-white/40">{"//"} [00:00.12] Smart Contract Bytecode Integrity:</div>
-                      <div className="term-line-1 text-[#fae8a4] flex items-center">
-                        <span>&gt; solc.verifyBytecode(ERC20Sovereign.sol)</span>
-                      </div>
-
-                      <div className="term-line-2 pl-3 border-l border-white/15 py-1 space-y-1 text-white/70">
-                        <div>constructor_supply: <span className="text-white">999,000,000 * 10^18</span></div>
-                        <div>ownership_status: <span className="text-white">address(0) [RENOUNCED]</span></div>
-                        <div>mint_selector: <span className="text-[#fae8a4]">0x00000000 (NOT IMPLEMENTED)</span></div>
-                        <div>platform_tax: <span className="text-white">0.00% (IMMUTABLE)</span></div>
-                      </div>
-
-                      <div className="term-line-3">
-                        {auditTest === 'mint' ? (
-                          <div className="p-2 bg-red-950/60 border border-red-500/30 rounded-[2px] text-red-300 text-[11px]">
-                            [SECURITY REVERT] execute: mint(to, 1000000)<br />
-                            ↳ REVERT: 0x4e487b71 (Function signature does not exist)
-                          </div>
-                        ) : auditTest === 'owner' ? (
-                          <div className="p-2 bg-amber-950/60 border border-amber-500/30 rounded-[2px] text-amber-200 text-[11px]">
-                            [SECURITY REVERT] execute: setTaxFee(0.05)<br />
-                            ↳ REVERT: Caller is not owner. Owner is address(0).
-                          </div>
-                        ) : (
-                          <div className="text-white/95 text-[11px] mt-2 flex items-center gap-1.5">
-                            <Check className="w-3.5 h-3.5 text-[#fae8a4]" />
-                            <span>[PASS] 0 backdoors detected in compiled bytecode</span>
-                          </div>
-                        )}
-                      </div>
-                    </>
-                  )}
-
-                  {activeStage === 2 && (
-                    <>
-                      <div className="term-line-1 text-white/40">{"//"} [00:00.15] Liquidity Settlement Routing:</div>
-                      <div className="term-line-1 text-[#fae8a4] flex items-center">
-                        <span>&gt; {activeNetwork === 'robinhood' ? 'UniswapV2Factory.createPair()' : 'pump.fun.initializeAMM()'}</span>
-                      </div>
-
-                      <div className="term-line-2 pl-3 border-l border-white/15 py-1 space-y-1 text-white/70 text-[11px]">
-                        <div>chain: <span className="text-white font-semibold">{activeNetwork === 'robinhood' ? 'Robinhood EVM (Chain ID 4663)' : 'Solana Mainnet'}</span></div>
-                        <div>router: <span className="text-[#cadcf0]">{activeNetwork === 'robinhood' ? (HOOD_MAINNET.router?.slice(0, 18) ?? '0x89e5db8b5aa49aa') + '...' : 'pump...4M5u'}</span></div>
-                        <div>lp_destination: <span className="text-[#fae8a4]">0x000000000000000000000000000000000000dead</span></div>
-                        <div>rugpull_prevention: <span className="text-white">LIQUIDITY PERMANENTLY LOCKED</span></div>
-                      </div>
-
-                      <div className="term-line-3 text-white/95 text-[11px] mt-2 flex items-center gap-1.5">
-                        <Check className="w-3.5 h-3.5 text-[#fae8a4]" />
-                        <span>[ACTIVE] Autonomous pool initialized onchain</span>
-                      </div>
-                    </>
-                  )}
-
-                  {activeStage === 3 && (
-                    <>
-                      <div className="term-line-1 text-white/40">{"//"} [00:00.18] Local Cryptographic Signing:</div>
-                      <div className="term-line-1 text-[#fae8a4] flex items-center">
-                        <span>&gt; window.ethereum.request(&#123; method: &apos;eth_sendRawTransaction&apos; &#125;)</span>
-                      </div>
-
-                      <div className="term-line-2 pl-3 border-l border-white/15 py-1 space-y-1 text-white/70 text-[11px]">
-                        <div>client_provider: <span className="text-white">Injected Web3 Wallet</span></div>
-                        <div>key_isolation: <span className="text-[#fae8a4]">100% Non-Custodial</span></div>
-                        <div>server_data_transit: <span className="text-white">0 bytes (Zero Private Keys Stored)</span></div>
-                        <div>signature_type: <span className="text-white">ECDSA secp256k1</span></div>
-                      </div>
-
-                      <div className="term-line-3 text-white/95 text-[11px] mt-2 flex items-center gap-1.5">
-                        <Check className="w-3.5 h-3.5 text-[#fae8a4]" />
-                        <span>[BROADCAST] Transaction signed locally and broadcasted</span>
-                      </div>
-                    </>
-                  )}
+                {/* Live Real Terminal Logs (Continuous line-by-line daemon feed, never stops on stage pause) */}
+                <div className="space-y-1.5 text-xs font-mono min-h-[220px] max-h-[220px] flex flex-col justify-end overflow-hidden">
+                  {streamLogs.map((log) => (
+                    <div key={log.id} className="term-stream-line flex items-start gap-2 leading-relaxed text-[11px] sm:text-xs">
+                      <span className="text-white/30 shrink-0 text-[10px] mt-0.5 font-mono">[{log.time}]</span>
+                      <span className="text-[#fae8a4] shrink-0 font-semibold text-[9px] sm:text-[10px] bg-white/5 px-1 py-0.2 rounded-[2px]">
+                        {log.tag}
+                      </span>
+                      <span className={`break-all ${log.color}`}>
+                        {log.text}
+                      </span>
+                    </div>
+                  ))}
                 </div>
 
                 {/* Active Shell Prompt with Blinking Cursor */}
