@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CHAINS, DIRECT_SUPPLY, getChain } from "../lib/chains";
+import { CHAINS, DIRECT_SUPPLY, defaultRouteFor, getChain } from "../lib/chains";
 
 describe("chains", () => {
   it("finds Hood mainnet by id", () => {
@@ -32,5 +32,20 @@ describe("chains", () => {
       expect(c.currency.length).toBeGreaterThan(0);
       expect(c.explorer).toMatch(/^https:\/\//);
     }
+  });
+
+  it("tags every chain with a known logo kind", () => {
+    for (const c of CHAINS) {
+      expect(["hood", "solana"]).toContain(c.logo);
+    }
+    expect(getChain(4663)?.logo).toBe("hood");
+    expect(getChain("solana-mainnet")?.logo).toBe("solana");
+  });
+
+  it("routes solana chains to pumpfun and the rest direct", () => {
+    expect(defaultRouteFor("solana-mainnet")).toBe("pumpfun");
+    expect(defaultRouteFor("solana-devnet")).toBe("pumpfun");
+    expect(defaultRouteFor(4663)).toBe("direct");
+    expect(defaultRouteFor(46630)).toBe("direct");
   });
 });

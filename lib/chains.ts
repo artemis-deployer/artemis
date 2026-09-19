@@ -4,14 +4,19 @@ export type Chain = {
   currency: string;
   testnet: boolean;
   explorer: string;
+  logo: "hood" | "solana";
 };
 
 export const CHAINS: Chain[] = [
-  { id: 4663, name: "Robinhood Chain", currency: "ETH", testnet: false, explorer: "https://robinhoodchain.blockscout.com" },
-  { id: "solana-mainnet", name: "Solana", currency: "SOL", testnet: false, explorer: "https://solscan.io" },
-  { id: 46630, name: "Robinhood Testnet", currency: "ETH", testnet: true, explorer: "https://explorer.testnet.chain.robinhood.com" },
-  { id: "solana-devnet", name: "Solana Devnet", currency: "SOL", testnet: true, explorer: "https://solscan.io?cluster=devnet" },
+  { id: 4663, name: "Robinhood Chain", currency: "ETH", testnet: false, explorer: "https://robinhoodchain.blockscout.com", logo: "hood" },
+  { id: "solana-mainnet", name: "Solana", currency: "SOL", testnet: false, explorer: "https://solscan.io", logo: "solana" },
+  { id: 46630, name: "Robinhood Testnet", currency: "ETH", testnet: true, explorer: "https://explorer.testnet.chain.robinhood.com", logo: "hood" },
+  { id: "solana-devnet", name: "Solana Devnet", currency: "SOL", testnet: true, explorer: "https://solscan.io?cluster=devnet", logo: "solana" },
 ];
+
+export function defaultRouteFor(id: number | string): "pumpfun" | "direct" {
+  return String(id).startsWith("solana") ? "pumpfun" : "direct";
+}
 
 export function getChain(id: number | string): Chain | undefined {
   const norm = typeof id === "string" && /^\d+$/.test(id) ? Number(id) : id;

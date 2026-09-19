@@ -4,11 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import Markdown from "react-markdown";
 import rehypeSanitize from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
-import { RotateCcw, SendHorizonal, Sparkles } from "lucide-react";
+import { Check, ChevronDown, RotateCcw, SendHorizonal, Sparkles } from "lucide-react";
 import { applyAutoPatch, parseDraftReply, shouldAutoApply } from "../lib/draft";
 import type { Draft } from "../lib/draft";
-import { CHAINS } from "../lib/chains";
+import { CHAINS, defaultRouteFor, getChain } from "../lib/chains";
 import { useDraft } from "./DraftContext";
+import ChainLogo from "./ChainLogo";
 
 type Line = { role: "user" | "assistant"; content: string; kind?: "ok" | "error"; auto?: boolean };
 
@@ -40,12 +41,38 @@ const TYPE_STEP = 14;
 const TYPE_MS = 12;
 
 export default function StudioChat() {
-  const { draft, setDraft } = useDraft();
+  const { draft, setDraft, setConsent } = useDraft();
   const [log, setLog] = useState<Line[]>([{ role: "assistant", content: GREETING }]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [reveal, setReveal] = useState<{ i: number; n: number } | null>(null);
   const [undo, setUndo] = useState<{ snapshot: Draft } | null>(null);
+  const [chainOpen, setChainOpen] = useState(false);
+  const chainRef = useRef<HTMLDivElement>(null);
+  const activeChain = getChain(draft.chainId);
+
+  useEffect(() => {
+    if (!chainOpen) return;
+    function onDown(e: MouseEvent) {
+      if (chainRef.current && !chainRef.current.contains(e.target as Node)) setChainOpen(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setChainOpen(false);
+    }
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [chainOpen]);
+
+  function pickChain(id: number | string) {
+    setDraft((prev) => ({ ...prev, chainId: id, route: defaultRouteFor(id) }));
+    setConsent(false);
+    setUndo(null);
+    setChainOpen(false);
+  }
   const logRef = useRef<HTMLDivElement>(null);
   const areaRef = useRef<HTMLTextAreaElement>(null);
   const draftRef = useRef(draft);
@@ -184,25 +211,56 @@ export default function StudioChat() {
         </button>
       </div>
 
-      <div className="flex items-center gap-2 overflow-x-auto border-t border-white/10 bg-[#1a1b1f] px-5 py-2.5">
-        <span className="font-mono text-xs font-semibold tracking-wider text-white/40 uppercase">
-          Chain:
-        </span>
-        {CHAINS.map((c) => (
+      <div className="relative border-t border-white/10 bg-[#1a1b1f] px-5 py-2.5" ref={chainRef}>
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-xs font-semibold tracking-wider text-white/40 uppercase">
+            Chain:
+          </span>
           <button
-            key={String(c.id)}
             type="button"
-            aria-pressed={draft.chainId === c.id}
-            className="inline-flex min-h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-medium whitespace-nowrap text-white/80 transition-all hover:border-white/30 hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+            aria-haspopup="listbox"
+            aria-expanded={chainOpen}
+            aria-label="Choose chain"
+            className="inline-flex min-h-9 cursor-pointer items-center gap-2 rounded border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-medium whitespace-nowrap text-white/80 transition-all hover:border-white/30 hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
             disabled={busy}
-            onClick={() => {
-              setDraft((prev) => ({ ...prev, chainId: c.id }));
-              setUndo(null);
-            }}
+            onClick={() => setChainOpen((o) => !o)}
           >
-            {c.name}
+            {activeChain && (
+              <span className="inline-flex text-[#fae8a4]" aria-hidden="true">
+                <ChainLogo kind={activeChain.logo} />
+              </span>
+            )}
+            <span>{activeChain?.name ?? "Choose chain"}</span>
+            <ChevronDown size={13} aria-hidden="true" />
           </button>
-        ))}
+        </div>
+        {chainOpen && (
+          <ul
+            role="listbox"
+            aria-label="Chains"
+            className="absolute right-5 left-5 z-20 mt-1.5 overflow-hidden rounded-lg border border-white/15 bg-[#1a1b1f] shadow-2xl"
+          >
+            {CHAINS.map((c) => {
+              const active = draft.chainId === c.id;
+              return (
+                <li key={String(c.id)} role="option" aria-selected={active}>
+                  <button
+                    type="button"
+                    onClick={() => pickChain(c.id)}
+                    className="flex w-full cursor-pointer items-center gap-2.5 px-3.5 py-2.5 text-left text-xs font-medium text-white/80 transition-all hover:bg-white/10 hover:text-white"
+                  >
+                    <span className="inline-flex shrink-0 text-[#fae8a4]" aria-hidden="true">
+                      <ChainLogo kind={c.logo} />
+                    </span>
+                    <span className="flex-1">{c.name}</span>
+                    <span className="font-mono text-[10px] text-white/40">{c.testnet ? "Test" : "Live"}</span>
+                    {active && <Check size={13} aria-hidden="true" className="text-[#fae8a4]" />}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
 
       <div className="chat-scroll flex flex-1 flex-col gap-3.5 overflow-y-auto p-5" aria-live="polite" ref={logRef}>
