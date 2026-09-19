@@ -28,9 +28,16 @@ export default function WalletModal({
 }) {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
+  const [tab, setTab] = useState<WalletKind>(kind);
+  const [syncedKind, setSyncedKind] = useState<WalletKind>(kind);
+  if (open && syncedKind !== kind) {
+    setSyncedKind(kind);
+    setTab(kind);
+    setError("");
+  }
   if (!open) return null;
 
-  const options = kind === "evm" ? EVM_WALLETS : SOLANA_WALLETS;
+  const options = tab === "evm" ? EVM_WALLETS : SOLANA_WALLETS;
 
   async function choose(id: EvmWalletId | SolanaWalletId, detected: boolean, installUrl: string) {
     if (!detected) {
@@ -40,7 +47,7 @@ export default function WalletModal({
     setError("");
     setBusy(id);
     try {
-      if (kind === "evm") await connectEvm(id as EvmWalletId);
+      if (tab === "evm") await connectEvm(id as EvmWalletId);
       else await connectSolana(id as SolanaWalletId);
       onConnected();
       onClose();
@@ -56,7 +63,7 @@ export default function WalletModal({
       className="wallet-overlay-in fixed inset-0 z-[120] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
       role="dialog"
       aria-modal="true"
-      aria-label={kind === "evm" ? "Connect Ethereum wallet" : "Connect Solana wallet"}
+        aria-label={tab === "evm" ? "Connect Ethereum wallet" : "Connect Solana wallet"}
       onClick={onClose}
     >
       <div
@@ -66,7 +73,7 @@ export default function WalletModal({
         <div className="mb-3 flex items-center justify-between border-b border-white/10 pb-3">
           <div>
             <h3 className="m-0 text-lg font-bold font-unbounded text-white">
-              {kind === "evm" ? "Connect Ethereum wallet" : "Connect Solana wallet"}
+              {tab === "evm" ? "Connect Ethereum wallet" : "Connect Solana wallet"}
             </h3>
             <p className="m-0 mt-0.5 text-xs text-white/50">Pick a wallet to continue. No keys leave your device.</p>
           </div>
@@ -80,10 +87,33 @@ export default function WalletModal({
           </button>
         </div>
 
+        <div className="mb-3 flex gap-2" role="tablist" aria-label="Wallet type">
+          {(["evm", "solana"] as const).map((t) => (
+            <button
+              key={t}
+              type="button"
+              role="tab"
+              aria-selected={tab === t}
+              disabled={busy !== null}
+              onClick={() => {
+                setTab(t);
+                setError("");
+              }}
+              className={`min-h-9 flex-1 cursor-pointer rounded-lg border px-3 py-1.5 text-xs font-bold transition-all disabled:cursor-wait disabled:opacity-60 ${
+                tab === t
+                  ? "border-[#fae8a4] bg-[#fae8a4]/10 text-[#fae8a4]"
+                  : "border-white/10 bg-white/5 text-white/60 hover:border-white/30 hover:text-white"
+              }`}
+            >
+              {t === "evm" ? "Ethereum" : "Solana"}
+            </button>
+          ))}
+        </div>
+
         <div className="flex flex-col gap-2 overflow-y-auto">
           {options.map((o) => {
             const detected =
-              kind === "evm" ? detectEvm(o.id as EvmWalletId) !== null : detectSolana(o.id as SolanaWalletId) !== null;
+              tab === "evm" ? detectEvm(o.id as EvmWalletId) !== null : detectSolana(o.id as SolanaWalletId) !== null;
             return (
               <button
                 key={o.id}
