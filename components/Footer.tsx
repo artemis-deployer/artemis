@@ -93,17 +93,6 @@ export const Footer: React.FC<FooterProps> = () => {
               </a>
               <a
                 className="social"
-                href="https://t.me"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Artemis on Telegram"
-              >
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M21.7 3.3 18.1 21c-.3 1.2-1 1.5-2 .9l-5.5-4.1-2.7 2.6c-.3.3-.5.5-1 .5l.4-5.6L17.5 6c.5-.4-.1-.6-.7-.2L4.2 13.7.8 12.6c-1.2-.4-1.2-1.2.2-1.7L20.1 3c.9-.3 1.9.2 1.6.3Z" />
-                </svg>
-              </a>
-              <a
-                className="social"
                 href="https://github.com"
                 target="_blank"
                 rel="noopener noreferrer"
