@@ -5,42 +5,36 @@ import { usePageTransition } from './PageTransition';
 
 const techCards = [
   {
-    tag: 'EVM 4663',
     title: 'ROBINHOOD V2 ROUTER',
     symbol: '↗',
     theme: 'tech-card-blue',
     href: '#how-it-works',
   },
   {
-    tag: 'SOLANA',
     title: 'PUMP.FUN PORTAL',
     symbol: '▣',
     theme: 'tech-card-lavender',
     href: '#how-it-works',
   },
   {
-    tag: 'HARDCAP',
-    title: '999M FIXED CEILING',
+    title: 'FIXED SUPPLY CEILING',
     symbol: '⊞',
     theme: 'tech-card-pink',
     href: '#how-it-works',
   },
   {
-    tag: '0.00% FEE',
-    title: '0% PLATFORM TOLL',
+    title: 'ZERO PLATFORM TOLL',
     symbol: '◇',
     theme: 'tech-card-pink',
     href: '#how-it-works',
   },
   {
-    tag: 'EIP-712',
     title: 'LOCAL RECEIPTS',
     symbol: '≋',
     theme: 'tech-card-blue',
     href: '/tokens',
   },
   {
-    tag: 'BURN 0xDEAD',
     title: 'SOVEREIGN LP KEYS',
     symbol: '↗',
     theme: 'tech-card-lavender',
@@ -73,42 +67,29 @@ export const TechnologySection: React.FC = () => {
           <div className="inline-flex items-center justify-center gap-2 font-mono text-[10px] sm:text-[11px] tracking-[0.25em] uppercase text-white/50 mb-3 border-b border-white/15 pb-1">
             <span>CORE ARCHITECTURE</span>
             <span className="text-white/20">/</span>
-            <span>SIX DETERMINISTIC INVARIANTS</span>
+            <span>AUTONOMOUS INVARIANTS</span>
           </div>
           <h2 className="font-unbounded text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white leading-[1.15]">
             The Mechanics of<br />Autonomous Launch Rails
           </h2>
           <p className="mt-4 text-xs sm:text-sm md:text-base text-white/60 max-w-xl mx-auto font-sans leading-relaxed">
-            Six architectural pillars locking liquidity, eliminating platform extraction, and striking supply in a single immutable genesis event.
+            Architectural pillars locking liquidity, eliminating platform extraction, and striking supply in an immutable genesis event.
           </p>
         </div>
 
-        {/* Original Staggered Tech Grid with Enhanced Polish */}
+        {/* Staggered Tech Grid with Clean Non-Redundant Cards */}
         <div className="tech-grid select-none">
           {techCards.map((card, i) => (
             <a
               key={i}
               href={card.href}
               onClick={(e) => handleClick(e, card.href)}
-              className={`${card.theme} group rounded-[3px] border border-black/15 shadow-[0_10px_35px_rgba(0,0,0,0.35)] hover:shadow-[0_20px_60px_rgba(0,0,0,0.55)] transition-all duration-300`}
+              className={`${card.theme} group rounded-[3px] border border-black/15 shadow-[0_12px_40px_rgba(0,0,0,0.35)] hover:shadow-[0_24px_60px_rgba(0,0,0,0.55)] transition-all duration-300`}
             >
-              {/* Card Top Pill Tag */}
-              <div className="w-full flex items-center justify-between font-mono text-[9px] sm:text-[10px] tracking-wider opacity-70 mb-1 border-b border-black/10 pb-1.5">
-                <span className="font-bold tracking-widest">{card.tag}</span>
-                <span className="opacity-50">0{i + 1}</span>
-              </div>
-
-              {/* Central Large Glyph */}
+              <span className="tracking-wider uppercase font-bold">{card.title}</span>
               <strong className="group-hover:scale-110 transition-transform duration-300 ease-out select-none">
                 {card.symbol}
               </strong>
-
-              {/* Bottom Title */}
-              <div className="w-full text-center">
-                <span className="block font-mono font-bold tracking-wider leading-tight text-xs sm:text-[13px]">
-                  {card.title}
-                </span>
-              </div>
             </a>
           ))}
         </div>
@@ -118,14 +99,14 @@ export const TechnologySection: React.FC = () => {
           <div className="flex items-center gap-2">
             <span className="text-[#fae8a4]">IMMUTABLE RAIL SPEC</span>
             <span>·</span>
-            <span>ZERO ADMIN CAPABILITY</span>
+            <span>ZERO ADMIN PRIVILEGE</span>
           </div>
           <div className="flex items-center gap-3 tracking-wider">
-            <span>ROBINHOOD CHAIN 4663</span>
+            <span>ROBINHOOD EVM</span>
             <span>·</span>
             <span>SOLANA AMM</span>
             <span>·</span>
-            <span>100% NON-CUSTODIAL</span>
+            <span>NON-CUSTODIAL RUNTIME</span>
           </div>
         </div>
       </div>
