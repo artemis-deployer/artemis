@@ -21,10 +21,10 @@ export const Footer: React.FC<FooterProps> = () => {
   return (
     <footer className="footer" data-theme="dark">
       <div className="max-w-[1800px] mx-auto w-full relative z-10">
-        {/* Footer CTA Banner with Animated Pixel Notch and Stepped Tabs */}
         <div className="footer-cta">
-          <h2>
-            Deploy where your coin<br />isn&apos;t the product.
+          <h2 className="!max-w-xl lg:!max-w-2xl font-unbounded">
+            <span className="block">Deploy where your coin</span>
+            <span className="block">isn&apos;t the product.</span>
           </h2>
           <a className="button dark-button" href="#studio">
             LAUNCH STUDIO <span>↗</span>
