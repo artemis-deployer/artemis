@@ -20,9 +20,10 @@ export const ExecutionSection: React.FC<ExecutionSectionProps> = () => {
     >
       <div className="max-w-[1800px] mx-auto w-full">
         {/* Center Heading */}
-        <div className="text-center max-w-3xl mx-auto mb-12">
-          <h2 className="font-unbounded text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-[#18191c] mb-4 leading-[1.15]">
-            Two Verified Rails.<br />One Transparent Standard.
+        <div className="text-center max-w-4xl mx-auto mb-12">
+          <h2 className="font-unbounded text-2xl sm:text-3xl md:text-4xl lg:text-[42px] font-bold tracking-tight text-[#18191c] mb-4 leading-[1.2]">
+            <span className="block">Two Verified Rails.</span>
+            <span className="block">One Transparent Standard.</span>
           </h2>
           <p className="font-sans text-[#18191c]/70 text-sm sm:text-base leading-relaxed max-w-xl mx-auto">
             Choose your execution rail. Both paths guarantee client-side transaction compilation and non-custodial wallet signatures.
