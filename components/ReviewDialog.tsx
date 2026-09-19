@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useState } from "react";
+import { forwardRef, useEffect, useState } from "react";
 import { Keypair } from "@solana/web3.js";
 import { parseEther, type Address } from "viem";
 import { X, ExternalLink } from "lucide-react";
@@ -12,16 +12,20 @@ import {
   deployToken,
   ensureChain,
   ETH_MIN_BPS,
+  estimateLaunchCost,
+  formatEth,
   getHoodConfig,
   launchOneTx,
   toTokenUnits,
   TX_DEADLINE_SECS,
   validateRouter,
+  type LaunchCost,
 } from "../lib/launcher-evm";
 import {
   DEVNET_RPC,
   MAINNET_RPC,
   PUMP_FEE_SOL,
+  PUMP_PRIORITY_FEE,
   buildCreateTx,
   buildMetadata,
   buildTradePayload,
@@ -39,6 +43,14 @@ import WalletButton from "./WalletButton";
 type HoodState = "idle" | "working" | "token-done" | "pool-done" | "stub" | "error";
 type PumpState = "idle" | "working" | "built" | "sent" | "error";
 
+function safeEthAmount(value: string): bigint | null {
+  try {
+    return parseEther(value || "0");
+  } catch {
+    return null;
+  }
+}
+
 const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: boolean }>(function ReviewDialog(
   { draft, mainnet },
   ref,
@@ -53,6 +65,8 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
   const [mint, setMint] = useState("");
   const [pump, setPump] = useState<PumpState>("idle");
   const [pumpNote, setPumpNote] = useState("");
+  const [cost, setCost] = useState<LaunchCost | null>(null);
+  const [costLoading, setCostLoading] = useState(false);
 
   const isPump = draft.route === "pumpfun" && String(draft.chainId).startsWith("solana");
   const rpc = draft.chainId === "solana-mainnet" ? MAINNET_RPC : DEVNET_RPC;
@@ -76,6 +90,35 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
   const chainObj = getChain(draft.chainId);
   const explorer = chainObj?.explorer ?? "https://solscan.io";
   const singleTx = chainId !== null && (getHoodConfig(chainId)?.launcher ?? null) !== null;
+
+  useEffect(() => {
+    if (isPump || chainId === null || !account) {
+      setCost(null);
+      return;
+    }
+    setCostLoading(true);
+    const id = setTimeout(() => {
+      (async () => {
+        try {
+          const estimate = await estimateLaunchCost({
+            chainId,
+            account,
+            name: draft.name || draft.ticker,
+            ticker: draft.ticker,
+            supply: toTokenUnits(String(DIRECT_SUPPLY)),
+            pooled: toTokenUnits(draft.pooled || "0"),
+            ethAmount: parseEther(draft.liquidity || "0"),
+          });
+          setCost(estimate);
+        } catch {
+          setCost(null);
+        } finally {
+          setCostLoading(false);
+        }
+      })();
+    }, 500);
+    return () => clearTimeout(id);
+  }, [isPump, chainId, account, draft.name, draft.ticker, draft.pooled, draft.liquidity]);
 
   function fail(message: string): void {
     setNote(message);
@@ -400,6 +443,39 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
                   : "Confirm & Launch on Hood"}
             </button>
 
+            <div className="flex flex-col gap-1.5 rounded-lg border border-white/10 bg-[#131219] p-3.5 text-[13px]" aria-label="Cost breakdown">
+              <div className="mb-1 font-mono text-xs font-bold tracking-wider text-white uppercase">
+                Cost Breakdown
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-white/50">Pool liquidity:</span>
+                <span className="text-right font-mono font-semibold break-all text-white">
+                  {draft.liquidity || "0"} {chainObj?.currency}
+                </span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-white/50">Network fee{cost && cost.steps === 2 ? " (deploy only)" : ""}:</span>
+                <span className="text-right font-mono font-semibold break-all text-white">
+                  {costLoading ? "estimating…" : cost ? `~${formatEth(cost.fee)} ${chainObj?.currency}` : "connect wallet"}
+                </span>
+              </div>
+              {(() => {
+                const liq = safeEthAmount(draft.liquidity);
+                if (!cost || liq === null) return null;
+                return (
+                  <div className="flex justify-between gap-3 border-t border-white/10 pt-1.5">
+                    <span className="text-white/50">Total spend:</span>
+                    <span className="text-right font-mono font-bold break-all text-[#fae8a4]">
+                      ~{formatEth(cost.fee + liq)} {chainObj?.currency}
+                    </span>
+                  </div>
+                );
+              })()}
+              {cost && cost.steps === 2 && (
+                <p className="m-0 text-[11px] text-white/50">Pool funding is a second transaction with its own gas.</p>
+              )}
+            </div>
+
             {!singleTx && (hood === "token-done" || hood === "error" || hood === "idle") && (token || evmResume?.token) && (
               <button
                 type="button"
@@ -442,7 +518,30 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
               </p>
             )}
 
-            <p className="m-0 text-xs text-white/50">Est. creation cost ~{PUMP_FEE_SOL} SOL plus network fees.</p>
+            <div className="flex flex-col gap-1.5 rounded-lg border border-white/10 bg-[#131219] p-3.5 text-[13px]" aria-label="Cost breakdown">
+              <div className="mb-1 font-mono text-xs font-bold tracking-wider text-white uppercase">
+                Cost Breakdown
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-white/50">Dev buy:</span>
+                <span className="text-right font-mono font-semibold break-all text-white">
+                  {Number.isFinite(Number(draft.liquidity)) && Number(draft.liquidity) > 0 ? draft.liquidity : "0"} SOL
+                </span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-white/50">Creation + priority fee:</span>
+                <span className="text-right font-mono font-semibold break-all text-white">
+                  ~{PUMP_FEE_SOL + PUMP_PRIORITY_FEE} SOL
+                </span>
+              </div>
+              <div className="flex justify-between gap-3 border-t border-white/10 pt-1.5">
+                <span className="text-white/50">Total spend:</span>
+                <span className="text-right font-mono font-bold break-all text-[#fae8a4]">
+                  ~{(Number.isFinite(Number(draft.liquidity)) && Number(draft.liquidity) > 0 ? Number(draft.liquidity) : 0) + PUMP_FEE_SOL + PUMP_PRIORITY_FEE} SOL
+                </span>
+              </div>
+              <p className="m-0 text-[11px] text-white/50">Plus small rent deposits for new accounts. Only actual onchain costs apply.</p>
+            </div>
 
             <button
               type="button"

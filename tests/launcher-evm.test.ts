@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   calcEthMin,
+  estimateLaunchCost,
   ETH_MIN_BPS,
+  formatEth,
   getHoodConfig,
   HOOD_MAINNET,
   HOOD_TESTNET,
@@ -57,6 +59,29 @@ describe("eth min slippage", () => {
     expect(calcEthMin(1n)).toBe(1n);
     expect(calcEthMin(0n)).toBe(0n);
     expect(calcEthMin(10n ** 18n)).toBe(98n * 10n ** 16n);
+  });
+});
+
+describe("formatEth", () => {
+  it("trims to 6 decimals", () => {
+    expect(formatEth(1000000000000000000n)).toBe("1");
+    expect(formatEth(1500000000000000n)).toBe("0.0015");
+    expect(formatEth(0n)).toBe("0");
+  });
+});
+
+describe("estimateLaunchCost guards", () => {
+  const base = {
+    chainId: 4663 as const,
+    account: "0x0000000000000000000000000000000000000001" as const,
+    name: "T",
+    ticker: "T",
+    supply: 999000000000000000000000000n,
+  };
+
+  it("refuses bad amounts without touching RPC", async () => {
+    await expect(estimateLaunchCost({ ...base, pooled: 0n, ethAmount: 1n })).rejects.toThrow("bad_pool_amount");
+    await expect(estimateLaunchCost({ ...base, pooled: 1n, ethAmount: 0n })).rejects.toThrow("bad_eth_amount");
   });
 });
 

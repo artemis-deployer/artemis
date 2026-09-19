@@ -3,6 +3,8 @@ import {
   createWalletClient,
   custom,
   defineChain,
+  encodeDeployData,
+  formatEther,
   http,
   parseEther,
   type Account,
@@ -33,6 +35,51 @@ export function calcEthMin(ethAmount: bigint): bigint {
   const result = (ethAmount * BigInt(ETH_MIN_BPS)) / 10000n;
   if (ethAmount > 0n && result === 0n) return 1n;
   return result;
+}
+
+export function formatEth(value: bigint, digits = 6): string {
+  const [head, tail = ""] = formatEther(value).split(".");
+  const frac = tail.slice(0, digits).replace(/0+$/, "");
+  return frac ? `${head}.${frac}` : (head || "0");
+}
+
+export type LaunchCost = { gas: bigint; gasPrice: bigint; fee: bigint; steps: 1 | 2 };
+
+/** Live gas estimate for the review screen. Throws on bad input or RPC failure. */
+export async function estimateLaunchCost(args: {
+  chainId: 4663 | 46630;
+  account: Address;
+  name: string;
+  ticker: string;
+  supply: bigint;
+  pooled: bigint;
+  ethAmount: bigint;
+}): Promise<LaunchCost> {
+  const cfg = getHoodConfig(args.chainId);
+  if (!cfg) throw new Error("unsupported_chain");
+  if (args.pooled <= 0n || args.pooled > args.supply) throw new Error("bad_pool_amount");
+  if (args.ethAmount <= 0n) throw new Error("bad_eth_amount");
+  const pub = publicClientFor(cfg);
+  const gasPrice = await pub.getGasPrice();
+  if (cfg.launcher) {
+    const deadline = BigInt(Math.floor(Date.now() / 1000) + TX_DEADLINE_SECS);
+    const gas = await pub.estimateContractGas({
+      address: cfg.launcher,
+      abi: LAUNCHER_ABI,
+      functionName: "launch",
+      args: [args.name || args.ticker, args.ticker, args.supply, args.pooled, calcEthMin(args.ethAmount), deadline],
+      value: args.ethAmount,
+      account: args.account,
+    });
+    return { gas, gasPrice, fee: gas * gasPrice, steps: 1 };
+  }
+  const data = encodeDeployData({
+    abi: TOKEN_ABI,
+    bytecode: TOKEN_BYTECODE as `0x${string}`,
+    args: [args.name || args.ticker, args.ticker, args.supply],
+  });
+  const gas = await pub.estimateGas({ account: args.account, data });
+  return { gas, gasPrice, fee: gas * gasPrice, steps: 2 };
 }
 
 export const HOOD_MAINNET: HoodConfig = {
