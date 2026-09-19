@@ -231,14 +231,18 @@ export default function StudioChat() {
               </span>
             )}
             <span>{activeChain?.name ?? "Choose chain"}</span>
-            <ChevronDown size={13} aria-hidden="true" />
+            <ChevronDown
+              size={13}
+              aria-hidden="true"
+              className={`text-white/50 transition-transform duration-150 ${chainOpen ? "rotate-180" : ""}`}
+            />
           </button>
         </div>
         {chainOpen && (
           <ul
             role="listbox"
             aria-label="Chains"
-            className="absolute right-5 left-5 z-20 mt-1.5 overflow-hidden rounded-lg border border-white/15 bg-[#1a1b1f] shadow-2xl"
+            className="drop-in absolute right-5 left-5 z-20 mt-1.5 overflow-hidden rounded-lg border border-white/15 bg-[#1a1b1f] shadow-2xl"
           >
             {CHAINS.map((c) => {
               const active = draft.chainId === c.id;

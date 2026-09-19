@@ -1855,8 +1855,7 @@ textarea:focus:not(:focus-visible) {
   }
 }
 
-/* Slim themed scrollbar for the copilot chat log */
-.chat-scroll {
+/* Slim themed scrollbar for the copilot chat log */.chat-scroll {
   scrollbar-width: thin;
   scrollbar-color: #fae8a455 transparent;
 }
@@ -1873,5 +1872,27 @@ textarea:focus:not(:focus-visible) {
 }
 .chat-scroll::-webkit-scrollbar-thumb:hover {
   background: #fae8a4;
+}
+
+/* Smooth popover open for dropdowns (chain, network, wallet lists) */
+@keyframes drop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-5px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.drop-in {
+  animation: drop-in 0.16s cubic-bezier(0.22, 1, 0.36, 1);
+  transform-origin: top center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drop-in {
+    animation: none;
+  }
 }
 

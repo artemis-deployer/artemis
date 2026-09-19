@@ -153,13 +153,17 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
             }`}>
               {chain.testnet ? "Testnet" : "Mainnet"}
             </span>
-            <ChevronDown size={14} aria-hidden="true" className="text-white/50" />
+            <ChevronDown
+              size={14}
+              aria-hidden="true"
+              className={`text-white/50 transition-transform duration-150 ${networkOpen ? "rotate-180" : ""}`}
+            />
           </button>
           {networkOpen && (
             <ul
               role="listbox"
               aria-label="Target networks"
-              className="absolute right-0 left-0 z-20 mt-1.5 overflow-hidden rounded-lg border border-white/15 bg-[#1a1b1f] shadow-2xl"
+              className="drop-in absolute right-0 left-0 z-20 mt-1.5 overflow-hidden rounded-lg border border-white/15 bg-[#1a1b1f] shadow-2xl"
             >
               {CHAINS.map((c) => {
                 const active = draft.chainId === c.id;
