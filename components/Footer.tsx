@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { HOOD_MAINNET } from '../lib/launcher-evm';
 import { TransitionLink } from './PageTransition';
-import { CandleBars } from './CandleBars';
+import { FloatingPixels } from './FloatingPixels';
 
 interface FooterProps {
   onOpenSoon?: (feature: string) => void;
@@ -20,9 +20,6 @@ export const Footer: React.FC<FooterProps> = () => {
 
   return (
     <footer className="footer" data-theme="dark">
-      {/* Background DEX Candlestick & Market Depth Animation (matching Hero) */}
-      <CandleBars className="opacity-35" />
-
       <div className="max-w-[1800px] mx-auto w-full relative z-10">
         {/* Footer CTA Banner with Animated Pixel Notch and Stepped Tabs */}
         <div className="footer-cta">
@@ -131,6 +128,9 @@ export const Footer: React.FC<FooterProps> = () => {
       <div className="footer-wordmark" aria-hidden="true">
         Artemis
       </div>
+
+      {/* Candlestick Animation at exact bottom baseline of original pixels */}
+      <FloatingPixels className="pixels" />
     </footer>
   );
 };
