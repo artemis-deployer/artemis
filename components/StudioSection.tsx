@@ -56,13 +56,13 @@ export const StudioSection: React.FC = () => {
 
       {/* Main Studio Frame */}
       <div className="rounded-xl border border-white/15 bg-[#1a1b1f] shadow-2xl p-4 sm:p-8 grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <div className="lg:col-span-5">
+          <StudioChat />
+        </div>
         <div className="lg:col-span-7">
           <LaunchForm
             onReview={openReview}
           />
-        </div>
-        <div className="lg:col-span-5">
-          <StudioChat />
         </div>
 
         <ReviewDialog ref={ref} draft={draft} mainnet={!chain.testnet} />

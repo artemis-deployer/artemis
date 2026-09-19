@@ -56,25 +56,56 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
         </div>
       </div>
 
-      {/* Live Token Stamp Preview */}
-      <div className="flex items-center justify-between gap-3 rounded-lg border border-white/15 bg-[#1a1b1f] px-[18px] py-3.5 max-sm:flex-wrap">
-        <div className="flex items-baseline gap-2">
-          {draft.image && imageOk && (
-            /* eslint-disable-next-line @next/next/no-img-element -- local data-URL preview, never remote */
-            <img src={draft.image} alt="" aria-hidden="true" className="h-7 w-7 self-center rounded-full border border-white/15 object-cover" />
-          )}
-          <span className="font-unbounded text-[24px] font-bold leading-none text-[#fae8a4] max-sm:text-xl">
-            {draft.ticker ? `$${draft.ticker}` : "$TICKER"}
+      {/* Coin Preview Card */}
+      <div className="flex flex-col gap-3 rounded-lg border border-white/15 bg-[#1a1b1f] p-4">
+        <div className="flex items-center justify-between">
+          <span className="font-unbounded text-base font-bold text-white">
+            {draft.name ? draft.name : "Your coin name"}
           </span>
-          <span className="text-[13px] font-medium text-white/80">
-            {draft.name ? draft.name : "Your Coin Draft"}
+          <span className="rounded border border-white/15 px-2 py-0.5 font-mono text-[10px] font-bold text-white/50 uppercase">
+            {draft.ticker ? `${draft.ticker} / Draft` : "TICKER / Draft"}
           </span>
         </div>
-        <div className="text-right">
-          <span className="block font-mono text-[11px] font-bold text-white/50 uppercase">{chain.name}</span>
-          <span className="text-[11px] font-mono text-[#cadcf0]">
-            {totalSupply.toLocaleString("en-US")} Fixed
-          </span>
+        {previewUrl || (draft.image && imageOk) ? (
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            title="Change artwork"
+            aria-label="Change coin artwork"
+            className="block w-full cursor-pointer overflow-hidden rounded-lg border border-white/15 p-0"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element -- local preview or user draft image */}
+            <img
+              src={previewUrl ?? draft.image ?? ""}
+              alt={draft.name ? `${draft.name} artwork` : "Coin artwork preview"}
+              className="h-52 w-full object-cover"
+            />
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            className="flex min-h-52 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-white/20 bg-[#1a1b1f] px-3 py-8 text-sm font-semibold text-white/70 transition-all hover:border-[#fae8a4] hover:text-white"
+          >
+            <ImagePlus size={22} aria-hidden="true" />
+            <span>Drop artwork here or upload</span>
+            <span className="text-[11px] font-medium text-white/40">Your coin image appears here</span>
+          </button>
+        )}
+        <div className="font-unbounded text-[24px] font-bold leading-none text-[#fae8a4] max-sm:text-xl">
+          {draft.ticker ? `$${draft.ticker}` : "$TICKER"}
+        </div>
+        <div className="flex items-center justify-between gap-3 border-t border-white/10 pt-2.5 text-[13px]">
+          <div>
+            <span className="block font-mono text-[10px] font-bold tracking-wider text-white/40 uppercase">Supply</span>
+            <span className="font-mono font-semibold text-white">
+              {totalSupply.toLocaleString("en-US")} Fixed
+            </span>
+          </div>
+          <div className="text-right">
+            <span className="block font-mono text-[10px] font-bold tracking-wider text-white/40 uppercase">Home</span>
+            <span className="font-semibold text-white">{chain.name}</span>
+          </div>
         </div>
       </div>
 
