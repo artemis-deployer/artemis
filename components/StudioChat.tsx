@@ -319,7 +319,7 @@ export default function StudioChat() {
         )}
       </div>
 
-      <div className="flex items-center gap-2 overflow-x-auto border-t border-white/10 bg-[#1a1b1f] px-5 py-2.5">
+      <div className="chat-scroll flex items-center gap-2 overflow-x-auto border-t border-white/10 bg-[#1a1b1f] px-5 py-2.5">
         <span className="font-mono text-xs font-semibold tracking-wider text-white/40 uppercase">
           Suggestions:
         </span>

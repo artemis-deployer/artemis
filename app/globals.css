@@ -1862,6 +1862,7 @@ textarea:focus:not(:focus-visible) {
 }
 .chat-scroll::-webkit-scrollbar {
   width: 4px;
+  height: 4px;
 }
 .chat-scroll::-webkit-scrollbar-track {
   background: transparent;
