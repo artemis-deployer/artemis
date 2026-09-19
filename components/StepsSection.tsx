@@ -88,14 +88,13 @@ const STAGES = [
   }
 ];
 
-const STAGE_DURATION_MS = 4200; // 4.2s per stage
-const TICK_MS = 35; // 28fps smooth tick
+const STAGE_DURATION_MS = 4500; // 4.5s per stage
+const TICK_MS = 40; // 25fps smooth tick
 const progressStep = (TICK_MS / STAGE_DURATION_MS) * 100;
 
 export const StepsSection: React.FC = () => {
   const [activeStage, setActiveStage] = useState<number>(0);
-  const [isPlaying, setIsPlaying] = useState<boolean>(true);
-  const [isHovered, setIsHovered] = useState<boolean>(false);
+  const [isAutoAdvance, setIsAutoAdvance] = useState<boolean>(true);
   const [progress, setProgress] = useState<number>(0);
   
   // Interactive State for Stage 0 (Prompt Synthesis)
@@ -111,9 +110,9 @@ export const StepsSection: React.FC = () => {
   const [isDryRunning, setIsDryRunning] = useState<boolean>(false);
   const [dryRunDone, setDryRunDone] = useState<boolean>(false);
 
-  // Strictly sequential auto-advance loop synchronized with progress
+  // Auto-advance loop: pauses only stage transitioning, never cuts off terminal
   useEffect(() => {
-    if (!isPlaying || isHovered) return;
+    if (!isAutoAdvance) return;
 
     const interval = setInterval(() => {
       setProgress((prev) => {
@@ -126,7 +125,7 @@ export const StepsSection: React.FC = () => {
     }, TICK_MS);
 
     return () => clearInterval(interval);
-  }, [isPlaying, isHovered]);
+  }, [isAutoAdvance]);
 
   const handleStageSelect = (index: number) => {
     setActiveStage(index);
@@ -166,11 +165,7 @@ export const StepsSection: React.FC = () => {
         </div>
 
         {/* Interactive Lifecycle Console */}
-        <div
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-          className="w-full border border-[#18191c]/15 bg-white/90 backdrop-blur-md rounded-sm shadow-xs overflow-hidden"
-        >
+        <div className="w-full border border-[#18191c]/15 bg-white/90 backdrop-blur-md rounded-sm shadow-xs overflow-hidden">
           
           {/* Stage Tab Rail (Unified 4-stage sequential progress track) */}
           <div className="grid grid-cols-4 border-b border-[#18191c]/10 bg-[#18191c]/[0.02]">
@@ -418,25 +413,23 @@ export const StepsSection: React.FC = () => {
               {/* Console Footer Play/Pause Controller */}
               <div className="mt-8 pt-4 border-t border-[#18191c]/10 flex items-center justify-between text-xs font-mono text-[#18191c]/60">
                 <button
-                  onClick={() => setIsPlaying(!isPlaying)}
-                  className="inline-flex items-center gap-2 hover:text-[#18191c] transition-colors cursor-pointer"
+                  onClick={() => setIsAutoAdvance(!isAutoAdvance)}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-[2px] border border-[#18191c]/20 bg-white hover:bg-[#18191c]/5 transition-all text-xs font-mono font-semibold text-[#18191c] cursor-pointer shadow-xs"
                 >
-                  {isPlaying && !isHovered ? (
+                  {isAutoAdvance ? (
                     <>
-                      <Pause className="w-3.5 h-3.5" />
-                      <span>Pause Auto-Tour</span>
+                      <Pause className="w-3.5 h-3.5 fill-current" />
+                      <span>Pause Stage Transition</span>
                     </>
                   ) : (
                     <>
-                      <Play className="w-3.5 h-3.5" />
-                      <span>Resume Auto-Tour</span>
+                      <Play className="w-3.5 h-3.5 fill-current" />
+                      <span>Resume Stage Transition</span>
                     </>
                   )}
                 </button>
                 <div className="flex items-center gap-2 font-mono text-[10px] text-[#18191c]/50 tracking-wider">
-                  <span className="hidden sm:inline">(Hover to pause)</span>
-                  <span>{"//"}</span>
-                  <span>{(!isPlaying || isHovered) ? 'STATUS: PAUSED' : 'STATUS: STREAMING'}</span>
+                  <span>{isAutoAdvance ? 'STAGE TRANSITION: AUTO (4.5s)' : 'STAGE TRANSITION: PAUSED'}</span>
                 </div>
               </div>
             </div>
@@ -457,155 +450,111 @@ export const StepsSection: React.FC = () => {
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-[10px] font-mono">
-                    <span className={(!isPlaying || isHovered) ? 'text-amber-300 font-semibold' : 'text-[#fae8a4]'}>
-                      {(!isPlaying || isHovered) ? '[PAUSED]' : '[STREAMING]'}
+                    <span className={isAutoAdvance ? 'text-[#fae8a4]' : 'text-amber-300 font-semibold'}>
+                      {isAutoAdvance ? '[AUTO-CYCLE]' : '[STAGE-PINNED]'}
                     </span>
                     <span className="text-white/25">|</span>
-                    <span className="text-white/40">{Math.round(progress)}%</span>
+                    <span className="text-white/40">{isAutoAdvance ? `${Math.round(progress)}%` : 'STATIC'}</span>
                   </div>
                 </div>
 
-                {/* Live Paced Terminal Logs (Synchronized directly with stage progress) */}
-                <div className="space-y-2.5 text-xs text-white/85 min-h-[220px]">
+                {/* Live Real Terminal Logs (Always fully visible for the active stage) */}
+                <div key={`${activeStage}-${selectedPreset.id}-${auditTest}-${activeNetwork}-${dryRunDone}`} className="space-y-2.5 text-xs text-white/85 min-h-[220px]">
                   {activeStage === 0 && (
                     <>
-                      <div className="text-white/40">{"//"} [00:00.08] NLP Extraction Vector:</div>
-                      <div className="text-[#fae8a4] flex items-center">
+                      <div className="term-line-1 text-white/40">{"//"} [00:00.08] NLP Extraction Vector:</div>
+                      <div className="term-line-1 text-[#fae8a4] flex items-center">
                         <span>&gt; copilot.parseNaturalPrompt(input)</span>
-                        {progress < 25 && <span className="inline-block w-1.5 h-3.5 bg-[#fae8a4] animate-pulse ml-1.5" />}
                       </div>
 
-                      {progress >= 25 && (
-                        <div className="term-line-1 pl-3 border-l border-white/15 py-1 space-y-1 text-white/70">
-                          <div>name: <span className="text-white font-semibold">&quot;{selectedPreset.name}&quot;</span></div>
-                          <div>symbol: <span className="text-[#cadcf0] font-semibold">{selectedPreset.symbol}</span></div>
-                        </div>
-                      )}
+                      <div className="term-line-2 pl-3 border-l border-white/15 py-1 space-y-1 text-white/70">
+                        <div>name: <span className="text-white font-semibold">&quot;{selectedPreset.name}&quot;</span></div>
+                        <div>symbol: <span className="text-[#cadcf0] font-semibold">{selectedPreset.symbol}</span></div>
+                        <div>target_supply: <span className="text-white">{selectedPreset.supply}</span></div>
+                        <div>curve_model: <span className="text-white">{selectedPreset.curve}</span></div>
+                      </div>
 
-                      {progress >= 50 && (
-                        <div className="term-line-2 pl-3 border-l border-white/15 py-0.5 space-y-1 text-white/70">
-                          <div>target_supply: <span className="text-white">{selectedPreset.supply}</span></div>
-                          <div>curve_model: <span className="text-white">{selectedPreset.curve}</span></div>
-                        </div>
-                      )}
-
-                      {progress >= 78 && (
-                        <div className="term-line-3 text-white/95 text-[11px] mt-2 flex items-center gap-1.5 font-semibold">
-                          <Check className="w-3.5 h-3.5 text-[#fae8a4]" />
-                          <span>[OK] Parameters compiled into immutable genesis payload</span>
-                          {progress < 95 && <span className="inline-block w-1.5 h-3.5 bg-[#fae8a4] animate-pulse ml-1.5" />}
-                        </div>
-                      )}
+                      <div className="term-line-3 text-white/95 text-[11px] mt-2 flex items-center gap-1.5 font-semibold">
+                        <Check className="w-3.5 h-3.5 text-[#fae8a4]" />
+                        <span>[OK] Parameters compiled into immutable genesis payload</span>
+                      </div>
                     </>
                   )}
 
                   {activeStage === 1 && (
                     <>
-                      <div className="text-white/40">{"//"} [00:00.12] Smart Contract Bytecode Integrity:</div>
-                      <div className="text-[#fae8a4] flex items-center">
+                      <div className="term-line-1 text-white/40">{"//"} [00:00.12] Smart Contract Bytecode Integrity:</div>
+                      <div className="term-line-1 text-[#fae8a4] flex items-center">
                         <span>&gt; solc.verifyBytecode(ERC20Sovereign.sol)</span>
-                        {progress < 25 && <span className="inline-block w-1.5 h-3.5 bg-[#fae8a4] animate-pulse ml-1.5" />}
                       </div>
 
-                      {progress >= 25 && (
-                        <div className="term-line-1 pl-3 border-l border-white/15 py-1 space-y-1 text-white/70">
-                          <div>constructor_supply: <span className="text-white">999,000,000 * 10^18</span></div>
-                          <div>ownership_status: <span className="text-white">address(0) [RENOUNCED]</span></div>
-                        </div>
-                      )}
+                      <div className="term-line-2 pl-3 border-l border-white/15 py-1 space-y-1 text-white/70">
+                        <div>constructor_supply: <span className="text-white">999,000,000 * 10^18</span></div>
+                        <div>ownership_status: <span className="text-white">address(0) [RENOUNCED]</span></div>
+                        <div>mint_selector: <span className="text-[#fae8a4]">0x00000000 (NOT IMPLEMENTED)</span></div>
+                        <div>platform_tax: <span className="text-white">0.00% (IMMUTABLE)</span></div>
+                      </div>
 
-                      {progress >= 50 && (
-                        <div className="term-line-2 pl-3 border-l border-white/15 py-0.5 space-y-1 text-white/70">
-                          <div>mint_selector: <span className="text-[#fae8a4]">0x00000000 (NOT IMPLEMENTED)</span></div>
-                          <div>platform_tax: <span className="text-white">0.00% (IMMUTABLE)</span></div>
-                        </div>
-                      )}
-
-                      {progress >= 78 && (
-                        <>
-                          {auditTest === 'mint' ? (
-                            <div className="term-line-3 mt-2 p-2 bg-red-950/60 border border-red-500/30 rounded-[2px] text-red-300 text-[11px]">
-                              [SECURITY REVERT] execute: mint(to, 1000000)<br />
-                              ↳ REVERT: 0x4e487b71 (Function signature does not exist)
-                            </div>
-                          ) : auditTest === 'owner' ? (
-                            <div className="term-line-3 mt-2 p-2 bg-amber-950/60 border border-amber-500/30 rounded-[2px] text-amber-200 text-[11px]">
-                              [SECURITY REVERT] execute: setTaxFee(0.05)<br />
-                              ↳ REVERT: Caller is not owner. Owner is address(0).
-                            </div>
-                          ) : (
-                            <div className="term-line-3 text-white/95 text-[11px] mt-2 flex items-center gap-1.5">
-                              <Check className="w-3.5 h-3.5 text-[#fae8a4]" />
-                              <span>[PASS] 0 backdoors detected in compiled bytecode</span>
-                              {progress < 95 && <span className="inline-block w-1.5 h-3.5 bg-[#fae8a4] animate-pulse ml-1.5" />}
-                            </div>
-                          )}
-                        </>
-                      )}
+                      <div className="term-line-3">
+                        {auditTest === 'mint' ? (
+                          <div className="p-2 bg-red-950/60 border border-red-500/30 rounded-[2px] text-red-300 text-[11px]">
+                            [SECURITY REVERT] execute: mint(to, 1000000)<br />
+                            ↳ REVERT: 0x4e487b71 (Function signature does not exist)
+                          </div>
+                        ) : auditTest === 'owner' ? (
+                          <div className="p-2 bg-amber-950/60 border border-amber-500/30 rounded-[2px] text-amber-200 text-[11px]">
+                            [SECURITY REVERT] execute: setTaxFee(0.05)<br />
+                            ↳ REVERT: Caller is not owner. Owner is address(0).
+                          </div>
+                        ) : (
+                          <div className="text-white/95 text-[11px] mt-2 flex items-center gap-1.5">
+                            <Check className="w-3.5 h-3.5 text-[#fae8a4]" />
+                            <span>[PASS] 0 backdoors detected in compiled bytecode</span>
+                          </div>
+                        )}
+                      </div>
                     </>
                   )}
 
                   {activeStage === 2 && (
                     <>
-                      <div className="text-white/40">{"//"} [00:00.15] Liquidity Settlement Routing:</div>
-                      <div className="text-[#fae8a4] flex items-center">
+                      <div className="term-line-1 text-white/40">{"//"} [00:00.15] Liquidity Settlement Routing:</div>
+                      <div className="term-line-1 text-[#fae8a4] flex items-center">
                         <span>&gt; {activeNetwork === 'robinhood' ? 'UniswapV2Factory.createPair()' : 'pump.fun.initializeAMM()'}</span>
-                        {progress < 25 && <span className="inline-block w-1.5 h-3.5 bg-[#fae8a4] animate-pulse ml-1.5" />}
                       </div>
 
-                      {progress >= 25 && (
-                        <div className="term-line-1 pl-3 border-l border-white/15 py-1 space-y-1 text-white/70 text-[11px]">
-                          <div>chain: <span className="text-white font-semibold">{activeNetwork === 'robinhood' ? 'Robinhood EVM (Chain ID 4663)' : 'Solana Mainnet'}</span></div>
-                          <div>router: <span className="text-[#cadcf0]">{activeNetwork === 'robinhood' ? (HOOD_MAINNET.router?.slice(0, 18) ?? '0x89e5db8b5aa49aa') + '...' : 'pump...4M5u'}</span></div>
-                        </div>
-                      )}
+                      <div className="term-line-2 pl-3 border-l border-white/15 py-1 space-y-1 text-white/70 text-[11px]">
+                        <div>chain: <span className="text-white font-semibold">{activeNetwork === 'robinhood' ? 'Robinhood EVM (Chain ID 4663)' : 'Solana Mainnet'}</span></div>
+                        <div>router: <span className="text-[#cadcf0]">{activeNetwork === 'robinhood' ? (HOOD_MAINNET.router?.slice(0, 18) ?? '0x89e5db8b5aa49aa') + '...' : 'pump...4M5u'}</span></div>
+                        <div>lp_destination: <span className="text-[#fae8a4]">0x000000000000000000000000000000000000dead</span></div>
+                        <div>rugpull_prevention: <span className="text-white">LIQUIDITY PERMANENTLY LOCKED</span></div>
+                      </div>
 
-                      {progress >= 50 && (
-                        <div className="term-line-2 pl-3 border-l border-white/15 py-0.5 space-y-1 text-white/70 text-[11px]">
-                          <div>lp_destination: <span className="text-[#fae8a4]">0x000000000000000000000000000000000000dead</span></div>
-                          <div>rugpull_prevention: <span className="text-white">LIQUIDITY PERMANENTLY LOCKED</span></div>
-                        </div>
-                      )}
-
-                      {progress >= 78 && (
-                        <div className="term-line-3 text-white/95 text-[11px] mt-2 flex items-center gap-1.5">
-                          <Check className="w-3.5 h-3.5 text-[#fae8a4]" />
-                          <span>[ACTIVE] Autonomous pool initialized onchain</span>
-                          {progress < 95 && <span className="inline-block w-1.5 h-3.5 bg-[#fae8a4] animate-pulse ml-1.5" />}
-                        </div>
-                      )}
+                      <div className="term-line-3 text-white/95 text-[11px] mt-2 flex items-center gap-1.5">
+                        <Check className="w-3.5 h-3.5 text-[#fae8a4]" />
+                        <span>[ACTIVE] Autonomous pool initialized onchain</span>
+                      </div>
                     </>
                   )}
 
                   {activeStage === 3 && (
                     <>
-                      <div className="text-white/40">{"//"} [00:00.18] Local Cryptographic Signing:</div>
-                      <div className="text-[#fae8a4] flex items-center">
+                      <div className="term-line-1 text-white/40">{"//"} [00:00.18] Local Cryptographic Signing:</div>
+                      <div className="term-line-1 text-[#fae8a4] flex items-center">
                         <span>&gt; window.ethereum.request(&#123; method: &apos;eth_sendRawTransaction&apos; &#125;)</span>
-                        {progress < 25 && <span className="inline-block w-1.5 h-3.5 bg-[#fae8a4] animate-pulse ml-1.5" />}
                       </div>
 
-                      {progress >= 25 && (
-                        <div className="term-line-1 pl-3 border-l border-white/15 py-1 space-y-1 text-white/70 text-[11px]">
-                          <div>client_provider: <span className="text-white">Injected Web3 Wallet</span></div>
-                          <div>key_isolation: <span className="text-[#fae8a4]">100% Non-Custodial</span></div>
-                        </div>
-                      )}
+                      <div className="term-line-2 pl-3 border-l border-white/15 py-1 space-y-1 text-white/70 text-[11px]">
+                        <div>client_provider: <span className="text-white">Injected Web3 Wallet</span></div>
+                        <div>key_isolation: <span className="text-[#fae8a4]">100% Non-Custodial</span></div>
+                        <div>server_data_transit: <span className="text-white">0 bytes (Zero Private Keys Stored)</span></div>
+                        <div>signature_type: <span className="text-white">ECDSA secp256k1</span></div>
+                      </div>
 
-                      {progress >= 50 && (
-                        <div className="term-line-2 pl-3 border-l border-white/15 py-0.5 space-y-1 text-white/70 text-[11px]">
-                          <div>server_data_transit: <span className="text-white">0 bytes (Zero Private Keys Stored)</span></div>
-                          <div>signature_type: <span className="text-white">ECDSA secp256k1</span></div>
-                        </div>
-                      )}
-
-                      {progress >= 78 && (
-                        <div className="term-line-3 text-white/95 text-[11px] mt-2 flex items-center gap-1.5">
-                          <Check className="w-3.5 h-3.5 text-[#fae8a4]" />
-                          <span>[BROADCAST] Transaction signed locally and broadcasted</span>
-                          {progress < 95 && <span className="inline-block w-1.5 h-3.5 bg-[#fae8a4] animate-pulse ml-1.5" />}
-                        </div>
-                      )}
+                      <div className="term-line-3 text-white/95 text-[11px] mt-2 flex items-center gap-1.5">
+                        <Check className="w-3.5 h-3.5 text-[#fae8a4]" />
+                        <span>[BROADCAST] Transaction signed locally and broadcasted</span>
+                      </div>
                     </>
                   )}
                 </div>
