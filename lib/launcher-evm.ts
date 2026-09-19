@@ -43,7 +43,7 @@ export const HOOD_MAINNET: HoodConfig = {
   router: "0x89e5db8b5aa49aa85ac63f691524311aeb649eba",
   factory: "0x8bceaa40b9acdfaedf85adf4ff01f5ad6517937f",
   weth: "0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73",
-  launcher: null,
+  launcher: "0xeea9d0f7ee0958c6d59f25162be4e69ba60a0f71",
 };
 
 export const HOOD_TESTNET: HoodConfig = {

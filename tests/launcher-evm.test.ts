@@ -69,11 +69,22 @@ describe("launchOneTx guards", () => {
     supply: 999000000000000000000000000n,
   };
 
+  it("pins the deployed mainnet launcher", () => {
+    expect(HOOD_MAINNET.launcher).toBe("0xeea9d0f7ee0958c6d59f25162be4e69ba60a0f71");
+  });
+
   it("refuses when no launcher is configured", async () => {
-    await expect(launchOneTx({ ...base, pooled: 1n, ethAmount: 1n })).rejects.toThrow("launcher_unavailable");
+    const prev = HOOD_MAINNET.launcher;
+    HOOD_MAINNET.launcher = null;
+    try {
+      await expect(launchOneTx({ ...base, pooled: 1n, ethAmount: 1n })).rejects.toThrow("launcher_unavailable");
+    } finally {
+      HOOD_MAINNET.launcher = prev;
+    }
   });
 
   it("refuses bad amounts before touching a wallet", async () => {
+    const prev = HOOD_MAINNET.launcher;
     HOOD_MAINNET.launcher = "0x0000000000000000000000000000000000000001";
     try {
       await expect(launchOneTx({ ...base, pooled: 0n, ethAmount: 1n })).rejects.toThrow("bad_pool_amount");
@@ -82,7 +93,7 @@ describe("launchOneTx guards", () => {
       ).rejects.toThrow("bad_pool_amount");
       await expect(launchOneTx({ ...base, pooled: 1n, ethAmount: 0n })).rejects.toThrow("bad_eth_amount");
     } finally {
-      HOOD_MAINNET.launcher = null;
+      HOOD_MAINNET.launcher = prev;
     }
   });
 });
