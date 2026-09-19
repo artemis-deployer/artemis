@@ -60,9 +60,6 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
     <section className="flex flex-col gap-[18px] rounded-xl border border-white/10 bg-[#1a1b1f] p-7 shadow-2xl text-white max-sm:p-[18px]" aria-label="Your launch">
       <div className="flex items-center justify-between gap-3 border-b border-white/10 pb-3">
         <h3 className="m-0 text-sm font-bold font-unbounded whitespace-nowrap text-white">Launch Parameters</h3>
-        <p className="m-0 truncate text-right text-xs text-white/50">
-          Configure parameters or let Artemis Copilot draft them
-        </p>
       </div>
 
       {/* Coin Preview Card */}
