@@ -1855,3 +1855,22 @@ textarea:focus:not(:focus-visible) {
   }
 }
 
+/* Slim themed scrollbar for the copilot chat log */
+.chat-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #fae8a455 transparent;
+}
+.chat-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.chat-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.chat-scroll::-webkit-scrollbar-thumb {
+  background: #fae8a455;
+  border-radius: 999px;
+}
+.chat-scroll::-webkit-scrollbar-thumb:hover {
+  background: #fae8a4;
+}
+
