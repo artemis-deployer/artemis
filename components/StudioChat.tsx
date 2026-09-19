@@ -5,11 +5,12 @@ import Markdown from "react-markdown";
 import rehypeSanitize from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
 import { RotateCcw, SendHorizonal, Sparkles } from "lucide-react";
-import { parseDraftReply } from "../lib/draft";
+import { applyAutoPatch, parseDraftReply, shouldAutoApply } from "../lib/draft";
 import type { Draft } from "../lib/draft";
+import { CHAINS } from "../lib/chains";
 import { useDraft } from "./DraftContext";
 
-type Line = { role: "user" | "assistant"; content: string; kind?: "ok" | "error"; patched?: boolean; patch?: Partial<Draft> };
+type Line = { role: "user" | "assistant"; content: string; kind?: "ok" | "error"; auto?: boolean };
 
 const SUGGESTIONS = [
   "Community coin for a local arts club",
@@ -39,13 +40,19 @@ const TYPE_STEP = 14;
 const TYPE_MS = 12;
 
 export default function StudioChat() {
-  const { setDraft } = useDraft();
+  const { draft, setDraft } = useDraft();
   const [log, setLog] = useState<Line[]>([{ role: "assistant", content: GREETING }]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [reveal, setReveal] = useState<{ i: number; n: number } | null>(null);
+  const [undo, setUndo] = useState<{ snapshot: Draft } | null>(null);
   const logRef = useRef<HTMLDivElement>(null);
   const areaRef = useRef<HTMLTextAreaElement>(null);
+  const draftRef = useRef(draft);
+
+  useEffect(() => {
+    draftRef.current = draft;
+  }, [draft]);
 
   useEffect(() => {
     logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: "smooth" });
@@ -77,19 +84,20 @@ export default function StudioChat() {
     setReveal(null);
     setLog([{ role: "assistant", content: GREETING }]);
     setInput("");
+    setUndo(null);
   }
 
-  function applyPatch(i: number) {
-    const line = log[i];
-    if (!line?.patch || line.patched) return;
-    setDraft((prev) => ({ ...prev, ...line.patch }));
-    setLog((prev) => prev.map((l, j) => (j === i ? { ...l, patched: true } : l)));
+  function undoAuto() {
+    if (!undo) return;
+    setDraft(undo.snapshot);
+    setUndo(null);
   }
 
   async function send(text: string) {
     const content = text.trim().slice(0, 1000);
     if (!content || busy) return;
     setBusy(true);
+    const snapshot = draftRef.current;
     const next: Line[] = [...log, { role: "user" as const, content }];
     setLog(next);
     setInput("");
@@ -100,6 +108,7 @@ export default function StudioChat() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           messages: next.map(({ role, content: c }) => ({ role, content: c })),
+          draft: snapshot,
         }),
       });
 
@@ -127,10 +136,15 @@ export default function StudioChat() {
       } else {
         patch = parseDraftReply(reply);
       }
-      const hasPatch = Object.keys(patch).length > 0;
-      const shown = displayOf(reply, hasPatch);
+      const auto = shouldAutoApply(patch);
+      if (auto) {
+        const { next: merged, prevSnapshot } = applyAutoPatch(snapshot, patch);
+        setDraft(merged);
+        setUndo({ snapshot: prevSnapshot });
+      }
+      const shown = displayOf(reply, auto);
       const at = next.length;
-      setLog([...next, { role: "assistant" as const, content: shown, kind: reply === OFFLINE_LINE ? "error" : "ok", patched: false, patch: hasPatch ? patch : undefined }]);
+      setLog([...next, { role: "assistant" as const, content: shown, kind: reply === OFFLINE_LINE ? "error" : "ok", auto }]);
       if (!prefersReducedMotion()) setReveal({ i: at, n: 0 });
     } catch {
       setLog([...next, { role: "assistant" as const, content: OFFLINE_LINE, kind: "error" }]);
@@ -170,6 +184,27 @@ export default function StudioChat() {
         </button>
       </div>
 
+      <div className="flex items-center gap-2 overflow-x-auto border-t border-white/10 bg-[#1a1b1f] px-5 py-2.5">
+        <span className="font-mono text-xs font-semibold tracking-wider text-white/40 uppercase">
+          Chain:
+        </span>
+        {CHAINS.map((c) => (
+          <button
+            key={String(c.id)}
+            type="button"
+            aria-pressed={draft.chainId === c.id}
+            className="inline-flex min-h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-medium whitespace-nowrap text-white/80 transition-all hover:border-white/30 hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={busy}
+            onClick={() => {
+              setDraft((prev) => ({ ...prev, chainId: c.id }));
+              setUndo(null);
+            }}
+          >
+            {c.name}
+          </button>
+        ))}
+      </div>
+
       <div className="chat-scroll flex flex-1 flex-col gap-3.5 overflow-y-auto p-5" aria-live="polite" ref={logRef}>
         {log.map((l, i) => (
           <div
@@ -197,18 +232,17 @@ export default function StudioChat() {
             ) : (
               <p className="m-0 leading-relaxed whitespace-pre-wrap">{l.content}</p>
             )}
-            {l.patch && !l.patched && (!reveal || reveal.i !== i) && (
-              <button
-                type="button"
-                onClick={() => applyPatch(i)}
-                className="mt-2 inline-flex cursor-pointer items-center gap-1 rounded-full border border-[#fae8a4]/40 bg-[#fae8a4]/10 px-3 py-1 text-[11px] font-bold text-[#fae8a4] transition-all hover:bg-[#fae8a4]/20"
-              >
-                <Sparkles size={11} aria-hidden="true" /> Apply to form →
-              </button>
-            )}
-            {l.patched && (!reveal || reveal.i !== i) && (
+            {l.auto && (!reveal || reveal.i !== i) && (
               <span className="mt-2 inline-flex items-center gap-1 rounded-full border border-emerald-300/30 bg-emerald-300/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-200">
-                <Sparkles size={11} aria-hidden="true" /> Draft updated
+                <Sparkles size={11} aria-hidden="true" /> AI updated
+                {undo && (
+                  <>
+                    <span aria-hidden="true"> • </span>
+                    <button type="button" onClick={undoAuto} className="cursor-pointer underline">
+                      Undo
+                    </button>
+                  </>
+                )}
               </span>
             )}
           </div>

@@ -1,23 +1,18 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { findNewCompletion, resetLaunchAmounts, useDraft } from './DraftContext';
 import LaunchForm from './LaunchForm';
 import ReviewDialog from './ReviewDialog';
 import StudioChat from './StudioChat';
 import { CHAINS } from '../lib/chains';
-import { validateDraft } from '../lib/draft';
 import { listReceipts } from '../lib/receipts';
 
 export const StudioSection: React.FC = () => {
-  const { draft, setDraft, consent } = useDraft();
+  const { draft, setDraft } = useDraft();
   const ref = useRef<HTMLDialogElement>(null);
   const openedAt = useRef<{ at: number; ticker: string } | null>(null);
-  const [tab, setTab] = useState<'copilot' | 'manual'>('copilot');
   const chain = CHAINS.find((c) => c.id === draft.chainId) ?? CHAINS[2];
-  const mainnet = !chain.testnet;
-  const errors = validateDraft(draft);
-  const gated = errors.length > 0 || (mainnet && !consent);
 
   function openReview() {
     openedAt.current = { at: Date.now(), ticker: draft.ticker };
@@ -59,67 +54,15 @@ export const StudioSection: React.FC = () => {
         </p>
       </div>
 
-      {/* Mode Switcher Tabs */}
-      <div className="flex justify-center mb-10">
-        <div className="inline-flex p-1 bg-white/5 border border-white/10 rounded-full">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === 'copilot'}
-            onClick={() => setTab('copilot')}
-            className={`min-h-11 px-8 py-2.5 text-xs md:text-sm font-semibold rounded-full transition-all cursor-pointer border-0 ${
-              tab === 'copilot'
-                ? 'bg-[#fae8a4] text-[#18191c] shadow-md'
-                : 'bg-transparent text-white/70 hover:text-white'
-            }`}
-          >
-            Copilot Chat
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === 'manual'}
-            onClick={() => setTab('manual')}
-            className={`min-h-11 px-8 py-2.5 text-xs md:text-sm font-semibold rounded-full transition-all cursor-pointer border-0 ${
-              tab === 'manual'
-                ? 'bg-[#fae8a4] text-[#18191c] shadow-md'
-                : 'bg-transparent text-white/70 hover:text-white'
-            }`}
-          >
-            Manual Parameters
-          </button>
-        </div>
-      </div>
-
       {/* Main Studio Frame */}
-      <div className="rounded-xl border border-white/15 bg-[#1a1b1f] shadow-2xl p-4 sm:p-8">
-        {/* Both panes stay mounted so the conversation survives tab switches.
-            Only the reset button inside Copilot Chat clears it. */}
-        <div hidden={tab !== 'copilot'}>
-          <div>
-            <StudioChat />
-            <div className="mt-8 flex flex-col items-center gap-3">
-              <button
-                type="button"
-                disabled={gated}
-                onClick={openReview}
-                className="dp-button min-w-[240px] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0"
-              >
-                <span>REVIEW LAUNCH CONFIG</span>
-                <span className="arrow-box">↗</span>
-              </button>
-              {errors.length > 0 && (
-                <p className="text-center text-xs text-white/50 max-w-md font-mono">
-                  Prompt a ticker, pool allocation, and deposit first — or fill them in Manual Parameters.
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-        <div hidden={tab !== 'manual'}>
+      <div className="rounded-xl border border-white/15 bg-[#1a1b1f] shadow-2xl p-4 sm:p-8 grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <div className="lg:col-span-7">
           <LaunchForm
             onReview={openReview}
           />
+        </div>
+        <div className="lg:col-span-5">
+          <StudioChat />
         </div>
 
         <ReviewDialog ref={ref} draft={draft} mainnet={!chain.testnet} />

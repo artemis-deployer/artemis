@@ -1,42 +1,25 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowRight, ImagePlus, X } from "lucide-react";
 import { CHAINS, DIRECT_SUPPLY } from "../lib/chains";
 import { stripNumericSeparators, validateDraft } from "../lib/draft";
 import { isSafeImageSrc, useDraft } from "./DraftContext";
 
-/** Downscale an image file to a small data URL (max 512px, JPEG). */
-function fileToDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      const scale = Math.min(1, 512 / Math.max(img.width, img.height));
-      const canvas = document.createElement("canvas");
-      canvas.width = Math.max(1, Math.round(img.width * scale));
-      canvas.height = Math.max(1, Math.round(img.height * scale));
-      const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        reject(new Error("image_failed"));
-        return;
-      }
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      resolve(canvas.toDataURL("image/jpeg", 0.85));
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("image_failed"));
-    };
-    img.src = url;
-  });
-}
+const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 
 export default function LaunchForm({ onReview }: { onReview: () => void }) {
   const { draft, setDraft, consent, setConsent } = useDraft();
   const [imageError, setImageError] = useState("");
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [fileName, setFileName] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
   const imageOk = isSafeImageSrc(draft.image);
   const errors = imageOk
     ? validateDraft(draft)
@@ -63,9 +46,14 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
             Configure parameters or let Artemis Copilot draft them
           </p>
         </div>
-        <span className="rounded border border-white/15 px-2.5 py-1 text-xs font-mono text-[#cadcf0]">
-          Non-Custodial
-        </span>
+        <div className="flex items-center gap-2.5">
+          <span className="rounded border border-white/15 px-2.5 py-1 text-xs font-mono text-[#cadcf0]">
+            DRAFT • NOT LAUNCHED
+          </span>
+          <span className="rounded border border-white/15 px-2.5 py-1 text-xs font-mono text-[#cadcf0]">
+            Non-Custodial
+          </span>
+        </div>
       </div>
 
       {/* Live Token Stamp Preview */}
@@ -246,18 +234,45 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
         <input
           ref={fileRef}
           type="file"
-          accept="image/png,image/jpeg,image/webp"
+          accept="image/*"
           className="hidden"
           onChange={(e) => {
             const file = e.target.files?.[0];
             if (!file) return;
             setImageError("");
-            fileToDataUrl(file)
-              .then((dataUrl) => setDraft({ ...draft, image: dataUrl }))
-              .catch(() => setImageError("Image processing failed. Try another file."));
+            if (file.size > MAX_IMAGE_BYTES) {
+              setImageError("Image must be under 2MB. Try another file.");
+              e.target.value = "";
+              return;
+            }
+            if (previewUrl) URL.revokeObjectURL(previewUrl);
+            const url = URL.createObjectURL(file);
+            setPreviewUrl(url);
+            setFileName(file.name);
           }}
         />
-        {draft.image ? (
+        {previewUrl ? (
+          <div className="flex items-center justify-between rounded-lg border border-white/15 bg-[#1a1b1f] p-2.5">
+            <div className="flex items-center gap-2.5">
+              {/* eslint-disable-next-line @next/next/no-img-element -- local object-URL preview, never remote */}
+              <img src={previewUrl} alt="Preview" className="h-9 w-9 rounded-full object-cover" />
+              <span className="text-xs font-medium text-white/80">{fileName ?? "Image attached"}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                if (previewUrl) URL.revokeObjectURL(previewUrl);
+                setPreviewUrl(null);
+                setFileName(null);
+                if (fileRef.current) fileRef.current.value = "";
+              }}
+              aria-label="Remove coin image"
+              className="cursor-pointer rounded-md border border-white/15 p-2 text-white/60 hover:border-white/30 hover:text-white"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        ) : draft.image && imageOk ? (
           <div className="flex items-center justify-between rounded-lg border border-white/15 bg-[#1a1b1f] p-2.5">
             <div className="flex items-center gap-2.5">
               {/* eslint-disable-next-line @next/next/no-img-element -- user draft image */}
@@ -280,8 +295,25 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
             className="flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-white/20 bg-[#1a1b1f] px-3 py-2.5 text-sm font-semibold text-white/70 transition-all hover:border-[#fae8a4] hover:text-white"
           >
             <ImagePlus size={16} aria-hidden="true" />
-            <span>Upload image (PNG/JPEG)</span>
+            <span>Drop artwork here or upload</span>
           </button>
+        )}
+        <label className="flex items-center justify-between text-xs font-bold tracking-[0.02em] text-white/90" htmlFor="artwork-url">
+          <span>Artwork URL</span>
+          <span className="text-[11px] font-medium text-white/40">For onchain metadata</span>
+        </label>
+        <input
+          id="artwork-url"
+          className="min-h-11 w-full rounded-lg border border-white/15 bg-[#1a1b1f] px-3 py-2.5 text-sm text-white placeholder-white/30 focus:border-[#fae8a4] focus:bg-[#1b1924]"
+          placeholder="https://example.com/artwork.png"
+          value={draft.image ?? ""}
+          maxLength={2048}
+          autoComplete="off"
+          spellCheck={false}
+          onChange={(e) => setDraft({ ...draft, image: e.target.value || undefined })}
+        />
+        {previewUrl && !draft.image && (
+          <p className="m-0 text-xs text-white/50">File preview only. Onchain metadata uses the URL above.</p>
         )}
         {imageError && (
           <p role="alert" className="m-0 text-xs font-medium text-red-300">

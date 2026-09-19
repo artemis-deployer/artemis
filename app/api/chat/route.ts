@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { DIRECT_SUPPLY } from "../../../lib/chains";
+import { DIRECT_SUPPLY, getChain } from "../../../lib/chains";
 import { checkRateLimit, clientIp } from "../../../lib/rate-limit";
 
 export const SYSTEM_PROMPT = [
@@ -9,6 +9,8 @@ export const SYSTEM_PROMPT = [
   "That block must be the last thing in the reply and hold exactly these keys: {name, ticker, pooled, liquidity, route}.",
   "Field rules: ticker must be uppercase alphanumeric, max 12 chars; pooled must be a numeric string > 0 and <= 999000000 for direct only; liquidity must be a numeric string > 0; route must be only direct or pumpfun.",
   "Supply is fixed and never editable: 999000000 for direct, 1000000000 for pumpfun.",
+  "Revise incrementally from Current draft: replace only what user changed, always return FULL draft JSON.",
+  "Chain inference: Robinhood, Hood, or EVM keywords keep or switch EVM chain; Solana keyword uses solana chain id from CHAINS; defaulting to current chain when unclear.",
   "Never ask for private keys or seed phrases. Never claim to sign transactions.",
   "Example exchange:",
   'User: Arts club coin, ticker ARTS, 500M pooled, 1.5 liquidity, direct route.',
@@ -24,6 +26,7 @@ export type ServerDraft = {
   pooled?: string;
   liquidity?: string;
   route?: "direct" | "pumpfun";
+  chainId?: number | string;
 };
 
 const TICKER_RE = /^[A-Z0-9]{1,12}$/;
@@ -99,6 +102,11 @@ export function extractServerDraft(reply: string): { draft: ServerDraft | null; 
     }
   }
 
+  if (typeof raw.chainId === "number" || typeof raw.chainId === "string") {
+    const found = getChain(raw.chainId);
+    if (found) draft.chainId = found.id;
+  }
+
   if (errors.length > 0) return { draft: null, draftErrors: errors };
   return { draft, draftErrors: [] };
 }
@@ -134,6 +142,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
   }
   const trimmed = messages.slice(-20);
+  const rawDraft: unknown = (body as { draft?: unknown }).draft;
+  const draftForContext =
+    typeof rawDraft === "object" && rawDraft !== null && !Array.isArray(rawDraft)
+      ? (rawDraft as Record<string, unknown>)
+      : null;
+  const systemContent = draftForContext
+    ? `${SYSTEM_PROMPT} Current draft: ${JSON.stringify(draftForContext)}.`
+    : SYSTEM_PROMPT;
 
   let upstream: Response;
   try {
@@ -142,7 +158,7 @@ export async function POST(req: Request) {
       headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
       body: JSON.stringify({
         model,
-        messages: [{ role: "system", content: SYSTEM_PROMPT }, ...trimmed],
+        messages: [{ role: "system", content: systemContent }, ...trimmed],
         temperature: 0.2,
         max_tokens: 500,
       }),

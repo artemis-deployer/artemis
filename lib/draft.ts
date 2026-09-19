@@ -1,4 +1,4 @@
-import { DIRECT_SUPPLY } from "./chains";
+import { DIRECT_SUPPLY, getChain } from "./chains";
 
 export type Draft = {
   name: string;
@@ -26,7 +26,19 @@ function sanitizeDraft(raw: Record<string, unknown>): Partial<Draft> {
   if (typeof raw.pooled === "string") out.pooled = stripNumericSeparators(raw.pooled);
   if (typeof raw.liquidity === "string") out.liquidity = stripNumericSeparators(raw.liquidity);
   if (raw.route === "pumpfun" || raw.route === "direct") out.route = raw.route;
+  if (typeof raw.chainId === "number" || typeof raw.chainId === "string") {
+    const found = getChain(raw.chainId);
+    if (found) out.chainId = found.id;
+  }
   return out;
+}
+
+export function shouldAutoApply(patch: Partial<Draft>): boolean {
+  return Object.keys(patch).length > 0;
+}
+
+export function applyAutoPatch(prev: Draft, patch: Partial<Draft>): { next: Draft; prevSnapshot: Draft } {
+  return { next: { ...prev, ...patch }, prevSnapshot: { ...prev } };
 }
 
 function tryParse(slice: string): Partial<Draft> | null {

@@ -335,4 +335,99 @@ describe("chat route", () => {
     expect(SYSTEM_PROMPT).toContain("500000000 pooled");
     expect(SYSTEM_PROMPT).toContain('"pooled":"500000000"');
   });
+
+  it("instructs incremental revision with full draft JSON and chain inference", () => {
+    expect(SYSTEM_PROMPT).toContain("Current draft");
+    expect(SYSTEM_PROMPT).toMatch(/incremental/i);
+    expect(SYSTEM_PROMPT).toContain("FULL");
+    expect(SYSTEM_PROMPT).toContain("Solana");
+    expect(SYSTEM_PROMPT).toContain("Robinhood");
+    expect(SYSTEM_PROMPT).toContain("current chain");
+  });
+
+  it("injects current draft into upstream system context", async () => {
+    let sentBody: { messages?: { role: string; content: string }[] } = {};
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(async (_url: string, init: { body?: string }) => {
+        sentBody = JSON.parse(init.body ?? "{}") as typeof sentBody;
+        return {
+          ok: true,
+          json: async () => ({
+            choices: [
+              {
+                message: {
+                  content:
+                    'Nice!\n```json\n{"name":"Arts Club","ticker":"ARTS","pooled":"500000000","liquidity":"1.5","route":"direct"}\n```',
+                },
+              },
+            ],
+          }),
+        };
+      }),
+    );
+    const draft = { ticker: "OLD", pooled: "1", liquidity: "1", route: "direct", chainId: 46630 };
+    const req = new Request("http://x/api/chat", {
+      method: "POST",
+      body: JSON.stringify({ messages: [{ role: "user", content: "bump liquidity" }], draft }),
+    });
+    const res = await chatPOST(req);
+    expect(res.status).toBe(200);
+    const system = sentBody.messages?.[0]?.content ?? "";
+    expect(system).toContain("Current draft");
+    expect(system).toContain("OLD");
+  });
+
+  it("accepts valid chainId in server draft", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          choices: [
+            {
+              message: {
+                content:
+                  'Pick!\n```json\n{"name":"X","ticker":"X","pooled":"100","liquidity":"1","route":"direct","chainId":4663}\n```',
+              },
+            },
+          ],
+        }),
+      }),
+    );
+    const req = new Request("http://x/api/chat", {
+      method: "POST",
+      body: JSON.stringify({ messages: [{ role: "user", content: "evm coin" }] }),
+    });
+    const res = await chatPOST(req);
+    const json = (await res.json()) as { draft: { chainId?: unknown } | null };
+    expect(json.draft).toMatchObject({ chainId: 4663 });
+  });
+
+  it("drops unknown chainId from server draft", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          choices: [
+            {
+              message: {
+                content:
+                  'Pick!\n```json\n{"name":"X","ticker":"X","pooled":"100","liquidity":"1","route":"direct","chainId":999999}\n```',
+              },
+            },
+          ],
+        }),
+      }),
+    );
+    const req = new Request("http://x/api/chat", {
+      method: "POST",
+      body: JSON.stringify({ messages: [{ role: "user", content: "weird chain" }] }),
+    });
+    const res = await chatPOST(req);
+    const json = (await res.json()) as { draft: Record<string, unknown> | null; draftErrors: string[] };
+    expect(json.draftErrors).toEqual([]);
+    expect(json.draft).not.toHaveProperty("chainId");
+  });
 });

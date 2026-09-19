@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { parseDraftReply, stripNumericSeparators, validateDraft } from "../lib/draft";
+import {
+  applyAutoPatch,
+  parseDraftReply,
+  shouldAutoApply,
+  stripNumericSeparators,
+  validateDraft,
+} from "../lib/draft";
 import { explorerTokenUrl, explorerTxUrl } from "../lib/chains";
 
 describe("parseDraftReply", () => {
@@ -47,6 +53,61 @@ describe("parseDraftReply", () => {
 
   it("ignores unknown keys such as image", () => {
     expect(parseDraftReply('{"ticker":"X","image":"https://x/y.png","foo":1}')).toEqual({ ticker: "X" });
+  });
+
+  it("accepts known chain ids from copilot patches", () => {
+    expect(parseDraftReply('{"ticker":"X","chainId":4663}')).toMatchObject({ chainId: 4663 });
+    expect(parseDraftReply('{"ticker":"X","chainId":"solana-devnet"}')).toMatchObject({
+      chainId: "solana-devnet",
+    });
+    expect(parseDraftReply('{"ticker":"X","chainId":"4663"}')).toMatchObject({ chainId: 4663 });
+  });
+
+  it("drops unknown chain ids", () => {
+    expect(parseDraftReply('{"ticker":"X","chainId":999999}')).toEqual({ ticker: "X" });
+    expect(parseDraftReply('{"ticker":"X","chainId":"nope"}')).toEqual({ ticker: "X" });
+  });
+});
+
+describe("shouldAutoApply", () => {
+  it("returns false for empty patches", () => {
+    expect(shouldAutoApply({})).toBe(false);
+  });
+
+  it("returns true when patch carries fields", () => {
+    expect(shouldAutoApply({ ticker: "X" })).toBe(true);
+    expect(shouldAutoApply({ chainId: 4663 })).toBe(true);
+  });
+});
+
+describe("applyAutoPatch", () => {
+  it("merges patch over prev and keeps snapshot for undo", () => {
+    const prev = {
+      name: "Old",
+      ticker: "OLD",
+      pooled: "1",
+      liquidity: "1",
+      route: "direct" as const,
+      chainId: 46630,
+    };
+    const { next, prevSnapshot } = applyAutoPatch(prev, { ticker: "NEW", chainId: 4663 });
+    expect(next).toMatchObject({ name: "Old", ticker: "NEW", chainId: 4663 });
+    expect(prevSnapshot).toEqual(prev);
+    expect(prevSnapshot).not.toBe(prev);
+  });
+
+  it("restoring snapshot undoes auto-apply", () => {
+    const prev = {
+      name: "Old",
+      ticker: "OLD",
+      pooled: "1",
+      liquidity: "1",
+      route: "direct" as const,
+      chainId: 46630,
+    };
+    const { next, prevSnapshot } = applyAutoPatch(prev, { ticker: "NEW" });
+    expect(next.ticker).toBe("NEW");
+    expect(prevSnapshot.ticker).toBe("OLD");
   });
 });
 
