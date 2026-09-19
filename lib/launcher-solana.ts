@@ -1,7 +1,7 @@
 import { Connection, Keypair, VersionedTransaction } from "@solana/web3.js";
+import bs58 from "bs58";
 
 export const PUMP_TRADE_URL = "https://pumpportal.fun/api/trade-local";
-export const PUMP_IPFS_URL = "https://pumpportal.fun/api/ipfs";
 export const MAINNET_RPC = "https://api.mainnet-beta.solana.com";
 export const DEVNET_RPC = "https://api.devnet.solana.com";
 export const PUMP_SLIPPAGE = 10;
@@ -19,33 +19,40 @@ export function buildMetadata(args: { name: string; symbol: string; description:
 }
 
 export async function uploadMetadata(meta: TokenMeta): Promise<string> {
-  let res: Response | undefined;
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      res = await fetch(PUMP_IPFS_URL, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(meta),
-      });
-      break;
-    } catch {
-      if (attempt === 1) throw new Error("pump_offline");
-    }
-  }
-  if (!res) throw new Error("pump_offline");
-  if (!res.ok) throw new Error("pump_rejected: ipfs upload failed");
-  let data: { metadataUri?: string; metadata_uri?: string; uri?: string };
+  // Pinned server-side (PINATA_JWT never leaves the server): the old
+  // PumpPortal /api/ipfs endpoint is dead ("Cannot POST /api/ipfs").
+  let res: Response;
   try {
-    data = (await res.json()) as { metadataUri?: string; metadata_uri?: string; uri?: string };
+    res = await fetch("/api/pump-metadata", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(meta),
+    });
   } catch {
-    throw new Error("pump_rejected: bad ipfs response");
+    throw new Error("pump_offline");
   }
-  const uri = data.metadataUri ?? data.metadata_uri ?? data.uri;
-  if (!uri) throw new Error("pump_rejected: no metadata uri");
-  return uri;
+  if (!res.ok) throw new Error("pump_rejected: metadata pin failed");
+  let data: { uri?: string };
+  try {
+    data = (await res.json()) as { uri?: string };
+  } catch {
+    throw new Error("pump_rejected: bad pin response");
+  }
+  if (!data.uri) throw new Error("pump_rejected: no metadata uri");
+  return data.uri;
 }
 
-export type TradePayload = Record<string, string | number>;
+export type TradePayload = {
+  publicKey: string;
+  action: "create";
+  tokenMetadata: { name: string; symbol: string; uri: string };
+  mint: string;
+  denominatedInSol: "true";
+  amount: number;
+  slippage: number;
+  priorityFee: number;
+  pool: string;
+};
 
 function base64ToBytes(b64: string): Uint8Array {
   const bin = atob(b64);
@@ -65,15 +72,13 @@ export function buildTradePayload(args: {
   return {
     publicKey: args.publicKey,
     action: "create",
+    tokenMetadata: { name: args.name, symbol: args.symbol, uri: args.uri },
     mint: args.mint,
     denominatedInSol: "true",
     amount: args.amountSol,
     slippage: PUMP_SLIPPAGE,
     priorityFee: PUMP_PRIORITY_FEE,
     pool: PUMP_POOL,
-    name: args.name,
-    symbol: args.symbol,
-    uri: args.uri,
   };
 }
 
@@ -107,16 +112,43 @@ export async function buildCreateTx(payload: TradePayload): Promise<VersionedTra
   }
   if (!res) throw new Error("pump_offline");
   if (!res.ok) throw new Error("pump_rejected: trade-local failed");
-  const b64 = (await res.text()).trim().replace(/^"|"$/g, "");
-  if (inspectTxSize(b64) === 0) throw new Error("pump_rejected: empty tx bytes");
-  let tx: VersionedTransaction;
+  const tx = decodeTxResponse(await res.arrayBuffer());
+  validateTxBytes(tx);
+  return tx;
+}
+
+/** Decode trade-local bodies: JSON array of base58 (create), legacy base64 text, or raw bytes. */
+export function decodeTxResponse(buf: ArrayBuffer): VersionedTransaction {
+  const bytes = new Uint8Array(buf);
+  const text = new TextDecoder().decode(bytes).trim();
+  if (text.startsWith("[")) {
+    let arr: unknown;
+    try {
+      arr = JSON.parse(text) as unknown;
+    } catch {
+      throw new Error("pump_rejected: bad tx bytes");
+    }
+    if (!Array.isArray(arr) || typeof arr[0] !== "string" || arr[0].length === 0) {
+      throw new Error("pump_rejected: empty tx bytes");
+    }
+    try {
+      return VersionedTransaction.deserialize(bs58.decode(arr[0]));
+    } catch {
+      throw new Error("pump_rejected: bad tx bytes");
+    }
+  }
+  if (/^[A-Za-z0-9+/=\s]+$/.test(text) && text.replace(/\s/g, "").length > 0) {
+    try {
+      return VersionedTransaction.deserialize(base64ToBytes(text));
+    } catch {
+      throw new Error("pump_rejected: bad tx bytes");
+    }
+  }
   try {
-    tx = VersionedTransaction.deserialize(base64ToBytes(b64));
+    return VersionedTransaction.deserialize(bytes);
   } catch {
     throw new Error("pump_rejected: bad tx bytes");
   }
-  validateTxBytes(tx);
-  return tx;
 }
 
 export type SolanaWallet = {

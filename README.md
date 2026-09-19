@@ -18,6 +18,7 @@ npm run dev                  # http://localhost:3000
 | `LLM_API_KEY` | Server-only model key. Missing = chat-off mode, forms still work |
 | `LLM_MODEL` | Default `mimo-v2.5` |
 | `DATABASE_URL` | Supabase Postgres (pooler). Missing = showcase falls back to local receipts |
+| `PINATA_JWT` | Pinata JWT for pump.fun metadata pinning (server-only). Missing = Solana metadata upload fails; devnet rehearsal still builds |
 
 ## Env security
 

@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
-  buildCreateTx,
   buildMetadata,
   buildTradePayload,
+  decodeTxResponse,
   inspectTxSize,
   mapPumpError,
   PUMP_FEE_SOL,
@@ -37,6 +37,11 @@ describe("buildTradePayload", () => {
     });
     expect(p).toMatchObject({ action: "create", pool: "pump", denominatedInSol: "true" });
     expect(p.slippage).toBeGreaterThan(0);
+    expect(p.tokenMetadata).toMatchObject({
+      name: "Kopi",
+      symbol: "KOPI",
+      uri: "https://example.test/m.json",
+    });
   });
 });
 
@@ -103,47 +108,69 @@ describe("validateTxBytes", () => {
   });
 });
 
-describe("pump network retry", () => {
+describe("pump pin route", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
   });
 
-  it("uploadMetadata retries once then throws pump_offline", async () => {
+  it("uploadMetadata throws pump_offline on network failure", async () => {
     const fetchMock = vi.fn().mockRejectedValue(new Error("network down"));
     vi.stubGlobal("fetch", fetchMock);
     await expect(uploadMetadata({ name: "Kopi", symbol: "KOPI", description: "d" })).rejects.toThrow(
       "pump_offline",
     );
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it("uploadMetadata succeeds on retry", async () => {
-    const fetchMock = vi
-      .fn()
-      .mockRejectedValueOnce(new Error("network down"))
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ metadataUri: "https://example.test/m.json" }),
-      });
+  it("uploadMetadata returns pinned uri", async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ uri: "https://ipfs.io/ipfs/bafytest" }),
+    });
     vi.stubGlobal("fetch", fetchMock);
     await expect(
       uploadMetadata({ name: "Kopi", symbol: "KOPI", description: "d" }),
-    ).resolves.toBe("https://example.test/m.json");
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    ).resolves.toBe("https://ipfs.io/ipfs/bafytest");
+    const [, init] = fetchMock.mock.calls[0] as [string, { body?: string }];
+    expect(fetchMock.mock.calls[0]?.[0]).toBe("/api/pump-metadata");
+    expect(JSON.parse(init.body ?? "{}")).toMatchObject({ name: "Kopi" });
   });
 
-  it("buildCreateTx rejects empty bytes via size check", async () => {
-    const fetchMock = vi.fn().mockResolvedValueOnce({ ok: true, text: async () => '""' });
+  it("uploadMetadata rejects pin failures", async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce({ ok: false, status: 502 });
     vi.stubGlobal("fetch", fetchMock);
-    await expect(buildCreateTx({ publicKey: "p", action: "create" })).rejects.toThrow(
-      "pump_rejected: empty tx bytes",
+    await expect(uploadMetadata({ name: "Kopi", symbol: "KOPI", description: "d" })).rejects.toThrow(
+      "pump_rejected: metadata pin failed",
     );
   });
+});
 
-  it("buildCreateTx rejects undecodable bytes", async () => {
-    const fetchMock = vi.fn().mockResolvedValueOnce({ ok: true, text: async () => '"aGk="' });
-    vi.stubGlobal("fetch", fetchMock);
-    await expect(buildCreateTx({ publicKey: "p", action: "create" })).rejects.toThrow(
+describe("decodeTxResponse", () => {
+  function encodeJson(v: unknown): ArrayBuffer {
+    return new TextEncoder().encode(JSON.stringify(v)).buffer;
+  }
+
+  it("decodes a live-shaped JSON base58 array into a transaction", async () => {
+    const { Keypair, TransactionMessage, VersionedTransaction } = await import("@solana/web3.js");
+    const bs58 = (await import("bs58")).default;
+    const payer = Keypair.generate().publicKey;
+    const message = new TransactionMessage({
+      payerKey: payer,
+      recentBlockhash: Keypair.generate().publicKey.toBase58(),
+      instructions: [],
+    }).compileToV0Message();
+    const bytes = new VersionedTransaction(message).serialize();
+    const tx = decodeTxResponse(encodeJson([bs58.encode(bytes)]));
+    expect(tx.serialize().length).toBe(bytes.length);
+  });
+
+  it("rejects empty arrays", () => {
+    expect(() => decodeTxResponse(encodeJson([]))).toThrow("pump_rejected: empty tx bytes");
+  });
+
+  it("rejects undecodable payloads", () => {
+    expect(() => decodeTxResponse(encodeJson(["!!!"]))).toThrow("pump_rejected: bad tx bytes");
+    expect(() => decodeTxResponse(new Uint8Array([0, 1, 2]).buffer)).toThrow(
       "pump_rejected: bad tx bytes",
     );
   });
