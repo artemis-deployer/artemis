@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from 'react';
+import { Check, X, ShieldCheck, ArrowDown } from 'lucide-react';
 
 export const ComparisonSection: React.FC = () => {
   const containerRef = useRef<HTMLElement>(null);
@@ -19,7 +20,7 @@ export const ComparisonSection: React.FC = () => {
       const totalScrollable = rect.height - stageHeight;
       if (totalScrollable <= 0) return;
 
-      // DarkpoolFi exact scroll progress formula
+      // Exact scroll progress formula
       const isMobile = window.innerWidth <= 700;
       const p = isMobile
         ? Math.max(0, Math.min(1, (80 - rect.top) / (vh * 0.55)))
@@ -57,17 +58,21 @@ export const ComparisonSection: React.FC = () => {
       ref={containerRef}
       id="visible-vs-sealed"
       data-theme="dark"
-      className="comparison-story scroll-scene relative bg-[#131416] text-[#f8f6f0]"
+      className="comparison-story scroll-scene relative bg-[#111215] text-[#f8f6f0] border-t border-white/10 overflow-hidden"
       style={{ height: '250svh', minHeight: '1700px' }}
     >
+      {/* Ambient background lighting */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_35%,rgba(250,232,164,0.035),transparent_65%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:48px_48px] pointer-events-none" />
+
       <div
         ref={stageRef}
         className="comparison-stage sticky top-20 h-[calc(100svh-80px)] min-h-[570px] flex flex-col justify-center items-center overflow-hidden px-[max(6.25vw,24px)]"
       >
-        {/* Pinned Splitting Title from darkpoolfi.tech */}
-        <h2 className="comparison-title font-sans absolute inset-0 flex items-center justify-center gap-3.5 text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-light pointer-events-none z-10 select-none tracking-tight">
+        {/* Pinned Splitting Title */}
+        <h2 className="comparison-title absolute inset-0 flex items-center justify-center gap-3 sm:gap-5 text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-unbounded font-black pointer-events-none z-10 select-none tracking-tight">
           <span
-            className="visible-word transition-transform duration-75 will-change-transform"
+            className="visible-word text-white/40 transition-transform duration-75 will-change-transform"
             style={{
               transform: `translateX(-${split * distance}px)`,
               opacity: Math.max(0, 1 - split)
@@ -76,13 +81,13 @@ export const ComparisonSection: React.FC = () => {
             Custodial
           </span>
           <span
-            className="versus-word text-[#baacc6] font-normal transition-opacity duration-75"
+            className="versus-word font-mono text-xs sm:text-sm uppercase tracking-widest text-[#fae8a4] px-3 py-1 rounded-full border border-[#fae8a4]/30 bg-[#fae8a4]/10 transition-opacity duration-75"
             style={{ opacity: Math.max(0, 1 - split * 1.5) }}
           >
             vs.
           </span>
           <span
-            className="sealed-word transition-transform duration-75 will-change-transform"
+            className="sealed-word text-[#fae8a4] transition-transform duration-75 will-change-transform"
             style={{
               transform: `translateX(${split * distance}px)`,
               opacity: Math.max(0, 1 - split)
@@ -92,9 +97,9 @@ export const ComparisonSection: React.FC = () => {
           </span>
         </h2>
 
-        {/* Rising Comparison Cards Grid (900px matching darkpoolfi) */}
+        {/* Rising Comparison Cards Grid */}
         <div
-          className="compare-grid w-full max-w-[900px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-5 relative z-20 will-change-transform"
+          className="compare-grid w-full max-w-[920px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 relative z-20 will-change-transform"
           style={{
             opacity: cardsProgress,
             transform: `translateY(${riseVal}px) scale(${scale})`,
@@ -102,102 +107,133 @@ export const ComparisonSection: React.FC = () => {
             pointerEvents: cardsProgress > 0.4 ? 'auto' : 'none'
           }}
         >
-          {/* Card 1: Custodial (Dark, Warning) */}
-          <article className="rounded bg-[#1a1b1f] border border-white/10 p-7 md:p-8 shadow-2xl relative overflow-hidden text-[#f1eaf6]">
-            <h3 className="text-xl md:text-2xl font-light text-white mb-2 tracking-tight">
-              The cost of custodial launchpads
-            </h3>
-            <p className="text-sm text-white/60 mb-6 pb-6 border-b border-white/10 leading-relaxed">
-              Your community token is trapped in someone else&apos;s smart contract infrastructure.
-            </p>
-
-            <div className="space-y-5">
-              <div className="relative pl-11 pt-1">
-                <span className="absolute left-0 top-0 w-7 h-7 rounded-full border border-white/20 text-[#e4d9ec] flex items-center justify-center text-sm font-medium">
-                  ×
-                </span>
-                <h4 className="text-base font-normal text-white/95">Platform holds the keys</h4>
-                <p className="text-xs text-[#a99daf] leading-relaxed mt-1">
-                  Servers custody your liquidity, sign on your behalf, or lock contract ownership behind centralized databases.
-                </p>
+          {/* Card 1: Custodial (Legacy Warning Card) */}
+          <article className="rounded-2xl bg-[#141518]/90 backdrop-blur-md border border-white/10 p-6 sm:p-8 shadow-2xl relative overflow-hidden flex flex-col justify-between group hover:border-white/20 transition-all duration-300">
+            <div>
+              {/* Badge */}
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 font-mono text-[10px] tracking-widest uppercase mb-4 w-fit">
+                <X className="w-3 h-3 text-red-400" />
+                <span>LEGACY CUSTODIAL RISK</span>
               </div>
 
-              <div className="relative pl-11 pt-1 border-t border-white/10 pt-5">
-                <span className="absolute left-0 top-5 w-7 h-7 rounded-full border border-white/20 text-[#e4d9ec] flex items-center justify-center text-sm font-medium">
-                  ×
-                </span>
-                <h4 className="text-base font-normal text-white/95">Hidden mint traps</h4>
-                <p className="text-xs text-[#a99daf] leading-relaxed mt-1">
-                  Contracts with mutable owner roles, pause mechanisms, or undisclosed mint privileges that dilute holders.
-                </p>
-              </div>
+              <h3 className="font-unbounded text-lg sm:text-xl font-bold text-white mb-2 tracking-tight">
+                The cost of custodial launchpads
+              </h3>
+              <p className="font-sans text-xs sm:text-sm text-white/50 mb-6 pb-6 border-b border-white/10 leading-relaxed">
+                Your community token is trapped in someone else&apos;s smart contract infrastructure.
+              </p>
 
-              <div className="relative pl-11 pt-1 border-t border-white/10 pt-5">
-                <span className="absolute left-0 top-5 w-7 h-7 rounded-full border border-white/20 text-[#e4d9ec] flex items-center justify-center text-sm font-medium">
-                  ×
-                </span>
-                <h4 className="text-base font-normal text-white/95">Tolls and listing cuts</h4>
-                <p className="text-xs text-[#a99daf] leading-relaxed mt-1">
-                  Hefty creator tax, transaction fees, and arbitrary gatekeeping before your coin can reach open DEX liquidity.
-                </p>
+              <div className="space-y-4 sm:space-y-5">
+                <div className="flex items-start gap-3.5">
+                  <div className="w-6 h-6 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center shrink-0 mt-0.5">
+                    <X className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-semibold text-white/90">Platform holds the keys</h4>
+                    <p className="text-xs text-white/50 leading-relaxed mt-1">
+                      Servers custody your liquidity, sign on your behalf, or lock contract ownership behind centralized databases.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3.5 pt-4 border-t border-white/5">
+                  <div className="w-6 h-6 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center shrink-0 mt-0.5">
+                    <X className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-semibold text-white/90">Hidden mint traps</h4>
+                    <p className="text-xs text-white/50 leading-relaxed mt-1">
+                      Contracts with mutable owner roles, pause mechanisms, or undisclosed mint privileges that dilute holders.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3.5 pt-4 border-t border-white/5">
+                  <div className="w-6 h-6 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center shrink-0 mt-0.5">
+                    <X className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-semibold text-white/90">Tolls and listing cuts</h4>
+                    <p className="text-xs text-white/50 leading-relaxed mt-1">
+                      Hefty creator tax, transaction fees, and arbitrary gatekeeping before your coin can reach open DEX liquidity.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </article>
 
-          {/* Card 2: Artemis (Buttercream, Success) with darkpoolfi decorative notches */}
-          <article className="rounded bg-[#fae8a4] text-[#18191c] p-7 md:p-8 shadow-2xl relative overflow-hidden border border-[#fae8a4]">
-            {/* Subtle decorative geometry accents from darkpoolfi */}
-            <div className="absolute top-0 left-0 w-12 h-7 bg-[#fae8a4]/40 pointer-events-none" />
-            <div className="absolute bottom-[15%] right-0 w-4 h-20 bg-[#fae8a4]/40 pointer-events-none" />
+          {/* Card 2: Artemis (Sovereign Gold Card) */}
+          <article className="rounded-2xl bg-[#fae8a4] text-[#18191c] p-6 sm:p-8 shadow-[0_20px_50px_rgba(250,232,164,0.12)] relative overflow-hidden border border-[#fae8a4] flex flex-col justify-between group">
+            {/* Tech watermark accent */}
+            <div className="absolute top-4 right-4 font-mono text-[9px] uppercase tracking-widest text-[#18191c]/30 select-none pointer-events-none">
+              VERIFIED_RAIL
+            </div>
 
-            <h3 className="text-xl md:text-2xl font-light text-[#18191c] mb-2 tracking-tight">
-              Sovereign launch with Artemis
-            </h3>
-            <p className="text-sm text-[#18191c]/70 mb-6 pb-6 border-b border-[#18191c]/15 leading-relaxed">
-              Every parameter is immutable and executed directly through your personal Web3 wallet.
-            </p>
-
-            <div className="space-y-5">
-              <div className="relative pl-11 pt-1">
-                <span className="absolute left-0 top-0 w-7 h-7 rounded-full border border-[#18191c]/30 text-[#18191c] flex items-center justify-center text-xs font-bold">
-                  ✓
-                </span>
-                <h4 className="text-base font-semibold text-[#18191c]">100% Non-Custodial</h4>
-                <p className="text-xs text-[#18191c]/80 leading-relaxed mt-1">
-                  Private keys never leave your browser. MetaMask, Phantom, and Solflare sign every deployment call directly.
-                </p>
+            <div>
+              {/* Badge */}
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#18191c]/10 border border-[#18191c]/20 text-[#18191c] font-mono text-[10px] tracking-widest uppercase mb-4 w-fit font-bold">
+                <ShieldCheck className="w-3 h-3 text-[#18191c]" />
+                <span>ARTEMIS SOVEREIGN SPEC</span>
               </div>
 
-              <div className="relative pl-11 pt-1 border-t border-[#18191c]/15 pt-5">
-                <span className="absolute left-0 top-5 w-7 h-7 rounded-full border border-[#18191c]/30 text-[#18191c] flex items-center justify-center text-xs font-bold">
-                  ✓
-                </span>
-                <h4 className="text-base font-semibold text-[#18191c]">Fixed 999M Supply</h4>
-                <p className="text-xs text-[#18191c]/80 leading-relaxed mt-1">
-                  Minted once in deployment. No mint functions, no administrative owner privileges, no transfer taxes.
-                </p>
-              </div>
+              <h3 className="font-unbounded text-lg sm:text-xl font-bold text-[#18191c] mb-2 tracking-tight">
+                Sovereign launch with Artemis
+              </h3>
+              <p className="font-sans text-xs sm:text-sm text-[#18191c]/75 mb-6 pb-6 border-b border-[#18191c]/15 leading-relaxed">
+                Every parameter is immutable and executed directly through your personal Web3 wallet.
+              </p>
 
-              <div className="relative pl-11 pt-1 border-t border-[#18191c]/15 pt-5">
-                <span className="absolute left-0 top-5 w-7 h-7 rounded-full border border-[#18191c]/30 text-[#18191c] flex items-center justify-center text-xs font-bold">
-                  ✓
-                </span>
-                <h4 className="text-base font-semibold text-[#18191c]">$0 Platform Fees</h4>
-                <p className="text-xs text-[#18191c]/80 leading-relaxed mt-1">
-                  Zero cuts, zero protocol taxes. You pay standard network gas and whatever liquidity you choose to fund.
-                </p>
+              <div className="space-y-4 sm:space-y-5">
+                <div className="flex items-start gap-3.5">
+                  <div className="w-6 h-6 rounded-full bg-[#18191c] text-[#fae8a4] flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
+                    <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-bold text-[#18191c]">100% Non-Custodial</h4>
+                    <p className="text-xs text-[#18191c]/80 leading-relaxed mt-1">
+                      Private keys never leave your browser. MetaMask, Phantom, and Solflare sign every deployment call directly.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3.5 pt-4 border-t border-[#18191c]/15">
+                  <div className="w-6 h-6 rounded-full bg-[#18191c] text-[#fae8a4] flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
+                    <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-bold text-[#18191c]">Fixed 999M Supply</h4>
+                    <p className="text-xs text-[#18191c]/80 leading-relaxed mt-1">
+                      Minted once in deployment. No mint functions, no administrative owner privileges, no transfer taxes.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3.5 pt-4 border-t border-[#18191c]/15">
+                  <div className="w-6 h-6 rounded-full bg-[#18191c] text-[#fae8a4] flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
+                    <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-bold text-[#18191c]">$0 Platform Fees</h4>
+                    <p className="text-xs text-[#18191c]/80 leading-relaxed mt-1">
+                      Zero cuts, zero protocol taxes. You pay standard network gas and whatever liquidity you choose to fund.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </article>
         </div>
 
-        {/* Scroll prompt cue from darkpoolfi */}
+        {/* Scroll prompt cue */}
         <div
-          className="comparison-cue absolute bottom-8 flex flex-col items-center gap-2 text-[10px] tracking-[0.14em] uppercase text-[#887997] select-none transition-opacity duration-300 pointer-events-none"
+          className="comparison-cue absolute bottom-8 flex flex-col items-center gap-2 font-mono text-[10px] tracking-[0.2em] uppercase select-none transition-opacity duration-300 pointer-events-none"
           style={{ opacity: Math.max(0, 1 - split * 2) }}
         >
-          <span>SCROLL TO SEE THE DIFFERENCE</span>
-          <i className="not-italic text-2xl text-white/70">↓</i>
+          <span className="text-[#fae8a4]/70 font-medium">SCROLL TO SEE THE DIFFERENCE</span>
+          <div className="w-6 h-6 rounded-full border border-white/10 flex items-center justify-center bg-white/5 animate-bounce">
+            <ArrowDown className="w-3 h-3 text-[#fae8a4]" />
+          </div>
         </div>
       </div>
     </section>
