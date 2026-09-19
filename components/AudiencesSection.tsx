@@ -34,8 +34,8 @@ const BUILDER_SEGMENTS: BuilderSegment[] = [
     id: 'creators',
     tabLabel: 'Community Creators',
     tag: 'VIRAL MOVEMENTS',
-    title: 'Turn Cultural Movements into Sovereign Onchain Liquidity',
-    desc: 'Launch community tokens and meme movements with permanently locked liquidity, fair genesis minting, and zero developer backdoors. Your community retains true economic sovereignty from block zero.',
+    title: 'Turn Cultural Movements into Sovereign Liquidity',
+    desc: 'Launch community tokens and cultural movements with locked liquidity, fair genesis minting, and zero developer backdoors. Complete community sovereignty from block zero.',
     icon: Users,
     img: '/assets/walkways.png',
     badge: 'FAIR LAUNCH VERIFIED',
@@ -54,8 +54,8 @@ const BUILDER_SEGMENTS: BuilderSegment[] = [
     id: 'developers',
     tabLabel: 'Web3 Developers',
     tag: 'DEFI ARCHITECTS',
-    title: 'Deploy Verified Contracts Directly to Automated DEX Pools',
-    desc: 'Synthesize non-custodial smart contracts compiled deterministically on Robinhood Chain or Solana Mainnet. Ownership is renounced at construction, guaranteeing permanent anti-rug compliance.',
+    title: 'Deploy Verified Contracts to Autonomous DEX Pools',
+    desc: 'Synthesize non-custodial smart contracts compiled deterministically on Robinhood Chain or Solana. Ownership is renounced at construction, guaranteeing permanent anti-rug safety.',
     icon: Terminal,
     img: '/assets/terrain.png',
     badge: 'BYTECODE AUDITED',
@@ -75,7 +75,7 @@ const BUILDER_SEGMENTS: BuilderSegment[] = [
     tabLabel: 'Autonomous AI Agents',
     tag: 'PROGRAMMATIC DAEMONS',
     title: 'Deterministic Liquidity Rails for Autonomous Agents',
-    desc: 'Empower autonomous AI agents, compute DAOs, and algorithmic agents to strike programmatic assets, automate liquidity routing, and seed token economics with zero human custodial intervention.',
+    desc: 'Empower autonomous AI agents and compute DAOs to strike programmatic assets, automate liquidity routing, and seed token economics with zero human custodial intervention.',
     icon: Cpu,
     img: '/assets/pyramids.png',
     badge: 'NON-CUSTODIAL RPC',
@@ -187,10 +187,10 @@ export const AudiencesSection: React.FC = () => {
           key={current.id}
           className={`animate-bento-fade rounded-[4px] border transition-colors duration-500 overflow-hidden bg-[#16181c] ${current.borderColor} shadow-[0_20px_60px_rgba(0,0,0,0.5)]`}
         >
-          <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch min-h-[460px]">
+          <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch min-h-[490px] lg:h-[490px]">
             
             {/* Left Content Column */}
-            <div className="lg:col-span-7 p-6 sm:p-10 md:p-12 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-white/10">
+            <div className="lg:col-span-7 p-6 sm:p-8 lg:p-10 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-white/10 h-full">
               <div>
                 <div className="flex items-center justify-between gap-3 mb-4">
                   <span className={`font-mono text-[10px] tracking-widest uppercase font-bold ${current.accentColor}`}>
@@ -201,19 +201,19 @@ export const AudiencesSection: React.FC = () => {
                   </span>
                 </div>
 
-                <h3 className="font-unbounded text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight leading-snug mb-4">
+                <h3 className="font-unbounded text-lg sm:text-2xl lg:text-[1.65rem] font-bold text-white tracking-tight leading-tight mb-3.5 min-h-[3.25rem] sm:min-h-[3.75rem] flex items-center">
                   {current.title}
                 </h3>
 
-                <p className="text-sm sm:text-base text-white/70 leading-relaxed font-sans mb-8">
+                <p className="text-xs sm:text-sm text-white/70 leading-relaxed font-sans mb-6 min-h-[3.5rem] flex items-start">
                   {current.desc}
                 </p>
 
                 {/* 4 Micro-Metric Grid */}
-                <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-6">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-4">
                   {current.metrics.map((m, i) => (
-                    <div key={i} className="p-3 bg-white/[0.03] border border-white/10 rounded-[2px] font-mono">
-                      <div className="text-[10px] text-white/40 tracking-wider uppercase mb-1">
+                    <div key={i} className="p-2.5 sm:p-3 bg-white/[0.03] border border-white/10 rounded-[2px] font-mono">
+                      <div className="text-[10px] text-white/40 tracking-wider uppercase mb-0.5">
                         {m.label}
                       </div>
                       <div className={`text-xs sm:text-sm font-semibold truncate ${current.accentColor}`}>
@@ -225,7 +225,7 @@ export const AudiencesSection: React.FC = () => {
               </div>
 
               {/* CLI Command & CTA Button */}
-              <div className="pt-6 border-t border-white/10 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+              <div className="pt-5 border-t border-white/10 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
                 <div className="p-2.5 bg-black/50 border border-white/10 rounded-[2px] font-mono text-[11px] text-white/70 flex items-center gap-2 overflow-x-auto">
                   <span className="text-[#fae8a4] shrink-0">&gt;</span>
                   <span className="truncate">{current.cliCommand}</span>
@@ -243,7 +243,7 @@ export const AudiencesSection: React.FC = () => {
             </div>
 
             {/* Right Image Feature Column */}
-            <div className="lg:col-span-5 relative bg-black/60 min-h-[280px] lg:min-h-full overflow-hidden flex items-center justify-center group">
+            <div className="lg:col-span-5 relative bg-black/60 min-h-[260px] lg:min-h-full h-full overflow-hidden flex items-center justify-center group">
               <img
                 key={current.img}
                 src={current.img}
