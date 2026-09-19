@@ -94,31 +94,21 @@ interface TerminalLogItem {
   color: string;
 }
 
-const getTimestamp = () => {
-  const d = new Date();
-  const h = String(d.getHours()).padStart(2, '0');
-  const m = String(d.getMinutes()).padStart(2, '0');
-  const s = String(d.getSeconds()).padStart(2, '0');
-  const ms = String(d.getMilliseconds()).padStart(3, '0').slice(0, 2);
-  return `${h}:${m}:${s}.${ms}`;
-};
-
 const getStageLogs = (
   stage: number,
   preset: PresetPrompt,
   audit: 'idle' | 'mint' | 'owner',
   network: 'robinhood' | 'solana',
-  routerAddr: string
+  routerAddr: string,
+  dryRunDone: boolean
 ): TerminalLogItem[] => {
   if (stage === 0) {
     return [
       { tag: 'COPILOT', text: `parsing natural intent: "${preset.tag}"`, color: 'text-[#fae8a4]' },
-      { tag: 'LEX_TOKEN', text: 'tokenized 14 lexical nodes from natural spec', color: 'text-white/70' },
-      { tag: 'SYMBOL', text: `extracted symbol=${preset.symbol} name="${preset.name}"`, color: 'text-[#cadcf0]' },
-      { tag: 'SUPPLY', text: 'fixed cap configured: 999,000,000 (0 mint reserve)', color: 'text-white' },
+      { tag: 'TOKENIZER', text: 'tokenized 14 lexical nodes from natural spec', color: 'text-white/70' },
+      { tag: 'SPEC', text: `symbol="${preset.symbol}" name="${preset.name}" cap=${preset.supply}`, color: 'text-[#cadcf0]' },
       { tag: 'CURVE_AST', text: `bonding model: ${preset.curve} validated`, color: 'text-white/80' },
-      { tag: 'COLLISION', text: '0 namespace collisions detected across Hood nodes', color: 'text-white/70' },
-      { tag: 'PEER_SYNC', text: '18 validator peers synchronized on compilation schema', color: 'text-white/80' },
+      { tag: 'PEER_SYNC', text: '18 validator peers synchronized on genesis payload', color: 'text-white/80' },
       { tag: 'PAYLOAD', text: '[OK] parameters compiled into immutable genesis payload', color: 'text-emerald-400' }
     ];
   }
@@ -127,15 +117,13 @@ const getStageLogs = (
       { tag: 'SOLC', text: 'solc 0.8.26 --optimize --runs=200 ERC20Sovereign.sol', color: 'text-[#fae8a4]' },
       { tag: 'BYTECODE', text: 'compiled 1,482 bytes immutable EVM instructions', color: 'text-white/80' },
       { tag: 'SLOT_0', text: 'constructor_supply = 999,000,000 * 10^18 locked', color: 'text-[#cadcf0]' },
-      { tag: 'OWNER_SLOT', text: 'ownership_status: address(0x0) [RENOUNCED AT GENESIS]', color: 'text-white' },
+      { tag: 'OWNERSHIP', text: 'ownership_status: address(0x0) [RENOUNCED AT GENESIS]', color: 'text-white' },
       { tag: 'VTABLE', text: 'mint() selector 0x00000000 not present in vtable', color: 'text-[#fae8a4]' },
-      { tag: 'TAX_RATE', text: 'platform_tax: 0.00% immutable hard-coded constant', color: 'text-white' },
       audit === 'mint'
         ? { tag: 'REVERT', text: 'execute: mint(to, 1000000) ↳ REVERT: 0x4e487b71', color: 'text-red-300' }
         : audit === 'owner'
         ? { tag: 'REVERT', text: 'execute: setTaxFee(0.05) ↳ REVERT: Caller is not owner', color: 'text-amber-200' }
-        : { tag: 'AUDIT', text: '[PASS] 0 backdoors detected in compiled bytecode', color: 'text-emerald-400' },
-      { tag: 'CODEHASH', text: 'codehash: 0x8a3f91c0 verified deterministic across nodes', color: 'text-white/70' }
+        : { tag: 'AUDIT', text: '[PASS] 0 backdoors detected in compiled bytecode', color: 'text-emerald-400' }
     ];
   }
   if (stage === 2) {
@@ -145,8 +133,6 @@ const getStageLogs = (
       { tag: 'ROUTER', text: `router: ${network === 'robinhood' ? routerAddr.slice(0, 18) + '...' : 'pump...4M5u'}`, color: 'text-[#cadcf0]' },
       { tag: 'LP_BURN', text: 'lp_destination: 0x000000000000000000000000000000000000dead', color: 'text-[#fae8a4]' },
       { tag: 'RUGGUARD', text: 'liquidity permanently locked to burn address', color: 'text-white' },
-      { tag: 'ORDERBOOK', text: 'constant product invariant: x * y = k initialized', color: 'text-white/70' },
-      { tag: 'SWAP_TICK', text: 'pool state active: liquidity ready for trading', color: 'text-white/80' },
       { tag: 'POOL_LIVE', text: '[ACTIVE] sovereign pair verified on block explorer', color: 'text-emerald-400' }
     ];
   }
@@ -155,10 +141,10 @@ const getStageLogs = (
     { tag: 'PROVIDER', text: 'injected browser wallet provider session verified', color: 'text-white/80' },
     { tag: 'NON_CUSTODIAL', text: 'private keys strictly isolated in client memory', color: 'text-[#fae8a4]' },
     { tag: 'ZERO_SERVER', text: 'server_data_transit: 0 bytes private key data dispatched', color: 'text-white' },
-    { tag: 'GAS_POLL', text: 'gas_estimate: ~0.00084 ETH (priorityFee: 0.0001 gwei)', color: 'text-[#cadcf0]' },
     { tag: 'ECDSA', text: 'secp256k1 ECDSA signature validated locally', color: 'text-white/80' },
-    { tag: 'BROADCAST', text: 'raw transaction broadcasted directly to peer node', color: 'text-white/75' },
-    { tag: 'CONFIRMED', text: '[BROADCAST] tx confirmed onchain (receipt #4663-8102)', color: 'text-emerald-400' }
+    dryRunDone
+      ? { tag: 'LOCAL_SIGN', text: '[VERIFIED] Signature verified locally (0 server exposure)', color: 'text-emerald-400' }
+      : { tag: 'CONFIRMED', text: '[BROADCAST] tx confirmed onchain (receipt #4663-8102)', color: 'text-emerald-400' }
   ];
 };
 
@@ -184,45 +170,35 @@ export const StepsSection: React.FC = () => {
   const [isDryRunning, setIsDryRunning] = useState<boolean>(false);
   const [dryRunDone, setDryRunDone] = useState<boolean>(false);
 
-  // Live continuous scrolling terminal feed (NEVER stops when stage transition is paused)
-  const [streamLogs, setStreamLogs] = useState<Array<{ id: number; time: string; tag: string; text: string; color: string }>>([]);
-  const logCounterRef = useRef<number>(0);
-  const streamStepRef = useRef<number>(0);
+  // Active terminal scanning pointer (loops downwards line-by-line from top to bottom)
+  const [activeLogIdx, setActiveLogIdx] = useState<number>(0);
 
+  // Live real-time telemetry metrics (modeled after Helios2 telemetry engine)
+  const [packetCount, setPacketCount] = useState<number>(1482);
+  const [latencyJitter, setLatencyJitter] = useState<number>(24);
+
+  // Real-time jittering telemetry interval (runs continuously, never stops)
   useEffect(() => {
-    const routerAddr = HOOD_MAINNET.router ?? '0x89e5db8b5aa49aa85ac63f691524311aeb649eba';
-    const pool = getStageLogs(activeStage, selectedPreset, auditTest, activeNetwork, routerAddr);
+    const t = setInterval(() => {
+      setPacketCount((p) => p + Math.floor(Math.random() * 9) - 4);
+      setLatencyJitter(20 + Math.floor(Math.random() * 6));
+    }, 1300);
+    return () => clearInterval(t);
+  }, []);
 
-    // Initial 4 lines seed
-    const seed = pool.slice(0, 4).map((item) => ({
-      id: logCounterRef.current++,
-      time: getTimestamp(),
-      tag: item.tag,
-      text: item.text,
-      color: item.color
-    }));
-    setStreamLogs(seed);
-    streamStepRef.current = 4;
-
-    // Endless interval adds a line every 850ms, looping line by line continuously
+  // Endless line-by-line loop scanning downwards from top to bottom (NEVER stops on pause)
+  useEffect(() => {
     const streamInterval = setInterval(() => {
-      const idx = streamStepRef.current % pool.length;
-      const item = pool[idx];
-      streamStepRef.current++;
-
-      const nextEntry = {
-        id: logCounterRef.current++,
-        time: getTimestamp(),
-        tag: item.tag,
-        text: item.text,
-        color: item.color
-      };
-
-      setStreamLogs((prev) => [...prev.slice(-6), nextEntry]);
-    }, 850);
+      setActiveLogIdx((prev) => (prev + 1) % 6);
+    }, 950);
 
     return () => clearInterval(streamInterval);
-  }, [activeStage, selectedPreset, auditTest, activeNetwork]);
+  }, []);
+
+  // Reset scanner to top line whenever active stage changes
+  useEffect(() => {
+    setActiveLogIdx(0);
+  }, [activeStage]);
 
   // Auto-advance loop: pauses only stage transitioning, never stops terminal
   useEffect(() => {
@@ -252,18 +228,11 @@ export const StepsSection: React.FC = () => {
     setTimeout(() => {
       setIsDryRunning(false);
       setDryRunDone(true);
-      setStreamLogs((prev) => [
-        ...prev.slice(-6),
-        {
-          id: logCounterRef.current++,
-          time: getTimestamp(),
-          tag: 'LOCAL_SIGN',
-          text: 'Signature verified locally (0 server exposure) hash=0x7f83b2...a891',
-          color: 'text-emerald-400'
-        }
-      ]);
-    }, 500);
+    }, 450);
   };
+
+  const routerAddr = HOOD_MAINNET.router ?? '0x89e5db8b5aa49aa85ac63f691524311aeb649eba';
+  const currentLogs = getStageLogs(activeStage, selectedPreset, auditTest, activeNetwork, routerAddr, dryRunDone);
 
   return (
     <section
@@ -583,27 +552,51 @@ export const StepsSection: React.FC = () => {
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-[10px] font-mono">
+                    <span className="text-white/60">UPLINK: <strong className="text-white">{packetCount} PKTS/S</strong></span>
+                    <span className="text-white/20">|</span>
+                    <span className="text-[#fae8a4] font-semibold">{latencyJitter}MS</span>
+                    <span className="text-white/20">|</span>
                     <span className={isAutoAdvance ? 'text-[#fae8a4]' : 'text-amber-300 font-semibold'}>
                       {isAutoAdvance ? '[AUTO-CYCLE]' : '[STAGE-PINNED]'}
                     </span>
-                    <span className="text-white/25">|</span>
-                    <span className="text-white/40">{isAutoAdvance ? `${Math.round(progress)}%` : 'STATIC'}</span>
                   </div>
                 </div>
 
-                {/* Live Real Terminal Logs (Continuous line-by-line daemon feed, never stops on stage pause) */}
-                <div className="space-y-1.5 text-xs font-mono min-h-[220px] max-h-[220px] flex flex-col justify-end overflow-hidden">
-                  {streamLogs.map((log) => (
-                    <div key={log.id} className="term-stream-line flex items-start gap-2 leading-relaxed text-[11px] sm:text-xs">
-                      <span className="text-white/30 shrink-0 text-[10px] mt-0.5 font-mono">[{log.time}]</span>
-                      <span className="text-[#fae8a4] shrink-0 font-semibold text-[9px] sm:text-[10px] bg-white/5 px-1 py-0.2 rounded-[2px]">
-                        {log.tag}
-                      </span>
-                      <span className={`break-all ${log.color}`}>
-                        {log.text}
-                      </span>
-                    </div>
-                  ))}
+                {/* Live Real Terminal Logs (Top-to-bottom layout, endless cycling scanning animation) */}
+                <div className="space-y-1.5 text-xs font-mono min-h-[220px] flex flex-col justify-start">
+                  {currentLogs.slice(0, 6).map((log, idx) => {
+                    const isActive = activeLogIdx === idx;
+                    const isPast = idx < activeLogIdx || (activeLogIdx === 0 && idx === 5);
+                    return (
+                      <div
+                        key={idx}
+                        className={`relative pl-3 pr-2.5 py-1.5 rounded-r-[3px] transition-all duration-300 flex items-start gap-2.5 text-[11px] sm:text-xs ${
+                          isActive
+                            ? 'bg-white/[0.08] border-l-2 border-[#fae8a4] translate-x-1 shadow-[0_0_15px_rgba(250,232,164,0.06)]'
+                            : isPast
+                            ? 'border-l-2 border-white/20 opacity-75'
+                            : 'border-l-2 border-transparent opacity-35'
+                        }`}
+                      >
+                        <span className="text-white/30 shrink-0 text-[10px] mt-0.5 font-mono">
+                          [{`00:0${idx + 1}.${(idx * 16 + 8).toString().padStart(2, '0')}`}]
+                        </span>
+                        <span className={`shrink-0 font-semibold text-[9px] sm:text-[10px] px-1.5 py-0.2 rounded-[2px] ${
+                          isActive ? 'bg-[#fae8a4] text-[#18191c] font-bold' : 'bg-white/10 text-[#fae8a4]'
+                        }`}>
+                          {log.tag}
+                        </span>
+                        <span className={`break-all ${isActive ? 'text-white font-medium' : log.color}`}>
+                          {log.text}
+                        </span>
+                        {isActive ? (
+                          <span className="inline-block w-1.5 h-3.5 bg-[#fae8a4] animate-pulse ml-auto shrink-0 mt-0.5" />
+                        ) : isPast ? (
+                          <Check className="w-3.5 h-3.5 text-[#fae8a4]/75 ml-auto shrink-0 mt-0.5" />
+                        ) : null}
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {/* Active Shell Prompt with Blinking Cursor */}
@@ -625,6 +618,8 @@ export const StepsSection: React.FC = () => {
                   <span>GAS: &lt; 0.001 ETH</span>
                   <span>·</span>
                   <span>CONFIRMATION: INSTANT</span>
+                  <span>·</span>
+                  <span>RPC: {latencyJitter}MS</span>
                 </div>
                 <div>ARTEMIS_KERNEL_V1</div>
               </div>
