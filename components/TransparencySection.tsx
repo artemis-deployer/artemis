@@ -1,8 +1,7 @@
 "use client";
 
-import React from 'react';
-import { ChevronDown, ArrowUpRight, ArrowDownRight, ShieldCheck } from 'lucide-react';
-import { usePageTransition } from './PageTransition';
+import React, { useState } from 'react';
+import { Plus, Minus, ArrowDownRight, ShieldCheck } from 'lucide-react';
 
 const disclosures = [
   {
@@ -36,13 +35,10 @@ interface TransparencySectionProps {
 }
 
 export const TransparencySection: React.FC<TransparencySectionProps> = () => {
-  const { navigate } = usePageTransition();
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
 
-  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    if (href.startsWith('/')) {
-      e.preventDefault();
-      navigate(href);
-    }
+  const toggleAccordion = (idx: number) => {
+    setOpenIndex((prev) => (prev === idx ? null : idx));
   };
 
   return (
@@ -91,50 +87,47 @@ export const TransparencySection: React.FC<TransparencySectionProps> = () => {
 
           {/* Right Column: Interactive Disclosures Accordion */}
           <div className="lg:col-span-7 divide-y divide-[#18191c]/15">
-            {disclosures.map((item, idx) => (
-              <details
-                key={idx}
-                className="group py-5 first:pt-0 cursor-pointer"
-                open={idx === 0}
-              >
-                <summary className="text-base sm:text-lg font-semibold tracking-tight flex items-center justify-between gap-4 select-none list-none text-[#18191c] hover:opacity-80 transition-opacity">
-                  <span>{item.title}</span>
-                  <div className="w-6 h-6 rounded-full bg-[#18191c]/5 group-hover:bg-[#18191c]/10 flex items-center justify-center text-[#18191c]/60 group-open:rotate-180 group-open:bg-[#18191c] group-open:text-white transition-all duration-200 shrink-0">
-                    <ChevronDown className="w-3.5 h-3.5" />
-                  </div>
-                </summary>
-                <p className="mt-3 text-xs sm:text-sm text-[#18191c]/75 leading-relaxed pr-6 font-sans">
-                  {item.desc}
-                </p>
-              </details>
-            ))}
-          </div>
-        </div>
+            {disclosures.map((item, idx) => {
+              const isOpen = openIndex === idx;
+              return (
+                <div key={idx} className="py-5 first:pt-0">
+                  <button
+                    type="button"
+                    onClick={() => toggleAccordion(idx)}
+                    className="w-full text-left text-base sm:text-lg font-semibold tracking-tight flex items-center justify-between gap-4 select-none text-[#18191c] hover:opacity-80 transition-opacity bg-transparent border-0 p-0 cursor-pointer"
+                  >
+                    <span>{item.title}</span>
+                    <span
+                      className={`w-7 h-7 rounded-full border flex items-center justify-center transition-all duration-300 shrink-0 ${
+                        isOpen
+                          ? 'bg-[#18191c] text-white border-[#18191c]'
+                          : 'bg-[#18191c]/5 text-[#18191c] border-[#18191c]/10 hover:bg-[#18191c]/10'
+                      }`}
+                    >
+                      {isOpen ? (
+                        <Minus className="w-3.5 h-3.5 stroke-[2.5]" />
+                      ) : (
+                        <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                      )}
+                    </span>
+                  </button>
 
-        {/* Go Deeper Section Navigation */}
-        <div className="mt-24 pt-12 border-t border-[#18191c]/10">
-          <div className="flex items-center justify-between mb-6">
-            <span className="text-xs uppercase tracking-[0.2em] text-[#18191c]/50 font-semibold font-mono">
-              GO A LITTLE DEEPER
-            </span>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {[
-              { label: 'Launch Studio', href: '#studio' },
-              { label: 'Lifecycle Engine', href: '#how-it-works' },
-              { label: 'Verified Rails', href: '#rails' },
-              { label: 'Public Showcase', href: '/tokens' }
-            ].map((link) => (
-              <a
-                key={link.label}
-                href={link.href}
-                onClick={(e) => handleLinkClick(e, link.href)}
-                className="p-4 border border-[#18191c]/10 rounded-xl bg-white/60 hover:bg-[#fae8a4] hover:border-[#fae8a4] transition-all duration-300 flex justify-between items-center text-xs sm:text-sm font-semibold text-[#18191c] no-underline group shadow-sm"
-              >
-                <span>{link.label}</span>
-                <ArrowUpRight className="w-4 h-4 text-[#18191c]/50 group-hover:text-[#18191c] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
-              </a>
-            ))}
+                  <div
+                    className={`grid transition-all duration-300 ease-in-out overflow-hidden ${
+                      isOpen
+                        ? 'grid-rows-[1fr] opacity-100 mt-3'
+                        : 'grid-rows-[0fr] opacity-0 mt-0 pointer-events-none'
+                    }`}
+                  >
+                    <div className="overflow-hidden">
+                      <p className="text-xs sm:text-sm text-[#18191c]/75 leading-relaxed pr-6 font-sans">
+                        {item.desc}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
