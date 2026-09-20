@@ -38,11 +38,12 @@ npm run dev                  # http://localhost:3000
 
 ## Launch rails
 
-- **Hood Chain (4663):** 1 transaction via ArtemisLauncher — fixed-supply ERC20 deploy + Uniswap V2 pool funding atomically (falls back to the legacy 2-step flow until the launcher address is configured). Testnet (46630) rehearses the deploy; the pool step is stubbed there because no V2 exists on testnet. See `docs/TESTNET-PROOF.md`.
+- **Hood Chain (4663):** 1 transaction via ArtemisLauncher — fixed-supply ERC20 deploy + Uniswap V2 pool funding atomically. Live and verified, see `docs/MAINNET-PROOF.md`. Testnet (46630) rehearses the deploy; the pool step is stubbed there because no V2 exists on testnet. See `docs/TESTNET-PROOF.md`.
 - **Solana pump.fun:** metadata upload + trade-local build + wallet signature. Devnet builds the transaction bytes but refuses broadcast by design.
 
 ## Docs
 
 - `docs/TESTNET-PROOF.md` — live testnet deployment record
+- `docs/MAINNET-PROOF.md` — live mainnet 1-tx launch record
 - `docs/superpowers/specs/2026-09-17-launchpad-design.md` — design spec
 - `docs/superpowers/plans/` — implementation plans per rail
