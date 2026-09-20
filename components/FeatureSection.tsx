@@ -20,8 +20,8 @@ const features = [
     rail: 'ROBINHOOD CHAIN',
     title: 'ROBINHOOD V2 POOLS',
     theme: 'bg-[#ece4d4]',
-    img: '/assets/feat_sovereign_lp.png',
-    alt: 'Sovereign cryptographic liquidity vault with master private key',
+    img: '/assets/orbital.png',
+    alt: 'Gyroscopic AMM liquidity orbital with luminous rings',
     desc: 'Deploy fixed-supply tokens directly into Uniswap V2 liquidity pairs with verified contract bytecode.',
     spec: 'ROUTER: 0x89e5…9eba'
   },

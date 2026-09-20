@@ -33,7 +33,7 @@ const BUILDER_SEGMENTS: BuilderSegment[] = [
     title: 'Turn Cultural Movements into Sovereign Liquidity',
     desc: 'Launch community tokens and cultural movements with locked liquidity, fair genesis minting, and zero developer backdoors. Complete community sovereignty from block zero.',
     icon: Users,
-    img: '/assets/aud_community.png',
+    img: '/assets/feat_sovereign_lp.png',
     badge: 'FAIR LAUNCH VERIFIED',
     accentColor: 'text-[#cadcf0]',
     borderColor: 'border-[#cadcf0]/40',
