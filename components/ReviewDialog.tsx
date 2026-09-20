@@ -39,6 +39,7 @@ import { findResumableEvmReceipt, listReceipts, saveReceipt } from "../lib/recei
 import { submitShowcase } from "../lib/showcase";
 import SolanaButton, { getSolanaProvider, type SolanaProvider } from "./SolanaButton";
 import WalletButton from "./WalletButton";
+import type { LaunchSuccess } from "./SuccessModal";
 
 type HoodState = "idle" | "working" | "token-done" | "pool-done" | "stub" | "error";
 type PumpState = "idle" | "working" | "built" | "sent" | "error";
@@ -55,8 +56,8 @@ function trimSol(value: number): string {
   return String(Number(value.toFixed(9)));
 }
 
-const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: boolean }>(function ReviewDialog(
-  { draft, mainnet },
+const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: boolean; onLaunched?: (info: LaunchSuccess) => void }>(function ReviewDialog(
+  { draft, mainnet, onLaunched },
   ref,
 ) {
   const rawChain = draft.chainId;
@@ -133,6 +134,17 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
     setHood("error");
   }
 
+  function succeed(token: string, hash: string): void {
+    onLaunched?.({
+      chainId: draft.chainId,
+      token,
+      hash,
+      ticker: draft.ticker,
+      name: draft.name || draft.ticker,
+    });
+    if (ref && typeof ref !== "function") ref.current?.close();
+  }
+
   async function launchSingle(acc: Address, launcher: Address) {
     const one = await launchOneTx({
       chainId: chainId as 4663 | 46630,
@@ -148,6 +160,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
     void submitShowcase({ chainId: chainId as 4663 | 46630, address: one.token, creator: acc, name: draft.name || draft.ticker, symbol: draft.ticker, txHash: one.hash });
     setHood("pool-done");
     setNote(`One transaction: token deployed and pool funded together (${launcher.slice(0, 10)}…).`);
+    succeed(one.token, one.hash);
   }
 
   async function launch() {
@@ -188,6 +201,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
         saveReceipt({ chainId, token: dep.token, hash: liq.hash, pool: liq.hash, createdAt: new Date().toISOString(), ticker: draft.ticker });
         void submitShowcase({ chainId, address: dep.token, creator: acc, name: draft.name || draft.ticker, symbol: draft.ticker, txHash: liq.hash });
         setHood("pool-done");
+        succeed(dep.token, liq.hash);
       } catch (inner: unknown) {
         const m = inner instanceof Error ? inner.message : "launch_failed";
         if (m === "pool_unsupported_on_testnet") {
@@ -237,6 +251,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       saveReceipt({ chainId, token: tokenAddr, hash: liq.hash, pool: liq.hash, createdAt: new Date().toISOString(), ticker: draft.ticker });
       void submitShowcase({ chainId, address: tokenAddr, creator: acc, name: draft.name || draft.ticker, symbol: draft.ticker, txHash: liq.hash });
       setHood("pool-done");
+      succeed(tokenAddr, liq.hash);
     } catch (e: unknown) {
       fail(e instanceof Error ? e.message : "launch_failed");
     }
@@ -354,6 +369,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       saveReceipt({ chainId: draft.chainId, token: mintBase58, hash: sig, createdAt: new Date().toISOString(), ticker: draft.ticker });
       void submitShowcase({ chainId: draft.chainId, address: mintBase58, creator: p.publicKey.toBase58(), name: meta.name, symbol: meta.symbol, txHash: sig });
       setPump("sent");
+      succeed(mintBase58, sig);
     } catch (e: unknown) {
       setPumpNote(mapPumpError(e));
       setPump("error");

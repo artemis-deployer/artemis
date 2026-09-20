@@ -1874,7 +1874,33 @@ textarea:focus:not(:focus-visible) {
   background: #fae8a4;
 }
 
-/* Smooth popover open for dropdowns (chain, network, wallet lists) */
+/* Springy pop for the launch success modal */
+@keyframes modal-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.7) rotate(-2deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.04) rotate(1deg);
+  }
+  80% {
+    transform: scale(0.98) rotate(-0.5deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+.modal-pop {
+  animation: modal-pop 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-pop {
+    animation: none;
+  }
+}
 @keyframes drop-in {
   from {
     opacity: 0;

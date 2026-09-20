@@ -1,16 +1,18 @@
 "use client";
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { findNewCompletion, resetLaunchAmounts, useDraft } from './DraftContext';
 import LaunchForm from './LaunchForm';
 import ReviewDialog from './ReviewDialog';
 import StudioChat from './StudioChat';
+import SuccessModal, { type LaunchSuccess } from './SuccessModal';
 import { CHAINS } from '../lib/chains';
 import { listReceipts } from '../lib/receipts';
 
 export const StudioSection: React.FC = () => {
   const { draft, setDraft } = useDraft();
   const ref = useRef<HTMLDialogElement>(null);
+  const [success, setSuccess] = useState<LaunchSuccess | null>(null);
   const openedAt = useRef<{ at: number; ticker: string } | null>(null);
   const chain = CHAINS.find((c) => c.id === draft.chainId) ?? CHAINS[2];
 
@@ -65,7 +67,8 @@ export const StudioSection: React.FC = () => {
           />
         </div>
 
-        <ReviewDialog ref={ref} draft={draft} mainnet={!chain.testnet} />
+        <ReviewDialog ref={ref} draft={draft} mainnet={!chain.testnet} onLaunched={setSuccess} />
+        <SuccessModal info={success} onClose={() => setSuccess(null)} />
       </div>
       </div>
     </section>
