@@ -6,6 +6,7 @@ import {
   encodeDeployData,
   formatEther,
   http,
+  parseAbi,
   parseEther,
   type Account,
   type Address,
@@ -115,11 +116,11 @@ export function toTokenUnits(amount: string): bigint {
   return parseEther(amount);
 }
 
-const ROUTER_ABI = [
+const ROUTER_ABI = parseAbi([
   "function WETH() view returns (address)",
   "function factory() view returns (address)",
   "function addLiquidityETH(address token, uint amountTokenDesired, uint amountTokenMin, uint amountETHMin, address to, uint deadline) payable returns (uint amountToken, uint amountETH, uint liquidity)",
-] as const;
+]);
 
 function hoodChain(cfg: HoodConfig) {
   return defineChain({
