@@ -406,7 +406,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
         {!isPump && (
           <div className="flex flex-col gap-3 pt-2">
             {chainId !== null ? (
-              <WalletButton chainId={chainId} />
+              <WalletButton chainId={chainId} onConnect={setAccount} />
             ) : (
               <p role="alert" className="text-xs font-medium text-red-400">
                 Unsupported chain.

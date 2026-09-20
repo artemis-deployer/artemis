@@ -20,7 +20,13 @@ function short(addr: string): string {
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 }
 
-export default function WalletButton({ chainId }: { chainId: 4663 | 46630 }) {
+export default function WalletButton({
+  chainId,
+  onConnect,
+}: {
+  chainId: 4663 | 46630;
+  onConnect?: (account: Address | null) => void;
+}) {
   const [account, setAccount] = useState<Address | null>(null);
   const [balance, setBalance] = useState<string | null>(null);
   const [modal, setModal] = useState(false);
@@ -42,6 +48,7 @@ export default function WalletButton({ chainId }: { chainId: 4663 | 46630 }) {
     }
     const addr = await silentEvmAccount(stored.id as EvmWalletId);
     setAccount(addr as Address | null);
+    if (onConnect) onConnect(addr as Address | null);
     if (addr) {
       const provider = detectEvm(stored.id as EvmWalletId);
       setBalance(provider ? await getEvmBalance(provider, addr) : null);
@@ -49,7 +56,7 @@ export default function WalletButton({ chainId }: { chainId: 4663 | 46630 }) {
     } else {
       setBalance(null);
     }
-  }, [chainId]);
+  }, [chainId, onConnect]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- mount-only hydrate from wallet extension
@@ -67,8 +74,10 @@ export default function WalletButton({ chainId }: { chainId: 4663 | 46630 }) {
         clearWallet();
         setAccount(null);
         setBalance(null);
+        if (onConnect) onConnect(null);
       } else {
         setAccount(next as Address);
+        if (onConnect) onConnect(next as Address);
         // Balance belongs to the previous account until refetched.
         void (async () => {
           const id = (loadWallet()?.id ?? stored.id) as EvmWalletId;
@@ -95,13 +104,14 @@ export default function WalletButton({ chainId }: { chainId: 4663 | 46630 }) {
       }
     };
     // account: resubscribe when the stored wallet changes (stale provider otherwise)
-  }, [refresh, account]);
+  }, [refresh, account, onConnect]);
 
   function disconnect() {
     clearWallet();
     setAccount(null);
     setBalance(null);
     setError("");
+    if (onConnect) onConnect(null);
   }
 
   if (!account) {
