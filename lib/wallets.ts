@@ -64,10 +64,11 @@ function asEvm(p: unknown): EvmProvider | null {
 }
 
 function asSolana(p: unknown): SolanaProviderLike | null {
+  // NOTE: publicKey stays null until the user connects (Phantom/Solflare/Backpack
+  // all hide it pre-connect), so presence of connect() alone proves installation.
   if (typeof p !== "object" || p === null) return null;
-  const o = p as { publicKey?: unknown; connect?: unknown };
-  if (typeof o.connect !== "function" || typeof o.publicKey !== "object" || o.publicKey === null) return null;
-  if (typeof (o.publicKey as { toBase58?: unknown }).toBase58 !== "function") return null;
+  const o = p as { connect?: unknown };
+  if (typeof o.connect !== "function") return null;
   return p as SolanaProviderLike;
 }
 

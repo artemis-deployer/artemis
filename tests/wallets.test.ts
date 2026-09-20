@@ -34,6 +34,24 @@ describe("wallet registry", () => {
     expect(detectSolana("phantom")).toBeNull();
     expect(loadWallet()).toBeNull();
   });
+
+  it("detects Phantom pre-connect when publicKey is still null", () => {
+    vi.stubGlobal("window", { phantom: { solana: { connect: async () => undefined, publicKey: null } } });
+    try {
+      expect(detectSolana("phantom")).not.toBeNull();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("rejects providers without connect", () => {
+    vi.stubGlobal("window", { phantom: { solana: { publicKey: null } } });
+    try {
+      expect(detectSolana("phantom")).toBeNull();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
 });
 
 describe("loadWallet", () => {
