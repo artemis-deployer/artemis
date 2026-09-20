@@ -72,6 +72,21 @@ function asSolana(p: unknown): SolanaProviderLike | null {
   return p as SolanaProviderLike;
 }
 
+/** Safe base58 read: null for connect-only/locked/missing providers. Never throws. */
+export function solanaAddressOf(p: unknown): string | null {
+  try {
+    const pk = (p as { publicKey?: unknown } | null | undefined)?.publicKey as
+      | { toBase58?: unknown }
+      | null
+      | undefined;
+    if (!pk || typeof pk.toBase58 !== "function") return null;
+    const addr = (pk as { toBase58(): string }).toBase58();
+    return typeof addr === "string" && addr.length > 0 ? addr : null;
+  } catch {
+    return null;
+  }
+}
+
 function flag(p: unknown, key: string): boolean {
   return typeof p === "object" && p !== null && (p as Record<string, unknown>)[key] === true;
 }

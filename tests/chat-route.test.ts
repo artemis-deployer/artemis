@@ -628,4 +628,31 @@ describe("chat route", () => {
     expect(json.draftErrors).toEqual([]);
     expect(json.draft).not.toHaveProperty("chainId");
   });
+
+  it("rejects >18-decimal dust like the client form (parseEther parity)", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          choices: [
+            {
+              message: {
+                content:
+                  'Dust!\n```json\n{"name":"X","ticker":"X","pooled":"0.0000000000000000001","liquidity":"1","route":"direct"}\n```',
+              },
+            },
+          ],
+        }),
+      }),
+    );
+    const req = new Request("http://x/api/chat", {
+      method: "POST",
+      body: JSON.stringify({ messages: [{ role: "user", content: "dust coin" }] }),
+    });
+    const res = await chatPOST(req);
+    const json = (await res.json()) as { draft: unknown; draftErrors: string[] };
+    expect(json.draft).toBeNull();
+    expect(json.draftErrors).toContain("invalid-pooled");
+  });
 });

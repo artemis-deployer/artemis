@@ -41,6 +41,33 @@ export function applyAutoPatch(prev: Draft, patch: Partial<Draft>): { next: Draf
   return { next: { ...prev, ...patch }, prevSnapshot: { ...prev } };
 }
 
+/** Form input id → draft key. Chat input edits no draft key. */
+const FOCUSED_FIELD: Record<string, keyof Draft> = {
+  "token-name": "name",
+  "token-ticker": "ticker",
+  "pool-tokens": "pooled",
+  "initial-liquidity": "liquidity",
+  "artwork-url": "image",
+};
+
+/**
+ * Merge AI patch over latest draft, dropping key user currently edits.
+ * Returns null when nothing left to apply (no keystroke overwrite).
+ */
+export function resolveAutoPatch(
+  latest: Draft,
+  patch: Partial<Draft>,
+  activeId: string | null,
+): { next: Draft; prevSnapshot: Draft } | null {
+  const filtered = { ...patch };
+  if (activeId) {
+    const key = FOCUSED_FIELD[activeId];
+    if (key) delete filtered[key];
+  }
+  if (Object.keys(filtered).length === 0) return null;
+  return { next: { ...latest, ...filtered }, prevSnapshot: { ...latest } };
+}
+
 function tryParse(slice: string): Partial<Draft> | null {
   try {
     const raw = JSON.parse(slice) as Record<string, unknown>;

@@ -50,6 +50,9 @@ function asNumericString(value: unknown): string | null {
 
 function isPositiveNumberString(value: string): boolean {
   if (!NUMERIC_RE.test(value)) return false;
+  // Parity with lib/draft + toTokenUnits: parseEther fails/truncates >18 decimals.
+  const frac = value.split(".")[1];
+  if (frac !== undefined && frac.length > 18) return false;
   const n = Number(value);
   return Number.isFinite(n) && n > 0;
 }

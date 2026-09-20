@@ -37,6 +37,7 @@ import {
 } from "../lib/launcher-solana";
 import { findResumableEvmReceipt, listReceipts, saveReceipt } from "../lib/receipts";
 import { submitShowcase } from "../lib/showcase";
+import { solanaAddressOf } from "../lib/wallets";
 import SolanaButton, { getSolanaProvider, type SolanaProvider } from "./SolanaButton";
 import WalletButton from "./WalletButton";
 import type { LaunchSuccess } from "./SuccessModal";
@@ -341,6 +342,13 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       setPump("error");
       return;
     }
+    // Connect-only providers expose no publicKey yet: fail clean, not TypeError.
+    const payerAddr = solanaAddressOf(p);
+    if (!payerAddr) {
+      setPumpNote("Connect a Solana wallet first.");
+      setPump("error");
+      return;
+    }
     const wallet = p as SolanaProvider & { signTransaction?: <T>(tx: T) => Promise<T> };
     if (typeof wallet.signTransaction !== "function") {
       setPumpNote("Wallet cannot sign transactions.");
@@ -357,7 +365,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       const mintBase58 = mintKp.publicKey.toBase58();
       if (!mintBase58) throw new Error("pump_failed");
       const payload = buildTradePayload({
-        publicKey: p.publicKey.toBase58(),
+        publicKey: payerAddr,
         mint: mintBase58,
         name: meta.name,
         symbol: meta.symbol,
@@ -374,7 +382,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       await confirmTx(MAINNET_RPC, sig);
       setMint(mintBase58);
       saveReceipt({ chainId: draft.chainId, token: mintBase58, hash: sig, createdAt: new Date().toISOString(), ticker: draft.ticker });
-      void submitShowcase({ chainId: draft.chainId, address: mintBase58, creator: p.publicKey.toBase58(), name: meta.name, symbol: meta.symbol, txHash: sig });
+      void submitShowcase({ chainId: draft.chainId, address: mintBase58, creator: payerAddr, name: meta.name, symbol: meta.symbol, txHash: sig });
       setPump("sent");
       succeed(mintBase58, sig);
     } catch (e: unknown) {

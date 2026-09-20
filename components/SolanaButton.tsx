@@ -31,7 +31,7 @@ export default function SolanaButton({
   onConnect,
   rpc,
 }: {
-  onConnect?: (p: SolanaProvider) => void;
+  onConnect?: (p: SolanaProvider | null) => void;
   rpc?: string;
 }) {
   const [account, setAccount] = useState<string | null>(null);
@@ -68,6 +68,7 @@ export default function SolanaButton({
     clearWallet();
     setAccount(null);
     setBalance(null);
+    if (onConnect) onConnect(null);
   }
 
   if (account) {

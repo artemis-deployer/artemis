@@ -5,7 +5,7 @@ import Markdown from "react-markdown";
 import rehypeSanitize from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
 import { Check, ChevronDown, RotateCcw, SendHorizonal, Sparkles } from "lucide-react";
-import { applyAutoPatch, parseDraftReply, shouldAutoApply } from "../lib/draft";
+import { parseDraftReply, resolveAutoPatch } from "../lib/draft";
 import type { Draft } from "../lib/draft";
 import { CHAINS, defaultRouteFor, getChain } from "../lib/chains";
 import { useDraft } from "./DraftContext";
@@ -168,14 +168,17 @@ export default function StudioChat() {
       } else {
         patch = parseDraftReply(reply);
       }
-      const auto = shouldAutoApply(patch);
-      if (auto) {
-        const { next: merged, prevSnapshot } = applyAutoPatch(snapshot, patch);
-        setDraft(merged);
+      const latest = draftRef.current;
+      const activeId =
+        typeof document !== "undefined" ? (document.activeElement as HTMLElement | null)?.id ?? null : null;
+      const resolved = resolveAutoPatch(latest, patch, activeId);
+      const auto = resolved !== null;
+      if (resolved) {
+        setDraft(resolved.next);
         // Manual chain picks reset consent; AI chain changes must too,
         // else mainnet consent carries across chains (consent bypass).
-        if (merged.chainId !== snapshot.chainId) setConsent(false);
-        setUndo({ snapshot: prevSnapshot });
+        if (resolved.next.chainId !== latest.chainId) setConsent(false);
+        setUndo({ snapshot: resolved.prevSnapshot });
       }
       const shown = displayOf(reply, auto);
       const at = next.length;

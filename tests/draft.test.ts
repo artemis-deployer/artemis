@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   applyAutoPatch,
   parseDraftReply,
+  resolveAutoPatch,
   shouldAutoApply,
   stripNumericSeparators,
   validateDraft,
@@ -202,6 +203,42 @@ describe("validateDraft", () => {
       pooled: "500000",
       liquidity: "0.5",
     });
+  });
+});
+
+describe("resolveAutoPatch", () => {
+  const base = {
+    name: "Old",
+    ticker: "OLD",
+    pooled: "1",
+    liquidity: "1",
+    route: "direct" as const,
+    chainId: 46630,
+  };
+
+  it("merges over latest and keeps snapshot for undo", () => {
+    const r = resolveAutoPatch(base, { ticker: "NEW" }, null);
+    expect(r?.next.ticker).toBe("NEW");
+    expect(r?.prevSnapshot).toEqual(base);
+  });
+
+  it("drops only the focused field, keeps rest", () => {
+    const r = resolveAutoPatch(base, { ticker: "NEW", pooled: "5" }, "token-ticker");
+    expect(r?.next.ticker).toBe("OLD");
+    expect(r?.next.pooled).toBe("5");
+  });
+
+  it("returns null when focused field was the only key", () => {
+    expect(resolveAutoPatch(base, { ticker: "NEW" }, "token-ticker")).toBeNull();
+  });
+
+  it("ignores chat input focus (no draft key)", () => {
+    const r = resolveAutoPatch(base, { ticker: "NEW" }, "chat-input");
+    expect(r?.next.ticker).toBe("NEW");
+  });
+
+  it("returns null for empty patch", () => {
+    expect(resolveAutoPatch(base, {}, null)).toBeNull();
   });
 });
 

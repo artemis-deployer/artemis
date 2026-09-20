@@ -7,6 +7,7 @@ import {
   getSolanaBalance,
   loadWallet,
   SOLANA_WALLETS,
+  solanaAddressOf,
   withTimeout,
 } from "../lib/wallets";
 
@@ -89,6 +90,29 @@ describe("loadWallet", () => {
       stubStorage({ "artemis.wallet.v1": JSON.stringify(stored) });
       expect(loadWallet()).toBeNull();
     }
+  });
+});
+
+describe("solanaAddressOf", () => {
+  it("returns null for connect-only providers with null publicKey", () => {
+    expect(solanaAddressOf({ connect: async () => undefined, publicKey: null })).toBeNull();
+  });
+
+  it("returns base58 when connected", () => {
+    expect(
+      solanaAddressOf({ connect: async () => undefined, publicKey: { toBase58: () => "9bVt7TN2D6PD9y3B5G6g3Mxfh22TLawkKSJQpPTRhxmX" } }),
+    ).toBe("9bVt7TN2D6PD9y3B5G6g3Mxfh22TLawkKSJQpPTRhxmX");
+  });
+
+  it("returns null when toBase58 throws or provider missing", () => {
+    expect(
+      solanaAddressOf({
+        connect: async () => undefined,
+        publicKey: { toBase58: () => { throw new Error("locked"); } },
+      }),
+    ).toBeNull();
+    expect(solanaAddressOf(null)).toBeNull();
+    expect(solanaAddressOf(undefined)).toBeNull();
   });
 });
 
