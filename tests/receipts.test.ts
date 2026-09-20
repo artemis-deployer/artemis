@@ -95,6 +95,11 @@ describe("findResumableEvmReceipt", () => {
     const list = [{ chainId: 46630, token: token.toUpperCase(), hash: "0xaaa", createdAt: "t1", ticker: "SPARK" }];
     expect(findResumableEvmReceipt(list, 46630, "SPARK")?.hash).toBe("0xaaa");
   });
+
+  it("ignores garbage token string (isAddress guard)", () => {
+    const list = [{ chainId: 46630, token: "garbage-not-an-address", hash: "0xaaa", createdAt: "t1", ticker: "SPARK" }];
+    expect(findResumableEvmReceipt(list, 46630, "SPARK")).toBeUndefined();
+  });
 });
 
 describe("dedupeLocalReceipts", () => {

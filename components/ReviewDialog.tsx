@@ -499,7 +499,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
         {/* Solana Rail (pump.fun) */}
         {isPump && (
           <div className="flex flex-col gap-3 pt-2" aria-label="Pump.fun launch">
-            <SolanaButton onConnect={setProvider} />
+            <SolanaButton onConnect={setProvider} rpc={rpc} />
 
             <p role="status" className="m-0 font-mono text-xs text-white/50">
               State: {pump}

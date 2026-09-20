@@ -1,3 +1,5 @@
+import { isAddress } from "viem";
+
 export type Receipt = {
   chainId: number | string;
   token?: string;
@@ -54,7 +56,7 @@ export function findResumableEvmReceipt(
     (r) =>
       String(r.chainId).toLowerCase() === wantChain &&
       typeof r.token === "string" &&
-      r.token.length > 0 &&
+      isAddress(r.token.toLowerCase() as `0x${string}`) &&
       !r.pool &&
       (!wantTicker || r.ticker === undefined || (typeof r.ticker === "string" && r.ticker.toUpperCase() === wantTicker)),
   );
