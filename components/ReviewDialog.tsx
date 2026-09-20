@@ -361,8 +361,8 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
   }
 
   return (
-    <dialog ref={ref} aria-label="Review your launch" className="m-auto max-w-[min(540px,94vw)] overflow-hidden rounded-xl border border-white/15 bg-[#1a1b1f] p-0 text-white shadow-2xl">
-      <div className="flex flex-col gap-4 p-6 max-sm:p-[18px]">
+    <dialog ref={ref} aria-label="Review your launch" className="m-auto max-w-[min(720px,94vw)] overflow-hidden rounded-xl border border-white/15 bg-[#1a1b1f] p-0 text-white shadow-2xl">
+      <div className="flex max-h-[88vh] flex-col gap-4 overflow-y-auto p-6 max-sm:p-[18px]">
         <div className="flex items-center justify-between border-b border-white/10 pb-3.5">
           <div>
             <h3 className="m-0 text-[19px] font-bold font-unbounded text-white">Review Launch Parameters</h3>
