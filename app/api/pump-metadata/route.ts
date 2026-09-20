@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
-import { checkRateLimit, clientIp } from "../../../lib/rate-limit";
+import { checkDailyLimit, checkRateLimit, clientIp } from "../../../lib/rate-limit";
 
 export async function POST(req: Request) {
   if (!checkRateLimit(`pin:${clientIp(req)}`, 10, 60000).ok) {
+    return NextResponse.json({ error: "too_many_requests" }, { status: 429 });
+  }
+  // Global daily pin cap: per-IP limits rotate away, JWT quota does not.
+  if (!checkDailyLimit("pin:daily", 200).ok) {
     return NextResponse.json({ error: "too_many_requests" }, { status: 429 });
   }
   const jwt = process.env.PINATA_JWT;
@@ -22,8 +26,13 @@ export async function POST(req: Request) {
   const name = str(b.name, 32);
   const symbol = str(b.symbol, 10)?.toUpperCase();
   const description = str(b.description, 500) ?? "";
-  const image = typeof b.image === "string" ? b.image.trim().slice(0, 2048) : undefined;
+  const rawImage = typeof b.image === "string" ? b.image.trim().slice(0, 2048) : "";
+  const image = rawImage === "" ? undefined : rawImage;
   if (!name || !symbol) return NextResponse.json({ error: "bad_request" }, { status: 400 });
+  // Attackers burn our Pinata quota via junk pins; only https images allowed.
+  if (image !== undefined && !image.startsWith("https://")) {
+    return NextResponse.json({ error: "bad_request" }, { status: 400 });
+  }
 
   const file = new File(
     [JSON.stringify({ name, symbol, description, ...(image ? { image } : {}) })],

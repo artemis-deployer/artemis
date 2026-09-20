@@ -40,9 +40,14 @@ describe("checkRateLimit", () => {
 });
 
 describe("clientIp", () => {
-  it("prefers first forwarded address", () => {
+  it("prefers last forwarded address (platform-appended real IP)", () => {
     const req = new Request("http://x.test", { headers: { "x-forwarded-for": "1.2.3.4, 5.6.7.8" } });
-    expect(clientIp(req)).toBe("1.2.3.4");
+    expect(clientIp(req)).toBe("5.6.7.8");
+  });
+
+  it("ADVERSARIAL: trusts LAST forwarded entry (platform-appended real IP, first spoofable)", () => {
+    const req = new Request("http://x.test", { headers: { "x-forwarded-for": "spoofed-1, spoofed-2, 9.9.9.9" } });
+    expect(clientIp(req)).toBe("9.9.9.9");
   });
 
   it("falls back to local", () => {

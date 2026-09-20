@@ -85,6 +85,40 @@ describe("pump-metadata route", () => {
     expect([200, 400]).toContain(res.status);
   });
 
+  it("ADVERSARIAL: rejects non-https image URLs (data:/http:/javascript: quota burn)", async () => {
+    for (const image of [
+      "data:image/png;base64,AAAA",
+      "http://evil.test/x.png",
+      "javascript:alert(1)",
+    ]) {
+      const req = new Request("http://x/api/pump-metadata", {
+        method: "POST",
+        body: JSON.stringify({ name: "Kopi", symbol: "KOPI", image }),
+      });
+      const res = await POST(req);
+      expect(res.status).toBe(400);
+    }
+  });
+
+  it("ADVERSARIAL: caps pins per day (junk-pinning on our JWT quota)", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ data: { cid: "b" } }) });
+    vi.stubGlobal("fetch", fetchMock);
+    let capped = false;
+    for (let i = 0; i < 500; i++) {
+      const req = new Request("http://x/api/pump-metadata", {
+        method: "POST",
+        headers: { "x-forwarded-for": `10.9.9.${i % 250}` },
+        body: JSON.stringify({ name: "Kopi", symbol: "KOPI" }),
+      });
+      const res = await POST(req);
+      if (res.status === 429) {
+        capped = true;
+        break;
+      }
+    }
+    expect(capped).toBe(true);
+  });
+
   it("maps empty body and broken JSON syntax to 400", async () => {
     for (const raw of ["", "{bad", '{"name":}']) {
       const req = new Request("http://x/api/pump-metadata", { method: "POST", body: raw });

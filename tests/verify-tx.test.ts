@@ -121,6 +121,40 @@ describe("verifySolanaTx pruned history (no network)", () => {
   });
 });
 
+describe("ADVERSARIAL: showcase squatting (EVM touch-only tx)", () => {
+  const victim = "0x097716e767df17605627def0030110f8ee559ec4";
+  const attacker = "0x1111111111111111111111111111111111111111";
+  const randomContract = "0x3333333333333333333333333333333333333333";
+  const hash = `0x${"ab".repeat(32)}`;
+  function mockReceipt(receipt: unknown) {
+    mockPublicFor.mockReturnValue({ getTransactionReceipt: async () => receipt } as never);
+  }
+  it("REJECTS attacker approve-0 to random contract merely touching victim (to != trusted, no creation)", async () => {
+    mockReceipt({ status: "success", from: attacker, to: randomContract, contractAddress: null, logs: [{ address: victim }] });
+    await expect(verifyEvmTx(4663, victim, hash, attacker)).resolves.toBe(false);
+  });
+  it("REJECTS attacker transfer-1-wei to victim token contract (to == token but no creation, untrusted)", async () => {
+    mockReceipt({ status: "success", from: attacker, to: victim, contractAddress: null, logs: [{ address: victim }] });
+    await expect(verifyEvmTx(4663, victim, hash, attacker)).resolves.toBe(false);
+  });
+  it("ACCEPTS legit deploy (contractAddress == token)", async () => {
+    mockReceipt({ status: "success", from: attacker, to: null, contractAddress: victim, logs: [] });
+    await expect(verifyEvmTx(4663, victim, hash, attacker)).resolves.toBe(true);
+  });
+  it("ACCEPTS legit addLiquidity (to == router, token in logs)", async () => {
+    const router = "0x89e5db8b5aa49aa85ac63f691524311aeb649eba";
+    mockGetHood.mockReturnValue({ router, factory: null, launcher: null } as never);
+    mockReceipt({ status: "success", from: attacker, to: router, contractAddress: null, logs: [{ address: victim }] });
+    await expect(verifyEvmTx(4663, victim, hash, attacker)).resolves.toBe(true);
+  });
+  it("ACCEPTS legit one-tx launch (to == launcher, token in logs)", async () => {
+    const launcher = "0xeea9d0f7ee0958c6d59f25162be4e69ba60a0f71";
+    mockGetHood.mockReturnValue({ router: null, factory: null, launcher } as never);
+    mockReceipt({ status: "success", from: attacker, to: launcher, contractAddress: null, logs: [{ address: victim }] });
+    await expect(verifyEvmTx(4663, victim, hash, attacker)).resolves.toBe(true);
+  });
+});
+
 describe("verifyEvmTx creator binding (no network)", () => {
   const addr = "0x097716e767df17605627def0030110f8ee559ec4";
   const hash = `0x${"ab".repeat(32)}`;

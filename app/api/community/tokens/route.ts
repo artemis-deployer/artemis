@@ -47,12 +47,18 @@ export async function POST(req: Request) {
   const creator = str(b.creator);
   let verified = false;
   if (chainNum === 4663 || chainNum === 46630) {
-    const expectedFrom = /^0x[0-9a-fA-F]{40}$/.test(creator) ? creator : undefined;
-    verified = await verifyEvmTx(chainNum, address, txHash, expectedFrom);
+    // Creator required: optional creator lets attackers squat victim
+    // addresses with touch-only txs. Our app always sends creator.
+    if (!/^0x[0-9a-fA-F]{40}$/.test(creator)) {
+      return NextResponse.json({ error: "bad_request" }, { status: 400 });
+    }
+    verified = await verifyEvmTx(chainNum, address, txHash, creator);
   } else if (chainId.startsWith("solana")) {
     const rpc = chainId === "solana-mainnet" ? MAINNET_RPC : DEVNET_RPC;
-    const expectedCreator = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(creator) ? creator : undefined;
-    verified = await verifySolanaTx(rpc, address, txHash, expectedCreator);
+    if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(creator)) {
+      return NextResponse.json({ error: "bad_request" }, { status: 400 });
+    }
+    verified = await verifySolanaTx(rpc, address, txHash, creator);
   } else {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
   }

@@ -172,6 +172,9 @@ export default function StudioChat() {
       if (auto) {
         const { next: merged, prevSnapshot } = applyAutoPatch(snapshot, patch);
         setDraft(merged);
+        // Manual chain picks reset consent; AI chain changes must too,
+        // else mainnet consent carries across chains (consent bypass).
+        if (merged.chainId !== snapshot.chainId) setConsent(false);
         setUndo({ snapshot: prevSnapshot });
       }
       const shown = displayOf(reply, auto);

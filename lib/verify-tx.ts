@@ -21,8 +21,12 @@ export function matchEvmReceipt(receipt: EvmReceiptLike, address: string): boole
   return false;
 }
 
-// True only if the hash is a confirmed successful tx involving the address.
-// Any RPC error or unexpected shape means "not proven" (false), never throw.
+// True only if the hash is a confirmed successful tx PROVING the address:
+// a creation tx (receipt.contractAddress == address) OR a pool tx
+// (from == expected creator, token in logs, to == router/factory/launcher).
+// Touch-only txs (approve 0 / 1-wei transfer via random contract) prove
+// nothing about ownership and are rejected. Any RPC error or unexpected
+// shape means "not proven" (false), never throw.
 export async function verifyEvmTx(
   chainId: 4663 | 46630,
   address: string,
@@ -40,9 +44,19 @@ export async function verifyEvmTx(
         return false;
       }
     }
-    return matchEvmReceipt(
-      receipt as unknown as EvmReceiptLike,
-      address,
+    const r = receipt as unknown as EvmReceiptLike;
+    const want = address.toLowerCase();
+    // Creation proof: this tx deployed the token.
+    if (typeof r.contractAddress === "string" && r.contractAddress.toLowerCase() === want) return true;
+    // Pool-tx proof: creator funded via trusted launcher/router/factory, token emitted logs.
+    if (expectedFrom === undefined || !/^0x[0-9a-fA-F]{40}$/.test(expectedFrom)) return false;
+    if (typeof r.from !== "string" || r.from.toLowerCase() !== expectedFrom.toLowerCase()) return false;
+    const trusted = [cfg.router, cfg.factory, cfg.launcher]
+      .filter((a): a is `0x${string}` => typeof a === "string" && a.length > 0)
+      .map((a) => a.toLowerCase());
+    if (typeof r.to !== "string" || !trusted.includes(r.to.toLowerCase())) return false;
+    return (r.logs ?? []).some(
+      (log) => typeof log?.address === "string" && log.address.toLowerCase() === want,
     );
   } catch {
     return false;

@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useEffect, useState } from "react";
+import { forwardRef, useEffect, useRef, useState } from "react";
 import { Keypair } from "@solana/web3.js";
 import { parseEther, type Address } from "viem";
 import { X, ExternalLink } from "lucide-react";
@@ -72,6 +72,9 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
   const [pumpNote, setPumpNote] = useState("");
   const [cost, setCost] = useState<LaunchCost | null>(null);
   const [costLoading, setCostLoading] = useState(false);
+  // Resume unmounts once hood hits working, so disabled prop can't guard
+  // same-tick double-clicks (TS narrows hood here). Ref guards instead.
+  const fundingRef = useRef(false);
 
   const isPump = draft.route === "pumpfun" && String(draft.chainId).startsWith("solana");
   const rpc = draft.chainId === "solana-mainnet" ? MAINNET_RPC : DEVNET_RPC;
@@ -238,6 +241,8 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
 
   async function fundPool(tokenAddr: Address, acc: Address) {
     if (chainId === null) return;
+    if (fundingRef.current) return;
+    fundingRef.current = true;
     setHood("working");
     try {
       await ensureChain(chainId);
@@ -254,6 +259,8 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       succeed(tokenAddr, liq.hash);
     } catch (e: unknown) {
       fail(e instanceof Error ? e.message : "launch_failed");
+    } finally {
+      fundingRef.current = false;
     }
   }
 
@@ -287,7 +294,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       }
       const payer = (() => {
         try {
-          return provider?.publicKey.toBase58() ?? getSolanaProvider()?.publicKey.toBase58() ?? null;
+          return getSolanaProvider()?.publicKey.toBase58() ?? provider?.publicKey.toBase58() ?? null;
         } catch {
           return null;
         }
@@ -328,7 +335,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       setPump("built");
       return;
     }
-    const p = provider ?? getSolanaProvider();
+    const p = getSolanaProvider() ?? provider;
     if (!p) {
       setPumpNote("Connect a Solana wallet first.");
       setPump("error");

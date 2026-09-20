@@ -34,10 +34,38 @@ export function checkRateLimit(key: string, limit: number, windowMs: number): { 
 
 export function clientIp(req: Request): string {
   const forwarded = req.headers.get("x-forwarded-for");
-  if (forwarded) return forwarded.split(",")[0]?.trim() || "unknown";
+  // Trust LAST entry: platforms (Vercel et al) append the real client IP,
+  // while the first entry is attacker-controlled. Taking first lets attackers
+  // rotate quota with spoofed headers.
+  if (forwarded) {
+    const parts = forwarded.split(",").map((p) => p.trim()).filter((p) => p.length > 0);
+    if (parts.length > 0) return parts[parts.length - 1] as string;
+    return "unknown";
+  }
   return "local";
+}
+
+const dailyHits = new Map<string, { day: string; hits: number }>();
+
+function today(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+// Best-effort in-memory daily cap (resets on deploy/restart). Guards
+// quota-backed proxies (Pinata) against junk-pinning across rotated IPs.
+export function checkDailyLimit(key: string, limit: number): { ok: boolean } {
+  const day = today();
+  const entry = dailyHits.get(key);
+  if (!entry || entry.day !== day) {
+    dailyHits.set(key, { day, hits: 1 });
+    return { ok: true };
+  }
+  if (entry.hits >= limit) return { ok: false };
+  entry.hits += 1;
+  return { ok: true };
 }
 
 export function clearRateLimits(): void {
   buckets.clear();
+  dailyHits.clear();
 }
