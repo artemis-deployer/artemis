@@ -50,6 +50,11 @@ describe("clientIp", () => {
     expect(clientIp(req)).toBe("9.9.9.9");
   });
 
+  it("handles single direct-connect IP with no commas", () => {
+    const req = new Request("http://x.test", { headers: { "x-forwarded-for": "1.2.3.4" } });
+    expect(clientIp(req)).toBe("1.2.3.4");
+  });
+
   it("falls back to local", () => {
     expect(clientIp(new Request("http://x.test"))).toBe("local");
   });

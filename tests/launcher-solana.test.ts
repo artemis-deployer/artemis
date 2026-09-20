@@ -7,6 +7,7 @@ vi.mock("@solana/web3.js", async (importOriginal) => {
 
 import { Connection } from "@solana/web3.js";
 import {
+  buildCreateTx,
   buildMetadata,
   buildTradePayload,
   confirmTx,
@@ -53,6 +54,33 @@ describe("buildTradePayload", () => {
       symbol: "KOPI",
       uri: "https://example.test/m.json",
     });
+  });
+
+  it("locks full PumpPortal contract: each field once, no flat leakage", () => {
+    const p = buildTradePayload({
+      publicKey: "11111111111111111111111111111111",
+      mint: "22222222222222222222222222222222222222222222",
+      name: "Kopi",
+      symbol: "KOPI",
+      uri: "https://example.test/m.json",
+      amountSol: 0.1,
+    });
+    expect(p.action).toBe("create");
+    expect(p.publicKey).toBe("11111111111111111111111111111111");
+    expect(p.mint).toBe("22222222222222222222222222222222222222222222");
+    expect(p.denominatedInSol).toBe("true");
+    expect(typeof p.denominatedInSol).toBe("string");
+    expect(p.amount).toBe(0.1);
+    expect(p.slippage).toBe(PUMP_SLIPPAGE);
+    expect(p.priorityFee).toBe(PUMP_PRIORITY_FEE);
+    expect(p.pool).toBe(PUMP_POOL);
+    expect(p.tokenMetadata).toEqual({ name: "Kopi", symbol: "KOPI", uri: "https://example.test/m.json" });
+    expect(Object.keys(p).sort()).toEqual(
+      ["action", "amount", "denominatedInSol", "mint", "pool", "priorityFee", "publicKey", "slippage", "tokenMetadata"].sort(),
+    );
+    expect(p).not.toHaveProperty("name");
+    expect(p).not.toHaveProperty("symbol");
+    expect(p).not.toHaveProperty("uri");
   });
 });
 
@@ -154,6 +182,84 @@ describe("pump pin route", () => {
       "pump_rejected: metadata pin failed",
     );
   });
+
+  it("uploadMetadata maps 429 throttle to offline, 400 to rejected (distinct)", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce({ ok: false, status: 429 }));
+    await expect(uploadMetadata({ name: "Kopi", symbol: "KOPI", description: "d" })).rejects.toThrow(
+      "pump_offline",
+    );
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce({ ok: false, status: 400 }));
+    await expect(uploadMetadata({ name: "Kopi", symbol: "KOPI", description: "d" })).rejects.toThrow(
+      "pump_rejected",
+    );
+  });
+
+  it("uploadMetadata rejects bad pin JSON and missing uri", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce({ ok: true, json: async () => { throw new Error("bad json"); } }));
+    await expect(uploadMetadata({ name: "Kopi", symbol: "KOPI", description: "d" })).rejects.toThrow(
+      "pump_rejected: bad pin response",
+    );
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce({ ok: true, json: async () => ({}) }));
+    await expect(uploadMetadata({ name: "Kopi", symbol: "KOPI", description: "d" })).rejects.toThrow(
+      "pump_rejected: no metadata uri",
+    );
+  });
+});
+
+describe("buildCreateTx", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("posts single-element array payload, no flat leakage", async () => {
+    const { Keypair, TransactionMessage, VersionedTransaction } = await import("@solana/web3.js");
+    const bs58 = (await import("bs58")).default;
+    const payer = Keypair.generate().publicKey;
+    const message = new TransactionMessage({
+      payerKey: payer,
+      recentBlockhash: Keypair.generate().publicKey.toBase58(),
+      instructions: [],
+    }).compileToV0Message();
+    const bytes = new VersionedTransaction(message).serialize();
+    const fetchMock = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      arrayBuffer: async () => new TextEncoder().encode(JSON.stringify([bs58.encode(bytes)])).buffer,
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const payload = buildTradePayload({
+      publicKey: payer.toBase58(),
+      mint: Keypair.generate().publicKey.toBase58(),
+      name: "Kopi",
+      symbol: "KOPI",
+      uri: "https://example.test/m.json",
+      amountSol: 0.1,
+    });
+    const tx = await buildCreateTx(payload);
+    expect(tx.serialize().length).toBe(bytes.length);
+    const [url, init] = fetchMock.mock.calls[0] as [string, { body?: string }];
+    expect(url).toBe("https://pumpportal.fun/api/trade-local");
+    const body = JSON.parse(init.body ?? "");
+    expect(Array.isArray(body) && body.length).toBe(1);
+    expect(body[0]).toMatchObject({ action: "create", pool: "pump", denominatedInSol: "true" });
+    expect(body[0]).not.toHaveProperty("name");
+    expect(body[0]).not.toHaveProperty("symbol");
+    expect(body[0]).not.toHaveProperty("uri");
+  });
+
+  it("maps offline vs rejected distinctly", async () => {
+    const payload = buildTradePayload({
+      publicKey: "11111111111111111111111111111111",
+      mint: "22222222222222222222222222222222222222222222",
+      name: "Kopi",
+      symbol: "KOPI",
+      uri: "https://example.test/m.json",
+      amountSol: 0.1,
+    });
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network down")));
+    await expect(buildCreateTx(payload)).rejects.toThrow("pump_offline");
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce({ ok: false, status: 500 }));
+    await expect(buildCreateTx(payload)).rejects.toThrow("pump_rejected: trade-local failed");
+  });
 });
 
 describe("signAndSend / confirmTx error paths", () => {
@@ -217,8 +323,48 @@ describe("decodeTxResponse", () => {
     expect(tx.serialize().length).toBe(bytes.length);
   });
 
+  it("decodes legacy base64 text into a transaction", async () => {
+    const { Keypair, TransactionMessage, VersionedTransaction } = await import("@solana/web3.js");
+    const payer = Keypair.generate().publicKey;
+    const message = new TransactionMessage({
+      payerKey: payer,
+      recentBlockhash: Keypair.generate().publicKey.toBase58(),
+      instructions: [],
+    }).compileToV0Message();
+    const bytes = new VersionedTransaction(message).serialize();
+    let bin = "";
+    bytes.forEach((b) => { bin += String.fromCharCode(b); });
+    const b64 = btoa(bin);
+    const tx = decodeTxResponse(new TextEncoder().encode(b64).buffer);
+    expect(tx.serialize().length).toBe(bytes.length);
+  });
+
+  it("decodes raw bytes into a transaction", async () => {
+    const { Keypair, TransactionMessage, VersionedTransaction } = await import("@solana/web3.js");
+    const payer = Keypair.generate().publicKey;
+    const message = new TransactionMessage({
+      payerKey: payer,
+      recentBlockhash: Keypair.generate().publicKey.toBase58(),
+      instructions: [],
+    }).compileToV0Message();
+    const bytes = new VersionedTransaction(message).serialize();
+    const copy = new Uint8Array(bytes.length);
+    copy.set(bytes);
+    const tx = decodeTxResponse(copy.buffer);
+    expect(tx.serialize().length).toBe(bytes.length);
+  });
+
   it("rejects empty arrays", () => {
     expect(() => decodeTxResponse(encodeJson([]))).toThrow("pump_rejected: empty tx bytes");
+  });
+
+  it("rejects malformed JSON, non-string array entries, empty string entries", () => {
+    expect(() => decodeTxResponse(new TextEncoder().encode("[bad").buffer)).toThrow(
+      "pump_rejected: bad tx bytes",
+    );
+    expect(() => decodeTxResponse(encodeJson([123]))).toThrow("pump_rejected: empty tx bytes");
+    expect(() => decodeTxResponse(encodeJson([""]))).toThrow("pump_rejected: empty tx bytes");
+    expect(() => decodeTxResponse(new TextEncoder().encode("").buffer)).toThrow();
   });
 
   it("rejects undecodable payloads", () => {

@@ -125,4 +125,57 @@ describe("pump-metadata route", () => {
       expect((await POST(req)).status).toBe(400);
     }
   });
+
+  it("rejects array and null bodies with 400", async () => {
+    for (const raw of ['[]', 'null', '"str"']) {
+      const req = new Request("http://x/api/pump-metadata", { method: "POST", body: raw });
+      expect((await POST(req)).status).toBe(400);
+    }
+  });
+
+  it("maps missing cid to 502", async () => {
+    for (const upstreamBody of [{ data: {} }, {}, { data: { cid: "" } }]) {
+      vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce({ ok: true, json: async () => upstreamBody }));
+      const req = new Request("http://x/api/pump-metadata", {
+        method: "POST",
+        body: JSON.stringify({ name: "Kopi", symbol: "KOPI" }),
+      });
+      expect((await POST(req)).status).toBe(502);
+    }
+  });
+
+  it("maps pinata throw and bad upstream JSON to 502", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValueOnce(new Error("network down")));
+    const req1 = new Request("http://x/api/pump-metadata", {
+      method: "POST",
+      body: JSON.stringify({ name: "Kopi", symbol: "KOPI" }),
+    });
+    expect((await POST(req1)).status).toBe(502);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValueOnce({ ok: true, json: async () => { throw new Error("bad json"); } }),
+    );
+    const req2 = new Request("http://x/api/pump-metadata", {
+      method: "POST",
+      body: JSON.stringify({ name: "Kopi", symbol: "KOPI" }),
+    });
+    expect((await POST(req2)).status).toBe(502);
+  });
+
+  it("throttles 10/min per IP with 429", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ data: { cid: "b" } }) });
+    vi.stubGlobal("fetch", fetchMock);
+    let throttled = false;
+    for (let i = 0; i < 12; i++) {
+      const req = new Request("http://x/api/pump-metadata", {
+        method: "POST",
+        headers: { "x-forwarded-for": "9.9.9.9" },
+        body: JSON.stringify({ name: "Kopi", symbol: "KOPI" }),
+      });
+      const res = await POST(req);
+      if (i < 10) expect(res.status).toBe(200);
+      else if (res.status === 429) throttled = true;
+    }
+    expect(throttled).toBe(true);
+  });
 });

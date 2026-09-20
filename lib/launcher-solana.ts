@@ -31,7 +31,10 @@ export async function uploadMetadata(meta: TokenMeta): Promise<string> {
   } catch {
     throw new Error("pump_offline");
   }
-  if (!res.ok) throw new Error("pump_rejected: metadata pin failed");
+  if (!res.ok) {
+    if (res.status === 429) throw new Error("pump_offline: metadata pin throttled");
+    throw new Error(`pump_rejected: metadata pin failed (${res.status})`);
+  }
   let data: { uri?: string };
   try {
     data = (await res.json()) as { uri?: string };
@@ -118,7 +121,7 @@ export async function buildCreateTx(payload: TradePayload): Promise<VersionedTra
 }
 
 /** Decode trade-local bodies: JSON array of base58 (create), legacy base64 text, or raw bytes. */
-export function decodeTxResponse(buf: ArrayBuffer): VersionedTransaction {
+export function decodeTxResponse(buf: ArrayBufferLike): VersionedTransaction {
   const bytes = new Uint8Array(buf);
   const text = new TextDecoder().decode(bytes).trim();
   if (text.startsWith("[")) {
