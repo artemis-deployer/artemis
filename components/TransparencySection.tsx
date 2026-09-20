@@ -71,8 +71,8 @@ export const TransparencySection: React.FC<TransparencySectionProps> = () => {
             >
               <div className="h-56 overflow-hidden bg-black/5">
                 <img
-                  src="/assets/terrain.png"
-                  alt="Transparent crystalline landscape"
+                  src="/assets/works_step2.png"
+                  alt="Interactive launch studio synthesizer console"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
               </div>

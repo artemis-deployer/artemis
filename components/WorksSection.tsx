@@ -103,7 +103,7 @@ export const WorksSection: React.FC<WorksSectionProps> = () => {
 
             <div className="lg:col-span-5 h-64 lg:h-auto overflow-hidden bg-black/10 flex items-center justify-center p-6 relative">
               <img
-                src="/assets/terrain.png"
+                src="/assets/works_step1.png"
                 alt="Autonomous launch draft landscape"
                 className="w-full h-full object-cover rounded-sm shadow-md"
               />
@@ -151,7 +151,7 @@ export const WorksSection: React.FC<WorksSectionProps> = () => {
 
             <div className="lg:col-span-5 h-64 lg:h-auto overflow-hidden bg-black/10 flex items-center justify-center p-6 relative">
               <img
-                src="/assets/orbital.png"
+                src="/assets/works_step2.png"
                 alt="Sovereign liquidity orbital"
                 className="w-full h-full object-cover rounded-sm shadow-md"
               />
@@ -199,7 +199,7 @@ export const WorksSection: React.FC<WorksSectionProps> = () => {
 
             <div className="lg:col-span-5 h-64 lg:h-auto overflow-hidden bg-black/10 flex items-center justify-center p-6 relative">
               <img
-                src="/assets/pyramids.png"
+                src="/assets/works_step3.png"
                 alt="Verified client signatures prisms"
                 className="w-full h-full object-cover rounded-sm shadow-md"
               />
@@ -247,7 +247,7 @@ export const WorksSection: React.FC<WorksSectionProps> = () => {
 
             <div className="lg:col-span-5 h-64 lg:h-auto overflow-hidden bg-black/10 flex items-center justify-center p-6 relative">
               <img
-                src="/assets/walkways.png"
+                src="/assets/works_step4.png"
                 alt="Automated liquidity pool walkways"
                 className="w-full h-full object-cover rounded-sm shadow-md"
               />
@@ -295,7 +295,7 @@ export const WorksSection: React.FC<WorksSectionProps> = () => {
 
             <div className="lg:col-span-5 h-64 lg:h-auto overflow-hidden bg-black/10 flex items-center justify-center p-6 relative">
               <img
-                src="/assets/terrain.png"
+                src="/assets/works_step5.png"
                 alt="Global token discovery showcase"
                 className="w-full h-full object-cover rounded-sm shadow-md"
               />

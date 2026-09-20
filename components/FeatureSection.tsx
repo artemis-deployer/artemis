@@ -9,8 +9,8 @@ const features = [
     rail: 'CHAIN SPEC',
     title: 'FIXED 999M SUPPLY',
     theme: 'bg-[#fae8a4]',
-    img: '/assets/orbital.png',
-    alt: 'Faceted orbital sphere with neon rings',
+    img: '/assets/feat_immutable.png',
+    alt: 'Armored silicon wafer with permanent golden bytecode and lock',
     desc: 'Supply is strictly minted once at contract deployment. No mint functions, no administrative backdoor keys.',
     spec: 'SUPPLY: 999,000,000 FIXED'
   },
@@ -20,8 +20,8 @@ const features = [
     rail: 'ROBINHOOD CHAIN',
     title: 'ROBINHOOD V2 POOLS',
     theme: 'bg-[#ece4d4]',
-    img: '/assets/pyramids.png',
-    alt: 'Pastel geometric pyramids and prisms',
+    img: '/assets/feat_sovereign_lp.png',
+    alt: 'Sovereign cryptographic liquidity vault with master private key',
     desc: 'Deploy fixed-supply tokens directly into Uniswap V2 liquidity pairs with verified contract bytecode.',
     spec: 'ROUTER: 0x89e5…9eba'
   },
@@ -31,8 +31,8 @@ const features = [
     rail: 'SOLANA MAINNET',
     title: 'SOLANA PUMP.FUN',
     theme: 'bg-[#cadcf0]',
-    img: '/assets/walkways.png',
-    alt: 'Suspended architectural walkways in nebula space',
+    img: '/assets/aud_community.png',
+    alt: 'Fair-launch community tokens and viral broadcasting nodes',
     desc: 'Fair-launch bonding curve rail via PumpPortal. IPFS metadata and transaction bytes built locally in-browser.',
     spec: 'CURVE: BONDING V1'
   },
@@ -42,8 +42,8 @@ const features = [
     rail: 'CLIENT RUNTIME',
     title: 'CLIENT-SIDE SIGNATURES',
     theme: 'bg-[#fae8a4]',
-    img: '/assets/terrain.png',
-    alt: 'Floating crystalline terrain and monoliths',
+    img: '/assets/feat_execution.png',
+    alt: 'Direct biometric wallet signature terminal firing into blockchain',
     desc: 'Every transaction is signed from your personal wallet. The server never touches private keys or custody.',
     spec: 'KEYPAIR: LOCAL RUNTIME'
   },
@@ -53,8 +53,8 @@ const features = [
     rail: 'PLATFORM PROTOCOL',
     title: 'ZERO-FEE PROTOCOL',
     theme: 'bg-[#ece4d4]',
-    img: '/assets/orbital.png',
-    alt: 'Faceted orbital geometry',
+    img: '/assets/feat_zerofee.png',
+    alt: 'Futuristic open gateway with 0% fee and balanced scales',
     desc: '$0 platform cut. You pay standard network gas and your paired liquidity deposit only.',
     spec: 'PLATFORM CUT: 0% EXACT'
   },
@@ -64,8 +64,8 @@ const features = [
     rail: 'STUDIO ENGINE',
     title: 'AI COPILOT DRAFTING',
     theme: 'bg-[#cadcf0]',
-    img: '/assets/walkways.png',
-    alt: 'Floating platforms in cosmos',
+    img: '/assets/feat_autonomous.png',
+    alt: 'Autonomous robotic assembly assembling a glowing token core',
     desc: 'Brainstorm concepts and tokenize communities via natural language. Parameters populate your review draft automatically.',
     spec: 'MODEL: ASSISTED DRAFT'
   }

@@ -16,7 +16,7 @@ const navItems = [
     label: 'Launch Studio',
     href: '#studio',
     sectionHref: '#studio',
-    art: '/assets/terrain.png',
+    art: '/assets/works_step2.png',
     caption: 'Co-create token drafts with AI Copilot or manually.'
   },
   {
@@ -24,7 +24,7 @@ const navItems = [
     label: 'How it works',
     href: '#how-it-works',
     sectionHref: '#how-it-works',
-    art: '/assets/walkways.png',
+    art: '/assets/works_step4.png',
     caption: 'Four deliberate steps from spark to onchain liquidity.'
   },
   {
@@ -32,7 +32,7 @@ const navItems = [
     label: 'Execution Rails',
     href: '#rails',
     sectionHref: '#rails',
-    art: '/assets/orbital.png',
+    art: '/assets/feat_sovereign_lp.png',
     caption: 'Robinhood Chain V2 direct pools and Solana pump.fun bonding curves.'
   },
   {
@@ -40,7 +40,7 @@ const navItems = [
     label: 'Transparency',
     href: '#transparency',
     sectionHref: '#transparency',
-    art: '/assets/pyramids.png',
+    art: '/assets/feat_immutable.png',
     caption: 'Fixed 999M supply, zero taxes, and radical risk disclosures.'
   },
   {
@@ -48,7 +48,7 @@ const navItems = [
     label: 'Showcase',
     href: '/tokens',
     sectionHref: '/tokens',
-    art: '/assets/terrain.png',
+    art: '/assets/feat_receipts.png',
     caption: 'Explore live community-launched coins and verifiable receipts.'
   }
 ];
