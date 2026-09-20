@@ -9,7 +9,8 @@ import {
   loadWallet,
   type SolanaWalletId,
 } from "../lib/wallets";
-import { MAINNET_RPC } from "../lib/launcher-solana";
+import { DEVNET_RPC, MAINNET_RPC } from "../lib/launcher-solana";
+import WalletMenu from "./WalletMenu";
 import WalletModal from "./WalletModal";
 
 export type SolanaProvider = {
@@ -70,16 +71,17 @@ export default function SolanaButton({
   }
 
   if (account) {
+    const solscan = rpc === DEVNET_RPC ? "https://solscan.io?cluster=devnet" : "https://solscan.io";
     return (
-      <div className="nav-connected">
-        <span>
-          {short(account)}
-          {balance !== null && ` · ${balance} SOL`}
-        </span>
-        <button type="button" onClick={disconnect} title="Disconnect wallet" aria-label="Disconnect wallet">
-          ×
-        </button>
-      </div>
+      <WalletMenu
+        shortLabel={short(account)}
+        address={account}
+        balance={balance !== null ? `${balance} SOL` : null}
+        explorerHref={`${solscan}/account/${account}`}
+        explorerName="Solscan"
+        onRefresh={() => void refresh()}
+        onDisconnect={disconnect}
+      />
     );
   }
 

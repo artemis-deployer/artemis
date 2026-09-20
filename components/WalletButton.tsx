@@ -13,6 +13,7 @@ import {
   type EvmWalletId,
 } from "../lib/wallets";
 import { getChain } from "../lib/chains";
+import WalletMenu from "./WalletMenu";
 import WalletModal from "./WalletModal";
 
 function short(addr: string): string {
@@ -127,14 +128,14 @@ export default function WalletButton({ chainId }: { chainId: 4663 | 46630 }) {
   }
 
   return (
-    <div className="nav-connected">
-      <span>
-        {short(account)}
-        {balance !== null && ` · ${balance} ${currency}`}
-      </span>
-      <button type="button" onClick={disconnect} title="Disconnect wallet" aria-label="Disconnect wallet">
-        ×
-      </button>
-    </div>
+    <WalletMenu
+      shortLabel={short(account)}
+      address={account}
+      balance={balance !== null ? `${balance} ${currency}` : null}
+      explorerHref={`${getChain(chainId)?.explorer ?? "https://blockscout.com"}/address/${account}`}
+      explorerName="Explorer"
+      onRefresh={() => void refresh()}
+      onDisconnect={disconnect}
+    />
   );
 }
