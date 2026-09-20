@@ -77,6 +77,23 @@ describe("verifySolanaTx pruned history (no network)", () => {
       return methods;
     } as never);
   }
+  it("rejects null value array and null slot (pruned / missing)", async () => {
+    mockConn({ getSignatureStatuses: async () => ({ value: null }), getTransaction: async () => null });
+    await expect(verifySolanaTx("https://rpc.test", "SomeMint11111111111111111111111111111", sig)).resolves.toBe(
+      false,
+    );
+    mockConn({ getSignatureStatuses: async () => ({ value: [null] }), getTransaction: async () => null });
+    await expect(verifySolanaTx("https://rpc.test", "SomeMint11111111111111111111111111111", sig)).resolves.toBe(
+      false,
+    );
+  });
+  it("rejects processed commitment (needs confirmed/finalized)", async () => {
+    mockConn({
+      getSignatureStatuses: async () => ({ value: [{ err: null, confirmationStatus: "processed" }] }),
+      getTransaction: async () => ({ transaction: { message: { accountKeys: ["M"] } } }),
+    });
+    await expect(verifySolanaTx("https://rpc.test", "M", sig)).resolves.toBe(false);
+  });
   it("returns false when tx body is null", async () => {
     mockConn({
       getSignatureStatuses: async () => ({ value: [{ err: null, confirmationStatus: "finalized" }] }),
@@ -120,5 +137,11 @@ describe("verifyEvmTx creator binding (no network)", () => {
     await expect(
       verifyEvmTx(4663, addr, hash, "0x2222222222222222222222222222222222222222"),
     ).resolves.toBe(false);
+  });
+  it("rejects non-success statuses (reverted and raw 0x1 never count)", async () => {
+    mockReceipt({ status: "reverted", from, contractAddress: addr, logs: [] });
+    await expect(verifyEvmTx(4663, addr, hash, from)).resolves.toBe(false);
+    mockReceipt({ status: "0x1", from, contractAddress: addr, logs: [] });
+    await expect(verifyEvmTx(4663, addr, hash, from)).resolves.toBe(false);
   });
 });

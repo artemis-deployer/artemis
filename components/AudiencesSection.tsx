@@ -1,15 +1,11 @@
 "use client";
 
 import React, { useState } from 'react';
-import { 
-  Users, 
-  Terminal, 
-  Cpu, 
-  ArrowUpRight, 
-  ShieldCheck, 
-  Check, 
-  Layers,
-  Sparkles
+import {
+  Users,
+  Terminal,
+  Cpu,
+  ArrowUpRight
 } from 'lucide-react';
 import { usePageTransition } from './PageTransition';
 

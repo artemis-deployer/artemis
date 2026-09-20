@@ -124,6 +124,30 @@ describe("chat route", () => {
     expect(json.draftErrors).toEqual([]);
   });
 
+  it("calls upstream once when first reply is valid (no loop, max 2)", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        choices: [
+          {
+            message: {
+              content:
+                'Nice!\n```json\n{"name":"Arts Club","ticker":"ARTS","pooled":"500000","liquidity":"1.5","route":"direct"}\n```',
+            },
+          },
+        ],
+      }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const req = new Request("http://x/api/chat", {
+      method: "POST",
+      body: JSON.stringify({ messages: [{ role: "user", content: "make a coin" }] }),
+    });
+    const res = await chatPOST(req);
+    expect(res.status).toBe(200);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
   it("returns first-reply errors when retry also fails", async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
@@ -469,6 +493,56 @@ describe("chat route", () => {
     const res = await chatPOST(req);
     const json = (await res.json()) as { draft: { chainId?: unknown } | null };
     expect(json.draft).toMatchObject({ chainId: 4663 });
+  });
+
+  it("ignores unknown top-level and message fields", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          choices: [
+            {
+              message: {
+                content:
+                  'Nice!\n```json\n{"name":"Arts Club","ticker":"ARTS","pooled":"500000","liquidity":"1.5","route":"direct"}\n```',
+              },
+            },
+          ],
+        }),
+      }),
+    );
+    const req = new Request("http://x/api/chat", {
+      method: "POST",
+      body: JSON.stringify({
+        messages: [{ role: "user", content: "make a coin", evil: 1 }],
+        draft: { ticker: "X" },
+        foo: "bar",
+        evilTop: 123,
+      }),
+    });
+    const res = await chatPOST(req);
+    expect(res.status).toBe(200);
+    const json = (await res.json()) as { draft: { ticker?: string } | null };
+    expect(json.draft).toMatchObject({ ticker: "ARTS" });
+  });
+
+  it("survives 5MB JSON without crash (400, not 500)", async () => {
+    const big = "x".repeat(5 * 1024 * 1024);
+    const req = new Request("http://x/api/chat", {
+      method: "POST",
+      body: JSON.stringify({ messages: [{ role: "user", content: big }] }),
+    });
+    const res = await chatPOST(req);
+    expect(res.status).toBe(400);
+  });
+
+  it("maps empty body and broken JSON syntax to 400", async () => {
+    for (const raw of ["", "{bad", '{"messages":}']) {
+      const req = new Request("http://x/api/chat", { method: "POST", body: raw });
+      const res = await chatPOST(req);
+      expect(res.status).toBe(400);
+    }
   });
 
   it("drops unknown chainId from server draft", async () => {

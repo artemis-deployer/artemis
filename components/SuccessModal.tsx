@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { ExternalLink, X } from "lucide-react";
 import { explorerTokenUrl, explorerTxUrl, getChain } from "../lib/chains";
 
@@ -12,6 +13,23 @@ export type LaunchSuccess = {
 };
 
 export default function SuccessModal({ info, onClose }: { info: LaunchSuccess | null; onClose: () => void }) {
+  const closeRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!info) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    closeRef.current?.focus();
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [info, onClose]);
+
   if (!info) return null;
   const chain = getChain(info.chainId);
   return (
@@ -37,6 +55,7 @@ export default function SuccessModal({ info, onClose }: { info: LaunchSuccess | 
           </div>
           <button
             type="button"
+            ref={closeRef}
             onClick={onClose}
             aria-label="Close success dialog"
             className="cursor-pointer rounded-md p-2 text-white/60 hover:bg-white/10 hover:text-white"

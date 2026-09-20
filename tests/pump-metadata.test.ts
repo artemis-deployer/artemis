@@ -59,4 +59,36 @@ describe("pump-metadata route", () => {
     });
     expect((await POST(req)).status).toBe(502);
   });
+
+  it("ignores unknown fields", async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ data: { cid: "bafytest" } }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const req = new Request("http://x/api/pump-metadata", {
+      method: "POST",
+      body: JSON.stringify({ name: "Kopi", symbol: "KOPI", evil: "x".repeat(1000), foo: 1 }),
+    });
+    expect((await POST(req)).status).toBe(200);
+  });
+
+  it("survives 5MB JSON without crash", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ data: { cid: "b" } }) });
+    vi.stubGlobal("fetch", fetchMock);
+    const big = "d".repeat(5 * 1024 * 1024);
+    const req = new Request("http://x/api/pump-metadata", {
+      method: "POST",
+      body: JSON.stringify({ name: "Kopi", symbol: "KOPI", description: big }),
+    });
+    const res = await POST(req);
+    expect([200, 400]).toContain(res.status);
+  });
+
+  it("maps empty body and broken JSON syntax to 400", async () => {
+    for (const raw of ["", "{bad", '{"name":}']) {
+      const req = new Request("http://x/api/pump-metadata", { method: "POST", body: raw });
+      expect((await POST(req)).status).toBe(400);
+    }
+  });
 });

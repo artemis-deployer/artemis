@@ -50,6 +50,11 @@ export default function StudioChat() {
   const [chainOpen, setChainOpen] = useState(false);
   const chainRef = useRef<HTMLDivElement>(null);
   const activeChain = getChain(draft.chainId);
+  const [prevChainId, setPrevChainId] = useState(draft.chainId);
+  if (draft.chainId !== prevChainId) {
+    setPrevChainId(draft.chainId);
+    if (chainOpen) setChainOpen(false);
+  }
 
   useEffect(() => {
     if (!chainOpen) return;

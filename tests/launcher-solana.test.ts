@@ -1,7 +1,15 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("@solana/web3.js", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@solana/web3.js")>();
+  return { ...actual, Connection: vi.fn() };
+});
+
+import { Connection } from "@solana/web3.js";
 import {
   buildMetadata,
   buildTradePayload,
+  confirmTx,
   decodeTxResponse,
   inspectTxSize,
   mapPumpError,
@@ -9,9 +17,12 @@ import {
   PUMP_POOL,
   PUMP_PRIORITY_FEE,
   PUMP_SLIPPAGE,
+  signAndSend,
   uploadMetadata,
   validateTxBytes,
 } from "../lib/launcher-solana";
+
+const MockConnection = vi.mocked(Connection);
 
 describe("buildMetadata", () => {
   it("builds pump metadata json", () => {
@@ -142,6 +153,48 @@ describe("pump pin route", () => {
     await expect(uploadMetadata({ name: "Kopi", symbol: "KOPI", description: "d" })).rejects.toThrow(
       "pump_rejected: metadata pin failed",
     );
+  });
+});
+
+describe("signAndSend / confirmTx error paths", () => {
+  afterEach(() => {
+    vi.resetAllMocks();
+  });
+  it("propagates wallet sign rejection (user cancel) to caller", async () => {
+    MockConnection.mockImplementation(function (this: unknown) {
+      return { getLatestBlockhash: async () => ({ blockhash: "B".repeat(44) }), sendRawTransaction: async () => "sig" };
+    } as never);
+    const { Keypair, VersionedTransaction, TransactionMessage } = await import("@solana/web3.js");
+    const mintKp = Keypair.generate();
+    const message = new TransactionMessage({
+      payerKey: mintKp.publicKey,
+      recentBlockhash: Keypair.generate().publicKey.toBase58(),
+      instructions: [],
+    }).compileToV0Message();
+    const tx = new VersionedTransaction(message);
+    const wallet = {
+      publicKey: { toBase58: () => mintKp.publicKey.toBase58() },
+      signTransaction: async () => {
+        throw new Error("User rejected the request");
+      },
+    };
+    await expect(
+      signAndSend({ rpc: "https://rpc.test", tx, mintSecret: mintKp.secretKey, wallet }),
+    ).rejects.toThrow("User rejected the request");
+  });
+  it("confirmTx throws tx_failed on error value, propagates RPC throw (dropped sig)", async () => {
+    MockConnection.mockImplementation(function (this: unknown) {
+      return { confirmTransaction: async () => ({ value: { err: {} } }) };
+    } as never);
+    await expect(confirmTx("https://rpc.test", "sig")).rejects.toThrow("tx_failed");
+    MockConnection.mockImplementation(function (this: unknown) {
+      return {
+        confirmTransaction: async () => {
+          throw new Error("Transaction was not confirmed");
+        },
+      };
+    } as never);
+    await expect(confirmTx("https://rpc.test", "sig")).rejects.toThrow("Transaction was not confirmed");
   });
 });
 

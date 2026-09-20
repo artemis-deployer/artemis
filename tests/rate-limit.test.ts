@@ -27,6 +27,16 @@ describe("checkRateLimit", () => {
     expect(checkRateLimit("cap-probe", 1, 60000).ok).toBe(true);
     expect(checkRateLimit("cap-probe", 1, 60000).ok).toBe(false);
   });
+
+  it("isolates route prefixes (chat vs showcase vs pin share no bucket)", () => {
+    clearRateLimits();
+    const ip = "1.2.3.4";
+    for (let i = 0; i < 10; i++) expect(checkRateLimit(`chat:${ip}`, 10, 60000).ok).toBe(true);
+    expect(checkRateLimit(`chat:${ip}`, 10, 60000).ok).toBe(false);
+    expect(checkRateLimit(`showcase:${ip}`, 20, 60000).ok).toBe(true);
+    expect(checkRateLimit(`showcase-get:${ip}`, 60, 60000).ok).toBe(true);
+    expect(checkRateLimit(`pin:${ip}`, 10, 60000).ok).toBe(true);
+  });
 });
 
 describe("clientIp", () => {

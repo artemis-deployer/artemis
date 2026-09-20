@@ -17,6 +17,11 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
   const [networkOpen, setNetworkOpen] = useState(false);
   const networkRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [prevChainId, setPrevChainId] = useState(draft.chainId);
+  if (draft.chainId !== prevChainId) {
+    setPrevChainId(draft.chainId);
+    if (networkOpen) setNetworkOpen(false);
+  }
 
   useEffect(() => {
     if (!networkOpen) return;

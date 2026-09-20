@@ -293,7 +293,7 @@ export async function launchOneTx(args: {
   return { hash, token };
 }
 
-function decodeLaunchedToken(
+export function decodeLaunchedToken(
   logs: { address: string; topics: `0x${string}`[]; data: `0x${string}` }[],
   launcher: Address,
 ): Address | null {

@@ -187,6 +187,43 @@ describe("tokens route", () => {
     expect(res.status).toBe(200);
   });
 
+  it("POST ignores unknown fields (not stored)", async () => {
+    mocked.isDbConfigured.mockReturnValue(true);
+    mocked.saveToken.mockResolvedValue(undefined);
+    const req = new Request("http://x/api/community/tokens", {
+      method: "POST",
+      body: JSON.stringify({ chainId: "4663", address: EVM_ADDR, txHash: EVM_HASH, evil: "x".repeat(5000), foo: 1 }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+    expect(mocked.saveToken).toHaveBeenCalledTimes(1);
+    const saved = mocked.saveToken.mock.calls[0]?.[0] as Record<string, unknown>;
+    expect(saved).not.toHaveProperty("evil");
+    expect(saved).not.toHaveProperty("foo");
+  });
+
+  it("POST survives 5MB JSON without crash (slices, validates)", async () => {
+    mocked.isDbConfigured.mockReturnValue(true);
+    mocked.saveToken.mockResolvedValue(undefined);
+    const big = "n".repeat(5 * 1024 * 1024);
+    const req = new Request("http://x/api/community/tokens", {
+      method: "POST",
+      body: JSON.stringify({ chainId: "4663", address: EVM_ADDR, txHash: EVM_HASH, name: big }),
+    });
+    const res = await POST(req);
+    expect([200, 400]).toContain(res.status);
+  });
+
+  it("POST maps empty body and broken JSON syntax to 400", async () => {
+    mocked.isDbConfigured.mockReturnValue(true);
+    for (const raw of ["", "{bad", '{"chainId":}']) {
+      const req = new Request("http://x/api/community/tokens", { method: "POST", body: raw });
+      const res = await POST(req);
+      expect(res.status).toBe(400);
+    }
+    expect(mocked.saveToken).not.toHaveBeenCalled();
+  });
+
   it("POST forwards Solana creator and rejects mismatch with invalid_tx", async () => {
     mocked.isDbConfigured.mockReturnValue(true);
     const mint = "Mint111111111111111111111111111111111111";

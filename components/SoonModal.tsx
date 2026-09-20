@@ -29,8 +29,8 @@ export const SoonModal: React.FC<SoonModalProps> = ({ isOpen, feature, onClose }
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-      <div className="relative w-full max-w-md bg-[#fae8a4] text-[#18191c] p-8 md:p-10 shadow-2xl border border-white/20 rounded">
+    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm" onClick={onClose}>
+      <div className="relative w-full max-w-md bg-[#fae8a4] text-[#18191c] p-8 md:p-10 shadow-2xl border border-white/20 rounded" onClick={(e) => e.stopPropagation()}>
         <button
           ref={closeRef}
           onClick={onClose}

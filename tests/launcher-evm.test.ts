@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   calcEthMin,
+  decodeLaunchedToken,
   estimateLaunchCost,
   ETH_MIN_BPS,
   formatEth,
@@ -125,5 +126,38 @@ describe("launchOneTx guards", () => {
     } finally {
       HOOD_MAINNET.launcher = prev;
     }
+  });
+});
+
+describe("decodeLaunchedToken", () => {
+  const launcher = "0xeea9d0f7ee0958c6d59f25162be4e69ba60a0f71";
+  const token = "0x097716e767df17605627def0030110f8ee559ec4";
+  const pad = (hex: string) => `0x${hex.replace(/^0x/, "").padStart(64, "0")}` as `0x${string}`;
+  function launchedLog(tokenAddr: string, from = launcher) {
+    return {
+      address: from,
+      topics: [pad("0xaaa"), pad(tokenAddr), pad("0x1111111111111111111111111111111111111111")] as `0x${string}`[],
+      data: "0x" as `0x${string}`,
+    };
+  }
+  it("picks Launched log among unrelated logs from same and other addresses", () => {
+    const other = "0x0000000000000000000000000000000000000001";
+    const logs = [
+      { address: other, topics: [pad("0xddd"), pad(token)] as `0x${string}`[], data: "0x" as `0x${string}` },
+      launchedLog(token),
+      { address: token, topics: [pad("0xeee"), pad(token), pad("0x222")] as `0x${string}`[], data: "0x" as `0x${string}` },
+    ];
+    expect(decodeLaunchedToken(logs, launcher as `0x${string}`)).toBe(token);
+  });
+  it("returns first token when multiple Launched events exist", () => {
+    const second = "0x1111111111111111111111111111111111111111";
+    expect(decodeLaunchedToken([launchedLog(token), launchedLog(second)], launcher as `0x${string}`)).toBe(
+      token,
+    );
+  });
+  it("rejects zero-address and short-topic logs", () => {
+    const zero = launchedLog("0x0000000000000000000000000000000000000000");
+    const short = { address: launcher, topics: [pad("0xaaa")] as `0x${string}`[], data: "0x" as `0x${string}` };
+    expect(decodeLaunchedToken([zero, short], launcher as `0x${string}`)).toBeNull();
   });
 });

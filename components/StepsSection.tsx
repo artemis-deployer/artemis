@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Cpu, Coins, Layers, KeyRound, Play, Pause, Check, Terminal, ShieldCheck, Zap, ShieldAlert } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Cpu, Coins, Layers, KeyRound, Play, Pause, Check, ShieldCheck, Zap, ShieldAlert } from 'lucide-react';
 import { DIRECT_SUPPLY } from '../lib/chains';
 import { HOOD_MAINNET } from '../lib/launcher-evm';
 
@@ -193,11 +193,6 @@ export const StepsSection: React.FC = () => {
     return () => clearInterval(streamInterval);
   }, []);
 
-  // Reset scanner to top line whenever active stage changes
-  useEffect(() => {
-    setActiveLogIdx(0);
-  }, [activeStage]);
-
   // Auto-advance loop: deterministic elapsed timer modeled after helios2 Architecture.tsx
   useEffect(() => {
     if (!isAutoAdvance) return;
@@ -215,6 +210,7 @@ export const StepsSection: React.FC = () => {
         clearInterval(timer);
         setProgress(0);
         setActiveStage((prev) => (prev + 1) % STAGES.length);
+        setActiveLogIdx(0);
       }
     }, interval);
 
@@ -224,6 +220,7 @@ export const StepsSection: React.FC = () => {
   const handleStageSelect = (index: number) => {
     setActiveStage(index);
     setProgress(0);
+    setActiveLogIdx(0);
   };
 
   const handleRunDryRun = () => {

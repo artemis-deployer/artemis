@@ -21,7 +21,7 @@ export async function submitShowcase(input: ShowcaseInput): Promise<ShowcaseStat
       body: JSON.stringify(input),
     });
     if (res.ok) return "saved";
-    if (res.status >= 500) return "offline";
+    if (res.status >= 500 || res.status === 429) return "offline";
     return "rejected";
   } catch {
     // showcase DB optional; never break launch UX

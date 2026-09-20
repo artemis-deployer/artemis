@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import {
   connectEvm,
@@ -30,6 +30,22 @@ export default function WalletModal({
   const [busy, setBusy] = useState<string | null>(null);
   const [tab, setTab] = useState<WalletKind>(kind);
   const [syncedKind, setSyncedKind] = useState<WalletKind>(kind);
+  const closeRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    closeRef.current?.focus();
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open, onClose]);
   if (open && syncedKind !== kind) {
     setSyncedKind(kind);
     setTab(kind);
@@ -79,6 +95,7 @@ export default function WalletModal({
           </div>
           <button
             type="button"
+            ref={closeRef}
             onClick={onClose}
             aria-label="Close wallet picker"
             className="cursor-pointer rounded-md p-2 text-white/60 hover:bg-white/10 hover:text-white"

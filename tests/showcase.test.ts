@@ -29,6 +29,14 @@ describe("submitShowcase", () => {
     await expect(submitShowcase({ chainId: 4663, address: "0xabc" })).resolves.toBe("offline");
   });
 
+  it("maps 429 rate-limit to offline (transient, not invalid)", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(new Response('{"error":"too_many_requests"}', { status: 429 })),
+    );
+    await expect(submitShowcase({ chainId: 4663, address: "0xabc" })).resolves.toBe("offline");
+  });
+
   it("maps timeout abort to offline", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new DOMException("timed out", "AbortError")));
     await expect(submitShowcase({ chainId: 4663, address: "0xabc" })).resolves.toBe("offline");
