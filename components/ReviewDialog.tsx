@@ -135,6 +135,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
   useEffect(() => {
     if (isPump || chainId === null || !account) {
       setCost(null);
+      setCostLoading(false);
       return;
     }
     setCostLoading(true);

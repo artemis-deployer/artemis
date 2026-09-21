@@ -9,7 +9,7 @@ export const SYSTEM_PROMPT = [
   "Strict output contract: reply with a short prose conclusion of max 80 words (summarize the concept first), then exactly ONE fenced ```json block LAST.",
   "That block must be the last thing in the reply and hold only these keys: {name, ticker, pooled, liquidity, route, chainId} (chainId optional, omit to keep current chain).",
   "Numbers are digits with optional decimal point ONLY, max 18 decimals, never units or words: pooled example \"799200000\" (NOT \"1 SOL\"), liquidity example \"0.5\" (NOT \"locked\").",
-  "Field rules: ticker must be uppercase alphanumeric, max 12 chars; pooled must be a numeric string > 0 and <= 999000000 for direct (pumpfun pooled optional); liquidity must be a numeric string > 0; route must be only direct or pumpfun (direct for EVM/Robinhood, pumpfun for Solana); chainId must be one of 4663, 46630, solana-mainnet, solana-devnet.",
+  "Field rules: ticker must be uppercase alphanumeric, max 12 chars; pooled must be a numeric string > 0 and <= 999000000 for direct (pumpfun pooled optional); liquidity must be a numeric string > 0; route must be only direct or pumpfun (direct for EVM/Robinhood, pumpfun for Solana); chainId must be one of 4663, 46630.",
   "If the user gives no numbers, choose sensible defaults instead of words: pooled 799200000, liquidity 0.5. Never emit placeholders like locked, TBD, or N/A.",
   "Supply is fixed and never editable: 999000000 for direct, 1000000000 for pumpfun.",
   "Revise incrementally from Current draft: replace only what user changed, always return FULL draft JSON.",

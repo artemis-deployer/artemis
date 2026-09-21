@@ -88,6 +88,15 @@ describe("chat route", () => {
     expect(SYSTEM_PROMPT).toContain("18 decimals");
   });
 
+  it("parks Solana in prompt (EVM-only chainId list, coming soon note)", () => {
+    expect(SYSTEM_PROMPT).toContain("coming soon");
+    expect(SYSTEM_PROMPT).toContain("current chain");
+    expect(SYSTEM_PROMPT).toContain("4663");
+    expect(SYSTEM_PROMPT).toContain("46630");
+    expect(SYSTEM_PROMPT).not.toContain("solana-mainnet");
+    expect(SYSTEM_PROMPT).not.toContain("solana-devnet");
+  });
+
   it("retries once and applies the corrected draft", async () => {
     const fetchMock = vi
       .fn()
@@ -791,6 +800,22 @@ describe("extractServerDraft edges", () => {
     );
     expect(draftErrors).toEqual([]);
     expect(draft).not.toHaveProperty("chainId");
+  });
+
+  it("adopts EVM chainId, drops unknown and parked Solana", () => {
+    const evm = extractServerDraft(wrap('{"ticker":"X","pooled":"100","liquidity":"1","route":"direct","chainId":4663}'));
+    expect(evm.draftErrors).toEqual([]);
+    expect(evm.draft).toMatchObject({ chainId: 4663 });
+    const unknown = extractServerDraft(
+      wrap('{"ticker":"X","pooled":"100","liquidity":"1","route":"direct","chainId":999999}'),
+    );
+    expect(unknown.draftErrors).toEqual([]);
+    expect(unknown.draft).not.toHaveProperty("chainId");
+    const sol = extractServerDraft(
+      wrap('{"ticker":"X","pooled":"100","liquidity":"1","route":"direct","chainId":"solana-devnet"}'),
+    );
+    expect(sol.draftErrors).toEqual([]);
+    expect(sol.draft).not.toHaveProperty("chainId");
   });
 
   it("rejects dust over fixed supply with invalid-pooled (precision parity)", () => {
