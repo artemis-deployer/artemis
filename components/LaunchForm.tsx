@@ -293,7 +293,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
       <div className="flex flex-col gap-[5px]">
         <label className="flex items-center justify-between text-xs font-bold tracking-[0.02em] text-white/90">
           <span>Token Brand Icon</span>
-          <span className="text-[11px] font-medium text-white/40">Optional · Max 512px</span>
+          <span className="text-[11px] font-medium text-white/40">Optional · Max 2MB</span>
         </label>
         <input
           ref={fileRef}
