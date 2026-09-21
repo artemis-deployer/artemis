@@ -168,7 +168,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
     setHood("error");
   }
 
-  function succeed(token: string, hash: string): void {
+  function succeed(token: string, hash: string, rehearsal = false): void {
     setArtworkFile(null);
     onLaunched?.({
       chainId: draft.chainId,
@@ -176,6 +176,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       hash,
       ticker: draft.ticker,
       name: draft.name || draft.ticker,
+      rehearsal,
     });
     if (ref && typeof ref !== "function") ref.current?.close();
   }
@@ -246,7 +247,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
         if (m === "pool_unsupported_on_testnet") {
           setHood("stub");
           setNote("Testnet rehearsal: token deployed, pool step unavailable (no V2 router on testnet).");
-          succeed(dep.token, dep.hash);
+          succeed(dep.token, dep.hash, true);
           return;
         }
         throw inner;
@@ -327,6 +328,58 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       setPump("error");
       return;
     }
+    if (rpc !== MAINNET_RPC) {
+      const mintKp = Keypair.generate();
+      const mintBase58 = mintKp.publicKey.toBase58();
+      if (!mintBase58) {
+        setPumpNote("pump_failed");
+        setPump("error");
+        return;
+      }
+      const payer = (() => {
+        try {
+          return getSolanaProvider()?.publicKey.toBase58() ?? provider?.publicKey.toBase58() ?? null;
+        } catch {
+          return null;
+        }
+      })();
+      if (!payer) {
+        setPumpNote("Connect a Solana wallet first.");
+        setPump("error");
+        return;
+      }
+      let uri = "devnet-rehearsal";
+      try {
+        uri = await uploadMetadata(meta, await artworkDataUrl());
+      } catch {
+        uri = "devnet-rehearsal";
+      }
+      const payload = buildTradePayload({
+        publicKey: payer,
+        mint: mintBase58,
+        name: meta.name,
+        symbol: meta.symbol,
+        uri,
+        amountSol,
+      });
+      setPump("working");
+      setPumpNote("");
+      let size: number;
+      try {
+        const tx = await buildCreateTx(payload);
+        validateTxBytes(tx);
+        size = tx.serialize().length;
+      } catch (e: unknown) {
+        setPumpNote(mapPumpError(e));
+        setPump("error");
+        return;
+      }
+      setMint(mintBase58);
+      setPumpNote(`Devnet rehearsal: transaction built (${size} bytes), broadcast omitted by design.`);
+      setPump("built");
+      succeed(mintBase58, "", true);
+      return;
+    }
     const p = getSolanaProvider() ?? provider;
     if (!p) {
       setPumpNote("Connect a Solana wallet first.");
@@ -364,14 +417,13 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
         amountSol,
       });
       const tx = await buildCreateTx(payload);
-      validateTxBytes(tx);
       const sig = await signAndSend({
-        rpc,
+        rpc: MAINNET_RPC,
         tx,
         mintSecret: mintKp.secretKey,
         wallet: { publicKey: p.publicKey, signTransaction },
       });
-      await confirmTx(rpc, sig);
+      await confirmTx(MAINNET_RPC, sig);
       setMint(mintBase58);
       saveReceipt({ chainId: draft.chainId, token: mintBase58, hash: sig, createdAt: new Date().toISOString(), ticker: draft.ticker });
       void submitShowcase({ chainId: draft.chainId, address: mintBase58, creator: payerAddr, name: meta.name, symbol: meta.symbol, txHash: sig });
@@ -557,6 +609,9 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
             {mint && (
               <p className="m-0 flex items-center gap-1 font-mono text-xs text-white">
                 <span className="text-white/50">Mint:</span>
+                {rpc !== MAINNET_RPC ? (
+                  <span className="text-white/70">{mint.slice(0, 10)}…{mint.slice(-8)} (unbroadcast)</span>
+                ) : (
                 <a
                   href={explorerTokenUrl(draft.chainId, mint)}
                   target="_blank"
@@ -566,6 +621,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
                   <span>{mint.slice(0, 10)}…{mint.slice(-8)}</span>
                   <ExternalLink size={11} />
                 </a>
+                )}
               </p>
             )}
 
