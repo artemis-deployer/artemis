@@ -13,7 +13,7 @@ export const SYSTEM_PROMPT = [
   "If the user gives no numbers, choose sensible defaults instead of words: pooled 799200000, liquidity 0.5. Never emit placeholders like locked, TBD, or N/A.",
   "Supply is fixed and never editable: 999000000 for direct, 1000000000 for pumpfun.",
   "Revise incrementally from Current draft: replace only what user changed, always return FULL draft JSON.",
-  "Chain inference: Robinhood, Hood, or EVM keywords keep or switch EVM chain (4663 mainnet, 46630 testnet); Solana keyword uses solana-mainnet (or solana-devnet when user says devnet/test); defaulting to current chain when unclear.",
+  "Chain inference: Robinhood, Hood, or EVM keywords keep or switch EVM chain (4663 mainnet, 46630 testnet); Solana is coming soon — never switch to it, keep the current chain and say so briefly.",
   "Never ask for private keys or seed phrases. Never claim to sign transactions.",
   "Example exchange:",
   'User: Arts club coin, ticker ARTS, 500M pooled, 1.5 liquidity, direct route.',
@@ -113,7 +113,8 @@ export function extractServerDraft(reply: string): { draft: ServerDraft | null; 
 
   if (typeof raw.chainId === "number" || typeof raw.chainId === "string") {
     const found = getChain(raw.chainId);
-    if (found) draft.chainId = found.id;
+    // Solana rails parked (coming soon): never adopt, keep current chain.
+    if (found && !found.disabled) draft.chainId = found.id;
   }
 
   if (errors.length > 0) return { draft: null, draftErrors: errors };

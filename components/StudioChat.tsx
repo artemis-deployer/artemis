@@ -261,14 +261,19 @@ export default function StudioChat() {
                 <li key={String(c.id)} role="option" aria-selected={active}>
                   <button
                     type="button"
+                    disabled={c.disabled}
                     onClick={() => pickChain(c.id)}
-                    className="flex w-full cursor-pointer items-center gap-2.5 px-3.5 py-2.5 text-left text-xs font-medium text-white/80 transition-all hover:bg-white/10 hover:text-white"
+                    className="flex w-full cursor-pointer items-center gap-2.5 px-3.5 py-2.5 text-left text-xs font-medium text-white/80 transition-all hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <span className="inline-flex shrink-0 text-[#fae8a4]" aria-hidden="true">
                       <ChainLogo kind={c.logo} />
                     </span>
                     <span className="flex-1">{c.name}</span>
-                    <span className="font-mono text-[10px] text-white/40">{c.testnet ? "Test" : "Live"}</span>
+                    {c.disabled ? (
+                      <span className="font-mono text-[10px] text-white/40">Soon</span>
+                    ) : (
+                      <span className="font-mono text-[10px] text-white/40">{c.testnet ? "Test" : "Live"}</span>
+                    )}
                     {active && <Check size={13} aria-hidden="true" className="text-[#fae8a4]" />}
                   </button>
                 </li>

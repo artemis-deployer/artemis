@@ -58,15 +58,17 @@ describe("parseDraftReply", () => {
 
   it("accepts known chain ids from copilot patches", () => {
     expect(parseDraftReply('{"ticker":"X","chainId":4663}')).toMatchObject({ chainId: 4663 });
-    expect(parseDraftReply('{"ticker":"X","chainId":"solana-devnet"}')).toMatchObject({
-      chainId: "solana-devnet",
-    });
     expect(parseDraftReply('{"ticker":"X","chainId":"4663"}')).toMatchObject({ chainId: 4663 });
   });
 
   it("drops unknown chain ids", () => {
     expect(parseDraftReply('{"ticker":"X","chainId":999999}')).toEqual({ ticker: "X" });
     expect(parseDraftReply('{"ticker":"X","chainId":"nope"}')).toEqual({ ticker: "X" });
+  });
+
+  it("parks Solana chain ids (coming soon)", () => {
+    expect(parseDraftReply('{"ticker":"X","chainId":"solana-devnet"}')).toEqual({ ticker: "X" });
+    expect(parseDraftReply('{"ticker":"X","chainId":"solana-mainnet"}')).toEqual({ ticker: "X" });
   });
 });
 

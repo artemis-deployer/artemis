@@ -5,13 +5,14 @@ export type Chain = {
   testnet: boolean;
   explorer: string;
   logo: "hood" | "solana";
+  disabled?: boolean;
 };
 
 export const CHAINS: Chain[] = [
   { id: 4663, name: "Robinhood Chain", currency: "ETH", testnet: false, explorer: "https://robinhoodchain.blockscout.com", logo: "hood" },
-  { id: "solana-mainnet", name: "Solana", currency: "SOL", testnet: false, explorer: "https://solscan.io", logo: "solana" },
+  { id: "solana-mainnet", name: "Solana", currency: "SOL", testnet: false, explorer: "https://solscan.io", logo: "solana", disabled: true },
   { id: 46630, name: "Robinhood Testnet", currency: "ETH", testnet: true, explorer: "https://explorer.testnet.chain.robinhood.com", logo: "hood" },
-  { id: "solana-devnet", name: "Solana Devnet", currency: "SOL", testnet: true, explorer: "https://solscan.io?cluster=devnet", logo: "solana" },
+  { id: "solana-devnet", name: "Solana Devnet", currency: "SOL", testnet: true, explorer: "https://solscan.io?cluster=devnet", logo: "solana", disabled: true },
 ];
 
 export function defaultRouteFor(id: number | string): "pumpfun" | "direct" {

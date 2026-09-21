@@ -638,6 +638,33 @@ describe("chat route", () => {
     expect(json.draft).not.toHaveProperty("chainId");
   });
 
+  it("parks Solana chainId from server draft (coming soon)", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          choices: [
+            {
+              message: {
+                content:
+                  'Pick!\n```json\n{"name":"X","ticker":"X","pooled":"100","liquidity":"1","route":"direct","chainId":"solana-mainnet"}\n```',
+              },
+            },
+          ],
+        }),
+      }),
+    );
+    const req = new Request("http://x/api/chat", {
+      method: "POST",
+      body: JSON.stringify({ messages: [{ role: "user", content: "solana please" }] }),
+    });
+    const res = await chatPOST(req);
+    const json = (await res.json()) as { draft: Record<string, unknown> | null; draftErrors: string[] };
+    expect(json.draftErrors).toEqual([]);
+    expect(json.draft).not.toHaveProperty("chainId");
+  });
+
   it("rejects >18-decimal dust like the client form (parseEther parity)", async () => {
     vi.stubGlobal(
       "fetch",

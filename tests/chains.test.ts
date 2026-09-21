@@ -34,6 +34,13 @@ describe("chains", () => {
     }
   });
 
+  it("parks Solana behind a disabled flag", () => {
+    expect(getChain("solana-mainnet")?.disabled).toBe(true);
+    expect(getChain("solana-devnet")?.disabled).toBe(true);
+    expect(getChain(4663)?.disabled).toBeUndefined();
+    expect(getChain(46630)?.disabled).toBeUndefined();
+  });
+
   it("tags every chain with a known logo kind", () => {
     for (const c of CHAINS) {
       expect(["hood", "solana"]).toContain(c.logo);

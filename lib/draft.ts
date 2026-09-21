@@ -33,7 +33,8 @@ function sanitizeDraft(raw: Record<string, unknown>): Partial<Draft> {
   if (raw.route === "pumpfun" || raw.route === "direct") out.route = raw.route;
   if (typeof raw.chainId === "number" || typeof raw.chainId === "string") {
     const found = getChain(raw.chainId);
-    if (found) out.chainId = found.id;
+    // Solana rails parked (coming soon): never adopt, keep current chain.
+    if (found && !found.disabled) out.chainId = found.id;
   }
   return out;
 }

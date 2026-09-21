@@ -170,21 +170,28 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
                   <li key={String(c.id)} role="option" aria-selected={active}>
                     <button
                       type="button"
+                      disabled={c.disabled}
                       onClick={() => {
                         setDraft({ ...draft, chainId: c.id, route: sol ? "pumpfun" : "direct" });
                         setConsent(false);
                         setNetworkOpen(false);
                       }}
-                      className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm text-white/80 transition-all hover:bg-white/10 hover:text-white"
+                      className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm text-white/80 transition-all hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <span className="inline-flex shrink-0 text-[#fae8a4]" aria-hidden="true">
                         <ChainLogo kind={c.logo} />
                       </span>
                       <span className="flex-1 font-bold text-white">{c.name}</span>
-                      <span className="font-mono text-[11px] text-white/50">{c.currency}</span>
-                      <span className="text-[11px] text-white/50">
-                        {sol ? "Solana · pump.fun" : "Robinhood Chain · V2 Router"}
-                      </span>
+                      {c.disabled ? (
+                        <span className="font-mono text-[11px] text-white/40">Coming soon</span>
+                      ) : (
+                        <>
+                          <span className="font-mono text-[11px] text-white/50">{c.currency}</span>
+                          <span className="text-[11px] text-white/50">
+                            {sol ? "Solana · pump.fun" : "Robinhood Chain · V2 Router"}
+                          </span>
+                        </>
+                      )}
                       {active && <Check size={13} aria-hidden="true" className="shrink-0 text-[#fae8a4]" />}
                     </button>
                   </li>
