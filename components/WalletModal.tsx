@@ -165,6 +165,12 @@ export default function WalletModal({
           })}
         </div>
 
+        {busy !== null && (
+          <p role="status" className="m-0 mt-3 rounded-lg border border-white/10 bg-white/5 p-3 text-xs text-white/70">
+            Approve the request in your wallet app. No popup appeared? Allow popups for this site, then retry.
+          </p>
+        )}
+
         {error && (
           <p role="alert" className="m-0 mt-3 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-xs font-medium text-red-300">
             {error}
