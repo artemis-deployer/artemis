@@ -70,6 +70,9 @@ export default function SuccessModal({ info, onClose }: { info: LaunchSuccess | 
           <dd className="m-0 text-right font-semibold break-all text-white">{chain?.name ?? String(info.chainId)}</dd>
           <dt className="font-medium text-white/50">Token:</dt>
           <dd className="m-0 text-right font-mono break-all">
+            {info.rehearsal ? (
+              <span className="text-white/70">{info.token.slice(0, 10)}…{info.token.slice(-8)} (unbroadcast)</span>
+            ) : (
             <a
               href={explorerTokenUrl(info.chainId, info.token)}
               target="_blank"
@@ -79,6 +82,7 @@ export default function SuccessModal({ info, onClose }: { info: LaunchSuccess | 
               <span>{info.token.slice(0, 10)}…{info.token.slice(-8)}</span>
               <ExternalLink size={11} />
             </a>
+            )}
           </dd>
           <dt className="font-medium text-white/50">Transaction:</dt>
           <dd className="m-0 text-right font-mono break-all">

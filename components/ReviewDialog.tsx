@@ -609,6 +609,9 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
             {mint && (
               <p className="m-0 flex items-center gap-1 font-mono text-xs text-white">
                 <span className="text-white/50">Mint:</span>
+                {rpc !== MAINNET_RPC ? (
+                  <span className="text-white/70">{mint.slice(0, 10)}…{mint.slice(-8)} (unbroadcast)</span>
+                ) : (
                 <a
                   href={explorerTokenUrl(draft.chainId, mint)}
                   target="_blank"
@@ -618,6 +621,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
                   <span>{mint.slice(0, 10)}…{mint.slice(-8)}</span>
                   <ExternalLink size={11} />
                 </a>
+                )}
               </p>
             )}
 
