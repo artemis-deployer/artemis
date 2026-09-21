@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  addLiquidity,
   calcEthMin,
   decodeLaunchedToken,
   estimateLaunchCost,
@@ -62,6 +63,11 @@ describe("eth min slippage", () => {
     expect(calcEthMin(10n ** 18n)).toBe(98n * 10n ** 16n);
   });
 
+  it("clamps dust to 1 wei with custom bps", () => {
+    expect(calcEthMin(1n, 9500)).toBe(1n);
+    expect(calcEthMin(1n, 9950)).toBe(1n);
+  });
+
   it("honors custom slippage bps", () => {
     expect(calcEthMin(10n ** 18n, 9950)).toBe(995n * 10n ** 15n);
     expect(calcEthMin(10n ** 18n, 9500)).toBe(95n * 10n ** 16n);
@@ -98,6 +104,15 @@ describe("estimateLaunchCost guards", () => {
   it("refuses bad amounts without touching RPC", async () => {
     await expect(estimateLaunchCost({ ...base, pooled: 0n, ethAmount: 1n })).rejects.toThrow("bad_pool_amount");
     await expect(estimateLaunchCost({ ...base, pooled: 1n, ethAmount: 0n })).rejects.toThrow("bad_eth_amount");
+  });
+
+  it("refuses bad slippage before touching RPC", async () => {
+    await expect(estimateLaunchCost({ ...base, pooled: 1n, ethAmount: 1n, slippageBps: 4999 })).rejects.toThrow(
+      "bad_slippage",
+    );
+    await expect(estimateLaunchCost({ ...base, pooled: 1n, ethAmount: 1n, slippageBps: 10001 })).rejects.toThrow(
+      "bad_slippage",
+    );
   });
 });
 
@@ -136,6 +151,36 @@ describe("launchOneTx guards", () => {
     } finally {
       HOOD_MAINNET.launcher = prev;
     }
+  });
+
+  it("refuses bad slippage before touching RPC or wallet", async () => {
+    const prev = HOOD_MAINNET.launcher;
+    HOOD_MAINNET.launcher = "0x0000000000000000000000000000000000000001";
+    try {
+      await expect(launchOneTx({ ...base, pooled: 1n, ethAmount: 1n, slippageBps: 4999 })).rejects.toThrow(
+        "bad_slippage",
+      );
+      await expect(launchOneTx({ ...base, pooled: 1n, ethAmount: 1n, slippageBps: 10001 })).rejects.toThrow(
+        "bad_slippage",
+      );
+    } finally {
+      HOOD_MAINNET.launcher = prev;
+    }
+  });
+});
+
+describe("addLiquidity guards", () => {
+  it("refuses bad slippage before touching wallet", async () => {
+    await expect(
+      addLiquidity({
+        chainId: 4663 as const,
+        account: "0x0000000000000000000000000000000000000001",
+        token: "0x0000000000000000000000000000000000000002",
+        tokenAmount: 1n,
+        ethAmount: 1n,
+        slippageBps: 4999,
+      }),
+    ).rejects.toThrow("bad_slippage");
   });
 });
 

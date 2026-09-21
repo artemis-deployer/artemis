@@ -68,6 +68,7 @@ export async function estimateLaunchCost(args: {
   if (!cfg) throw new Error("unsupported_chain");
   if (args.pooled <= 0n || args.pooled > args.supply) throw new Error("bad_pool_amount");
   if (args.ethAmount <= 0n) throw new Error("bad_eth_amount");
+  const ethMin = calcEthMin(args.ethAmount, args.slippageBps);
   const pub = publicClientFor(cfg);
   const gasPrice = await pub.getGasPrice();
   if (cfg.launcher) {
@@ -76,7 +77,7 @@ export async function estimateLaunchCost(args: {
       address: cfg.launcher,
       abi: LAUNCHER_ABI,
       functionName: "launch",
-      args: [args.name || args.ticker, args.ticker, args.supply, args.pooled, calcEthMin(args.ethAmount, args.slippageBps), deadline],
+      args: [args.name || args.ticker, args.ticker, args.supply, args.pooled, ethMin, deadline],
       value: args.ethAmount,
       account: args.account,
     });
@@ -234,6 +235,7 @@ export async function addLiquidity(args: {
 }): Promise<{ hash: `0x${string}` }> {
   const cfg = getHoodConfig(args.chainId);
   if (!cfg || !cfg.router) throw new Error("pool_unsupported_on_testnet");
+  const ethMin = calcEthMin(args.ethAmount, args.slippageBps);
   const wallet: WalletClient = createWalletClient({ chain: hoodChain(cfg), transport: custom(ethProvider() as never) });
   const pub = publicClientFor(cfg);
   const approveHash = await wallet.writeContract({
@@ -252,7 +254,7 @@ export async function addLiquidity(args: {
     address: cfg.router,
     abi: ROUTER_ABI,
     functionName: "addLiquidityETH",
-    args: [args.token, args.tokenAmount, args.tokenAmount, calcEthMin(args.ethAmount, args.slippageBps), args.account, deadline],
+    args: [args.token, args.tokenAmount, args.tokenAmount, ethMin, args.account, deadline],
     value: args.ethAmount,
     account: args.account as unknown as Account,
     chain: hoodChain(cfg),
@@ -280,6 +282,7 @@ export async function launchOneTx(args: {
   if (!cfg || !cfg.launcher) throw new Error("launcher_unavailable");
   if (args.pooled <= 0n || args.pooled > args.supply) throw new Error("bad_pool_amount");
   if (args.ethAmount <= 0n) throw new Error("bad_eth_amount");
+  const ethMin = calcEthMin(args.ethAmount, args.slippageBps);
   await validateRouter(cfg);
   const wallet: WalletClient = createWalletClient({ chain: hoodChain(cfg), transport: custom(ethProvider() as never) });
   const pub = publicClientFor(cfg);
@@ -288,7 +291,7 @@ export async function launchOneTx(args: {
     address: cfg.launcher,
     abi: LAUNCHER_ABI,
     functionName: "launch",
-    args: [args.name || args.ticker, args.ticker, args.supply, args.pooled, calcEthMin(args.ethAmount, args.slippageBps), deadline],
+    args: [args.name || args.ticker, args.ticker, args.supply, args.pooled, ethMin, deadline],
     value: args.ethAmount,
     account: args.account as unknown as Account,
     chain: hoodChain(cfg),
