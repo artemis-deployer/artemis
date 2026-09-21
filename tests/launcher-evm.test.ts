@@ -61,6 +61,16 @@ describe("eth min slippage", () => {
     expect(calcEthMin(0n)).toBe(0n);
     expect(calcEthMin(10n ** 18n)).toBe(98n * 10n ** 16n);
   });
+
+  it("honors custom slippage bps", () => {
+    expect(calcEthMin(10n ** 18n, 9950)).toBe(995n * 10n ** 15n);
+    expect(calcEthMin(10n ** 18n, 9500)).toBe(95n * 10n ** 16n);
+  });
+
+  it("rejects absurd slippage", () => {
+    expect(() => calcEthMin(10n ** 18n, 4999)).toThrow("bad_slippage");
+    expect(() => calcEthMin(10n ** 18n, 10001)).toThrow("bad_slippage");
+  });
 });
 
 describe("formatEth", () => {

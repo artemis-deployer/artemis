@@ -16,6 +16,7 @@ import {
   formatEth,
   getHoodConfig,
   launchOneTx,
+  SLIPPAGE_PRESETS,
   toTokenUnits,
   TX_DEADLINE_SECS,
   validateRouter,
@@ -73,6 +74,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
   const [pumpNote, setPumpNote] = useState("");
   const [cost, setCost] = useState<LaunchCost | null>(null);
   const [costLoading, setCostLoading] = useState(false);
+  const [slippageBps, setSlippageBps] = useState<number>(ETH_MIN_BPS);
   // Resume unmounts once hood hits working, so disabled prop can't guard
   // same-tick double-clicks (TS narrows hood here). Ref guards instead.
   const fundingRef = useRef(false);
@@ -121,6 +123,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
             supply: toTokenUnits(String(DIRECT_SUPPLY)),
             pooled: toTokenUnits(draft.pooled || "0"),
             ethAmount: parseEther(draft.liquidity || "0"),
+            slippageBps,
           });
           if (alive) setCost(estimate);
         } catch {
@@ -134,7 +137,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       alive = false;
       clearTimeout(id);
     };
-  }, [isPump, chainId, account, draft.name, draft.ticker, draft.pooled, draft.liquidity]);
+  }, [isPump, chainId, account, slippageBps, draft.name, draft.ticker, draft.pooled, draft.liquidity]);
 
   function fail(message: string): void {
     setNote(message);
@@ -161,6 +164,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       supply: toTokenUnits(String(DIRECT_SUPPLY)),
       pooled: toTokenUnits(draft.pooled || "0"),
       ethAmount: parseEther(draft.liquidity || "0"),
+      slippageBps,
     });
     setToken(one.token);
     saveReceipt({ chainId: chainId as 4663 | 46630, token: one.token, hash: one.hash, pool: one.hash, createdAt: new Date().toISOString(), ticker: draft.ticker });
@@ -206,6 +210,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
           token: dep.token,
           tokenAmount: toTokenUnits(draft.pooled || "0"),
           ethAmount: parseEther(draft.liquidity || "0"),
+          slippageBps,
         });
         saveReceipt({ chainId, token: dep.token, hash: liq.hash, pool: liq.hash, createdAt: new Date().toISOString(), ticker: draft.ticker });
         void submitShowcase({ chainId, address: dep.token, creator: acc, name: draft.name || draft.ticker, symbol: draft.ticker, txHash: liq.hash });
@@ -260,6 +265,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
         token: tokenAddr,
         tokenAmount: toTokenUnits(draft.pooled || "0"),
         ethAmount: parseEther(draft.liquidity || "0"),
+        slippageBps,
       });
       saveReceipt({ chainId, token: tokenAddr, hash: liq.hash, pool: liq.hash, createdAt: new Date().toISOString(), ticker: draft.ticker });
       void submitShowcase({ chainId, address: tokenAddr, creator: acc, name: draft.name || draft.ticker, symbol: draft.ticker, txHash: liq.hash });
@@ -435,9 +441,26 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
         </dl>
 
         {!isPump && (
-          <p className="m-0 rounded border border-white/10 bg-[#131416] p-2.5 text-xs text-white/60">
-            Protection: {100 - ETH_MIN_BPS / 100}% ETH slippage · {TX_DEADLINE_SECS / 60}-min deadline. Token minimum is exact.
-          </p>
+          <div className="flex flex-col gap-2 rounded border border-white/10 bg-[#131219] p-2.5 text-xs text-white/60">
+            <p className="m-0">
+              Protection: {100 - slippageBps / 100}% ETH slippage · {TX_DEADLINE_SECS / 60}-min deadline. Token minimum is exact.
+            </p>
+            <label className="flex items-center gap-2 font-semibold text-white/80">
+              <span>Slippage tolerance</span>
+              <select
+                value={slippageBps}
+                onChange={(e) => setSlippageBps(Number(e.target.value))}
+                aria-label="Slippage tolerance"
+                className="cursor-pointer rounded-md border border-white/15 bg-[#1a1b1f] px-2 py-1 font-mono text-xs text-white"
+              >
+                {SLIPPAGE_PRESETS.map((p) => (
+                  <option key={p.bps} value={p.bps}>
+                    {p.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
         )}
 
         {mainnet && (

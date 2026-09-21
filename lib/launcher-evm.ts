@@ -30,13 +30,20 @@ export type HoodConfig = {
 };
 
 export const ETH_MIN_BPS = 9800;
-export const TX_DEADLINE_SECS = 600;
 
-export function calcEthMin(ethAmount: bigint): bigint {
-  const result = (ethAmount * BigInt(ETH_MIN_BPS)) / 10000n;
+export const SLIPPAGE_PRESETS = [
+  { label: "Low 0.5%", bps: 9950 },
+  { label: "Default 2%", bps: 9800 },
+  { label: "High 5%", bps: 9500 },
+] as const;
+
+export function calcEthMin(ethAmount: bigint, bps: number = ETH_MIN_BPS): bigint {
+  if (!Number.isInteger(bps) || bps < 5000 || bps > 10000) throw new Error("bad_slippage");
+  const result = (ethAmount * BigInt(bps)) / 10000n;
   if (ethAmount > 0n && result === 0n) return 1n;
   return result;
 }
+export const TX_DEADLINE_SECS = 600;
 
 export function formatEth(value: bigint, maxDecimals = 8): string {
   const [head, tail = ""] = formatEther(value).split(".");
@@ -55,6 +62,7 @@ export async function estimateLaunchCost(args: {
   supply: bigint;
   pooled: bigint;
   ethAmount: bigint;
+  slippageBps?: number;
 }): Promise<LaunchCost> {
   const cfg = getHoodConfig(args.chainId);
   if (!cfg) throw new Error("unsupported_chain");
@@ -68,7 +76,7 @@ export async function estimateLaunchCost(args: {
       address: cfg.launcher,
       abi: LAUNCHER_ABI,
       functionName: "launch",
-      args: [args.name || args.ticker, args.ticker, args.supply, args.pooled, calcEthMin(args.ethAmount), deadline],
+      args: [args.name || args.ticker, args.ticker, args.supply, args.pooled, calcEthMin(args.ethAmount, args.slippageBps), deadline],
       value: args.ethAmount,
       account: args.account,
     });
@@ -222,6 +230,7 @@ export async function addLiquidity(args: {
   token: Address;
   tokenAmount: bigint;
   ethAmount: bigint;
+  slippageBps?: number;
 }): Promise<{ hash: `0x${string}` }> {
   const cfg = getHoodConfig(args.chainId);
   if (!cfg || !cfg.router) throw new Error("pool_unsupported_on_testnet");
@@ -243,7 +252,7 @@ export async function addLiquidity(args: {
     address: cfg.router,
     abi: ROUTER_ABI,
     functionName: "addLiquidityETH",
-    args: [args.token, args.tokenAmount, args.tokenAmount, calcEthMin(args.ethAmount), args.account, deadline],
+    args: [args.token, args.tokenAmount, args.tokenAmount, calcEthMin(args.ethAmount, args.slippageBps), args.account, deadline],
     value: args.ethAmount,
     account: args.account as unknown as Account,
     chain: hoodChain(cfg),
@@ -265,6 +274,7 @@ export async function launchOneTx(args: {
   supply: bigint;
   pooled: bigint;
   ethAmount: bigint;
+  slippageBps?: number;
 }): Promise<{ hash: `0x${string}`; token: Address }> {
   const cfg = getHoodConfig(args.chainId);
   if (!cfg || !cfg.launcher) throw new Error("launcher_unavailable");
@@ -278,7 +288,7 @@ export async function launchOneTx(args: {
     address: cfg.launcher,
     abi: LAUNCHER_ABI,
     functionName: "launch",
-    args: [args.name || args.ticker, args.ticker, args.supply, args.pooled, calcEthMin(args.ethAmount), deadline],
+    args: [args.name || args.ticker, args.ticker, args.supply, args.pooled, calcEthMin(args.ethAmount, args.slippageBps), deadline],
     value: args.ethAmount,
     account: args.account as unknown as Account,
     chain: hoodChain(cfg),
