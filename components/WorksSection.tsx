@@ -176,7 +176,7 @@ export const WorksSection: React.FC<WorksSectionProps> = () => {
                   <span className="font-light text-[#18191c]/60">Broadcast to the world.</span>
                 </h3>
                 <p className="text-sm md:text-base text-[#18191c]/80 leading-relaxed max-w-xl">
-                  Every transaction payload compiles client-side and dispatches through your personal browser wallet extension. Private keys never leave your device, and receipts are permanently indexed in your browser store.
+                  Every transaction payload compiles client-side and dispatches through your personal browser wallet extension. Private keys never leave your device, and receipts are saved in your browser store.
                 </p>
               </div>
 
@@ -221,10 +221,10 @@ export const WorksSection: React.FC<WorksSectionProps> = () => {
                 </div>
                 <h3 className="font-unbounded text-2xl sm:text-3xl lg:text-[2.2rem] font-bold tracking-tight leading-[1.15] mb-4 text-[#18191c]">
                   LP pair creation.<br />
-                  <span className="font-light text-[#18191c]/60">Permanent autonomous liquidity.</span>
+                  <span className="font-light text-[#18191c]/60">Creator-held pool liquidity.</span>
                 </h3>
                 <p className="text-sm md:text-base text-[#18191c]/80 leading-relaxed max-w-xl">
-                  Initial supply and base liquidity are paired atomically in a single atomic transaction block. The creator receives standard LP tokens directly into their wallet with zero platform escrow lockouts.
+                  On mainnet, initial supply and base liquidity pair atomically in a single transaction via the launcher. The creator receives standard LP tokens directly into their wallet with zero platform escrow.
                 </p>
               </div>
 
@@ -234,13 +234,13 @@ export const WorksSection: React.FC<WorksSectionProps> = () => {
                   <small className="block text-[11px] uppercase tracking-wider text-[#18191c]/60 mb-1">Pool Settlement</small>
                   <strong className="block text-lg sm:text-xl font-bold tracking-tight text-[#18191c]">Atomic Uniswap V2</strong>
                   <small className="block text-[11px] uppercase tracking-wider text-[#18191c]/60 mt-3 mb-1">Dev Withdrawal Backdoor</small>
-                  <strong className="block text-base sm:text-lg font-semibold text-[#18191c]">None (Renounced)</strong>
+                  <strong className="block text-base sm:text-lg font-semibold text-[#18191c]">None (No Owner)</strong>
                 </div>
                 <div className="border-l-2 border-[#18191c]/25 pl-4">
                   <small className="block text-[11px] uppercase tracking-wider text-[#18191c]/60 mb-1">Community Allocation</small>
-                  <strong className="block text-lg sm:text-xl font-bold tracking-tight text-[#18191c]">100% Sovereign Float</strong>
+                  <strong className="block text-lg sm:text-xl font-bold tracking-tight text-[#18191c]">Creator-Held Remainder</strong>
                   <small className="block text-[11px] uppercase tracking-wider text-[#18191c]/60 mt-3 mb-1">Trading Toll</small>
-                  <strong className="block text-base sm:text-lg font-semibold text-[#18191c]">0.00% Zero Fee</strong>
+                  <strong className="block text-base sm:text-lg font-semibold text-[#18191c]">0.00% (No Token Tax)</strong>
                 </div>
               </div>
             </div>
@@ -272,7 +272,7 @@ export const WorksSection: React.FC<WorksSectionProps> = () => {
                   <span className="font-light text-[#18191c]/60">Transparent token showcase.</span>
                 </h3>
                 <p className="text-sm md:text-base text-[#18191c]/80 leading-relaxed max-w-xl">
-                  Your deployed token is immediately discoverable on Artemis&apos;s public community showcase. Anyone can verify creator receipts, audit contract bytecode on the explorer, and trade directly on DEX rails.
+                  Your deployed token is submitted immediately to Artemis&apos;s public community showcase. Anyone can verify creator receipts, audit contract bytecode on the explorer, and trade directly on DEX rails.
                 </p>
               </div>
 
@@ -280,7 +280,7 @@ export const WorksSection: React.FC<WorksSectionProps> = () => {
               <div className="grid grid-cols-2 gap-4 sm:gap-6 pt-8 border-t border-[#18191c]/15 mt-8 font-mono">
                 <div className="border-l-2 border-[#18191c]/25 pl-4">
                   <small className="block text-[11px] uppercase tracking-wider text-[#18191c]/60 mb-1">Showcase State</small>
-                  <strong className="block text-lg sm:text-xl font-bold tracking-tight text-[#18191c]">Instant Indexing Live</strong>
+                  <strong className="block text-lg sm:text-xl font-bold tracking-tight text-[#18191c]">Auto Showcase Submit</strong>
                   <small className="block text-[11px] uppercase tracking-wider text-[#18191c]/60 mt-3 mb-1">Provenance Proof</small>
                   <strong className="block text-base sm:text-lg font-semibold text-[#18191c]">Signer Verified</strong>
                 </div>

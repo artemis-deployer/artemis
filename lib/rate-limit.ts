@@ -84,7 +84,8 @@ async function dbHit(key: string, limit: number, windowMs: number): Promise<Rate
       RETURNING hits`;
     const hits = (rows as unknown as { hits: number }[])[0]?.hits ?? limit + 1;
     if (hits <= limit) return { ok: true, retryAfterMs: 0 };
-    return { ok: false, retryAfterMs: (bucket + 1) * windowMs - Date.now() };
+    // Bucket math uses two Date.now reads; clamp crossing-boundary race to >= 0.
+    return { ok: false, retryAfterMs: Math.max(0, (bucket + 1) * windowMs - Date.now()) };
   } catch {
     return null;
   }
@@ -95,8 +96,8 @@ export function clearRateLimits(): void {
   dailyHits.clear();
 }
 
-// Daily cap backed by the shared counter (rolling 24h window).
-// Guards quota-backed proxies (Pinata) against junk-pinning across rotated IPs.
+// Daily cap in UTC-day fixed window (memory day string + DB key daily:YYYY-MM-DD:key).
+// Both paths reset at UTC midnight; combined check is stricter (must pass both). Documented, intended.
 export async function checkDailyLimit(key: string, limit: number): Promise<{ ok: boolean }> {
   const day = today();
   const entry = dailyHits.get(key);

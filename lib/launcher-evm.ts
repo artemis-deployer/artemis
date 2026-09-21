@@ -45,6 +45,24 @@ export function calcEthMin(ethAmount: bigint, bps: number = ETH_MIN_BPS): bigint
 }
 export const TX_DEADLINE_SECS = 600;
 
+/** Pure: chain timestamp (secs) + deadline window. Test without RPC. */
+export function deadlineFromChainTs(chainTsSecs: number | bigint): bigint {
+  return BigInt(chainTsSecs) + BigInt(TX_DEADLINE_SECS);
+}
+
+type BlockClock = { getBlock: () => Promise<{ timestamp: number | bigint }> };
+
+/** Chain-time deadline. Falls back to Date.now when block fetch fails (fail-open: blocks launch otherwise). */
+export async function chainDeadline(pub: BlockClock): Promise<bigint> {
+  try {
+    const block = await pub.getBlock();
+    return deadlineFromChainTs(block.timestamp);
+  } catch {
+    // ponytail: local clock skew possible, but launch must not hard-block on RPC blip
+    return BigInt(Math.floor(Date.now() / 1000) + TX_DEADLINE_SECS);
+  }
+}
+
 export function formatEth(value: bigint, maxDecimals = 8): string {
   const [head, tail = ""] = formatEther(value).split(".");
   const frac = tail.replace(/0+$/, "").slice(0, maxDecimals);
@@ -72,7 +90,7 @@ export async function estimateLaunchCost(args: {
   const pub = publicClientFor(cfg);
   const gasPrice = await pub.getGasPrice();
   if (cfg.launcher) {
-    const deadline = BigInt(Math.floor(Date.now() / 1000) + TX_DEADLINE_SECS);
+    const deadline = await chainDeadline(pub);
     const gas = await pub.estimateContractGas({
       address: cfg.launcher,
       abi: LAUNCHER_ABI,
@@ -249,7 +267,7 @@ export async function addLiquidity(args: {
   await pub.waitForTransactionReceipt({ hash: approveHash }).then((r) => {
     if (r.status === "reverted") throw new Error("tx_failed");
   });
-  const deadline = BigInt(Math.floor(Date.now() / 1000) + TX_DEADLINE_SECS);
+  const deadline = await chainDeadline(pub);
   const hash = await wallet.writeContract({
     address: cfg.router,
     abi: ROUTER_ABI,
@@ -286,7 +304,7 @@ export async function launchOneTx(args: {
   await validateRouter(cfg);
   const wallet: WalletClient = createWalletClient({ chain: hoodChain(cfg), transport: custom(ethProvider() as never) });
   const pub = publicClientFor(cfg);
-  const deadline = BigInt(Math.floor(Date.now() / 1000) + TX_DEADLINE_SECS);
+  const deadline = await chainDeadline(pub);
   const hash = await wallet.writeContract({
     address: cfg.launcher,
     abi: LAUNCHER_ABI,

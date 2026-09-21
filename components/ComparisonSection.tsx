@@ -195,7 +195,7 @@ export const ComparisonSection: React.FC = () => {
                 <div className="flex-1 min-w-0">
                   <h4 className="text-base font-semibold text-[#18191c]">$0 Platform Fees</h4>
                   <p className="text-xs text-[#18191c]/80 leading-relaxed mt-1">
-                    Zero cuts, zero protocol taxes. You pay standard network gas and whatever liquidity you choose to fund.
+                    Zero Artemis cuts, zero token taxes. You pay standard network gas (plus pump.fun creation fees on Solana) and whatever liquidity you choose to fund.
                   </p>
                 </div>
               </div>

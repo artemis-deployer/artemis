@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   addLiquidity,
   calcEthMin,
+  chainDeadline,
+  deadlineFromChainTs,
   decodeLaunchedToken,
   estimateLaunchCost,
   ETH_MIN_BPS,
@@ -208,6 +210,32 @@ describe("addLiquidity guards", () => {
         slippageBps: 4999,
       }),
     ).rejects.toThrow("bad_slippage");
+  });
+});
+
+describe("chain deadline", () => {
+  it("adds 600s to chain timestamp (number + bigint)", () => {
+    expect(deadlineFromChainTs(1000)).toBe(1600n);
+    expect(deadlineFromChainTs(1000n)).toBe(1600n);
+    expect(deadlineFromChainTs(0)).toBe(BigInt(TX_DEADLINE_SECS));
+  });
+
+  it("uses block timestamp, not local clock", async () => {
+    const pub = { getBlock: async () => ({ timestamp: 2000n }) };
+    expect(await chainDeadline(pub)).toBe(2600n);
+  });
+
+  it("falls back to Date.now when block fetch fails", async () => {
+    const before = Math.floor(Date.now() / 1000);
+    const pub = {
+      getBlock: async () => {
+        throw new Error("rpc_down");
+      },
+    };
+    const d = await chainDeadline(pub);
+    const after = Math.floor(Date.now() / 1000);
+    expect(d >= BigInt(before + TX_DEADLINE_SECS)).toBe(true);
+    expect(d <= BigInt(after + TX_DEADLINE_SECS)).toBe(true);
   });
 });
 

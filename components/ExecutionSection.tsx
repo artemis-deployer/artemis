@@ -22,7 +22,7 @@ export const ExecutionSection: React.FC<ExecutionSectionProps> = () => {
         {/* Center Heading */}
         <div className="text-center max-w-4xl mx-auto mb-12">
           <h2 className="font-unbounded text-2xl sm:text-3xl md:text-4xl lg:text-[42px] font-bold tracking-tight text-[#18191c] mb-4 leading-[1.2]">
-            <span className="block">Two Verified Rails.</span>
+            <span className="block">Two Launch Rails.</span>
             <span className="block">One Transparent Standard.</span>
           </h2>
           <p className="font-sans text-[#18191c]/70 text-sm sm:text-base leading-relaxed max-w-xl mx-auto">
@@ -91,7 +91,7 @@ export const ExecutionSection: React.FC<ExecutionSectionProps> = () => {
                     Robinhood<br />Chain V2
                   </h3>
                   <p className="font-sans text-xs sm:text-sm text-[#18191c]/80 leading-relaxed mb-6">
-                    Two-step honest deployment: creates a fixed 999M ERC20 contract, then pairs with ETH via Uniswap V2 Router.
+                    One-transaction launcher: deploys a fixed 999M ERC20 and pairs with ETH via Uniswap V2 Router atomically.
                   </p>
                 </div>
                 <a
@@ -195,7 +195,7 @@ export const ExecutionSection: React.FC<ExecutionSectionProps> = () => {
                   <span className="w-4 h-4 rounded-full bg-[#18191c]/10 text-[#18191c] flex items-center justify-center shrink-0">
                     <Check className="w-2.5 h-2.5 stroke-[2.5]" />
                   </span>
-                  <span>Devnet simulation mode</span>
+                  <span>Devnet drill-mint mode</span>
                 </li>
                 <li className="flex items-center gap-2.5">
                   <span className="w-4 h-4 rounded-full bg-[#18191c]/10 text-[#18191c] flex items-center justify-center shrink-0">

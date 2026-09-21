@@ -117,7 +117,7 @@ const getStageLogs = (
       { tag: 'SOLC', text: 'solc 0.8.26 --optimize --runs=200 ERC20Sovereign.sol', color: 'text-[#fae8a4]' },
       { tag: 'BYTECODE', text: 'compiled 1,482 bytes immutable EVM instructions', color: 'text-white/80' },
       { tag: 'SLOT_0', text: 'constructor_supply = 999,000,000 * 10^18 locked', color: 'text-[#cadcf0]' },
-      { tag: 'OWNERSHIP', text: 'ownership_status: address(0x0) [RENOUNCED AT GENESIS]', color: 'text-white' },
+      { tag: 'OWNERSHIP', text: 'ownership: no owner roles [NONE AT GENESIS]', color: 'text-white' },
       { tag: 'VTABLE', text: 'mint() selector 0x00000000 not present in vtable', color: 'text-[#fae8a4]' },
       audit === 'mint'
         ? { tag: 'REVERT', text: 'execute: mint(to, 1000000) ↳ REVERT: 0x4e487b71', color: 'text-red-300' }
@@ -131,8 +131,8 @@ const getStageLogs = (
       { tag: 'AMM_ROUTER', text: network === 'robinhood' ? 'UniswapV2Factory.createPair(token, WETH)' : 'pump.fun.initializeAMM(token, SOL)', color: 'text-[#fae8a4]' },
       { tag: 'NETWORK', text: `target_chain: ${network === 'robinhood' ? 'Robinhood EVM (ID 4663)' : 'Solana Mainnet'}`, color: 'text-white/80' },
       { tag: 'ROUTER', text: `router: ${network === 'robinhood' ? routerAddr.slice(0, 18) + '...' : 'pump...4M5u'}`, color: 'text-[#cadcf0]' },
-      { tag: 'LP_BURN', text: 'lp_destination: 0x000000000000000000000000000000000000dead', color: 'text-[#fae8a4]' },
-      { tag: 'RUGGUARD', text: 'liquidity permanently locked to burn address', color: 'text-white' },
+      { tag: 'LP_BURN', text: 'lp_destination: creator wallet (self-custodied)', color: 'text-[#fae8a4]' },
+      { tag: 'RUGGUARD', text: 'LP tokens delivered to creator (unlocked)', color: 'text-white' },
       { tag: 'POOL_LIVE', text: '[ACTIVE] sovereign pair verified on block explorer', color: 'text-emerald-400' }
     ];
   }
@@ -421,7 +421,7 @@ export const StepsSection: React.FC = () => {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-[#18191c]/60">Mint Authority:</span>
-                        <span className="font-bold text-emerald-700">RENOUNCED AT GENESIS</span>
+                        <span className="font-bold text-emerald-700">NONE (NO OWNER)</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-[#18191c]/60">Platform Tax:</span>
@@ -613,7 +613,7 @@ export const StepsSection: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <span>GAS: &lt; 0.001 ETH</span>
                   <span>·</span>
-                  <span>CONFIRMATION: INSTANT</span>
+                  <span>CONFIRMATION: ONCHAIN</span>
                   <span>·</span>
                   <span>RPC: {latencyJitter}MS</span>
                 </div>

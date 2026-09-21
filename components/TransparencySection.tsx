@@ -25,7 +25,7 @@ const disclosures = [
     desc: 'Artemis runs as a client-side interface and stateless API proxy. Private keys are never requested, stored, or transmitted. Every onchain interaction requires your explicit wallet signature.'
   },
   {
-    title: 'Trading pair creation guarantees no buyers.',
+    title: 'No buyers guaranteed at launch.',
     desc: 'Creating an onchain liquidity pool establishes an open DEX order book, but does not guarantee volume, secondary market interest, or market appreciation. Launch responsibly.'
   }
 ];

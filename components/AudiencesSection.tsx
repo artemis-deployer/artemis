@@ -31,7 +31,7 @@ const BUILDER_SEGMENTS: BuilderSegment[] = [
     tabLabel: 'Community Creators',
     tag: 'VIRAL MOVEMENTS',
     title: 'Turn Cultural Movements into Sovereign Liquidity',
-    desc: 'Launch community tokens and cultural movements with locked liquidity, fair genesis minting, and zero developer backdoors. Complete community sovereignty from block zero.',
+    desc: 'Launch community tokens and cultural movements with creator-held LP, fair genesis minting, and zero developer backdoors. Complete community sovereignty from block zero.',
     icon: Users,
     img: '/assets/feat_sovereign_lp.png',
     badge: 'FAIR LAUNCH VERIFIED',
@@ -40,7 +40,7 @@ const BUILDER_SEGMENTS: BuilderSegment[] = [
     metrics: [
       { label: 'GENESIS MODEL', value: 'Fair Launch' },
       { label: 'DEV TAX', value: 'Zero (0.00%)' },
-      { label: 'LP DESTINATION', value: 'Burnt 0xdead' },
+      { label: 'LP DESTINATION', value: 'Creator wallet' },
       { label: 'MINT FUNCTION', value: 'Non-Existent' }
     ],
     cliCommand: 'artemis.deploy({ archetype: "community", lpLock: true, devTax: 0 })',
@@ -51,7 +51,7 @@ const BUILDER_SEGMENTS: BuilderSegment[] = [
     tabLabel: 'Web3 Developers',
     tag: 'DEFI ARCHITECTS',
     title: 'Deploy Verified Contracts to Autonomous DEX Pools',
-    desc: 'Synthesize non-custodial smart contracts compiled deterministically on Robinhood Chain or Solana. Ownership is renounced at construction, guaranteeing permanent anti-rug safety.',
+    desc: 'Synthesize non-custodial smart contracts compiled deterministically on Robinhood Chain or Solana. No owner roles exist at construction, blocking mint-rug backdoors.',
     icon: Terminal,
     img: '/assets/aud_developers.png',
     badge: 'BYTECODE AUDITED',

@@ -38,7 +38,7 @@ export const IntroSection: React.FC<IntroSectionProps> = () => {
             </h2>
 
             <p className="mt-4 text-sm sm:text-base text-[#18191c]/75 leading-relaxed font-sans max-w-xl">
-              No platform custody, zero mint backdoors, and zero developer tax. Every transaction compiles locally in-browser and routes directly to your wallet for signing. Launch on Robinhood Chain Uniswap V2 or Solana pump.fun with true cryptographic sovereignty.
+              No platform custody, zero mint backdoors, and zero developer tax. EVM transactions compile locally in-browser; every transaction is signed directly in your wallet. Launch on Robinhood Chain Uniswap V2 or Solana pump.fun with true cryptographic sovereignty.
             </p>
 
             <div className="mt-7 flex flex-wrap items-center gap-4">
@@ -83,7 +83,7 @@ export const IntroSection: React.FC<IntroSectionProps> = () => {
                 Immutable Genesis Mint
               </h3>
               <p className="text-xs sm:text-[13px] text-[#18191c]/70 leading-relaxed">
-                Ownership renounced on deploy with zero auxiliary mint functions. Strictly fixed at 999,000,000 supply.
+                No owner roles exist on deploy with zero auxiliary mint functions. Strictly fixed at 999,000,000 supply.
               </p>
             </div>
 

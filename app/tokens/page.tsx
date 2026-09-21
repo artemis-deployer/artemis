@@ -131,7 +131,7 @@ export default function TokensPage() {
             Token Showcase
           </h1>
           <p className="m-0 max-w-xl text-base text-white/70 leading-relaxed">
-            Explore live tokens launched across Robinhood Chain direct Uniswap V2 pools and Solana pump.fun bonding curves.
+            Explore tokens launched across Robinhood Chain direct Uniswap V2 pools and Solana pump.fun bonding curves.
           </p>
         </div>
 

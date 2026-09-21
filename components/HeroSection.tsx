@@ -97,7 +97,7 @@ export const HeroSection: React.FC<HeroSectionProps> = () => {
             </div>
             <div>
               <span className="block text-[11px] uppercase tracking-wider text-white/40">Environments</span>
-              <strong className="mt-1 block text-base sm:text-lg font-bold tracking-tight text-[#cadcf0]">{CHAINS.length} Chains Live</strong>
+              <strong className="mt-1 block text-base sm:text-lg font-bold tracking-tight text-[#cadcf0]">{CHAINS.length} Networks</strong>
             </div>
             <div>
               <span className="block text-[11px] uppercase tracking-wider text-white/40">Key Custody</span>

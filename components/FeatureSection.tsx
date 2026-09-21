@@ -33,7 +33,7 @@ const features = [
     theme: 'bg-[#cadcf0]',
     img: '/assets/aud_community.png',
     alt: 'Fair-launch community tokens and viral broadcasting nodes',
-    desc: 'Fair-launch bonding curve rail via PumpPortal. IPFS metadata and transaction bytes built locally in-browser.',
+    desc: 'Fair-launch bonding curve rail via PumpPortal. IPFS metadata pinned server-side; transactions signed locally in-wallet.',
     spec: 'CURVE: BONDING V1'
   },
   {
@@ -55,7 +55,7 @@ const features = [
     theme: 'bg-[#ece4d4]',
     img: '/assets/feat_zerofee.png',
     alt: 'Futuristic open gateway with 0% fee and balanced scales',
-    desc: '$0 platform cut. You pay standard network gas and your paired liquidity deposit only.',
+    desc: '$0 platform cut. You pay network gas (plus pump creation fees on Solana) and your paired liquidity deposit only.',
     spec: 'PLATFORM CUT: 0% EXACT'
   },
   {
