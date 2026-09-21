@@ -16,6 +16,7 @@ import {
   formatEth,
   getHoodConfig,
   launchOneTx,
+  publicClientFor,
   SLIPPAGE_PRESETS,
   toTokenUnits,
   TX_DEADLINE_SECS,
@@ -41,7 +42,7 @@ import {
 } from "../lib/launcher-solana";
 import { findResumableEvmReceipt, listReceipts, saveReceipt } from "../lib/receipts";
 import { submitShowcase } from "../lib/showcase";
-import { solanaAddressOf } from "../lib/wallets";
+import { isInsufficientFunds, solanaAddressOf, walletLabel } from "../lib/wallets";
 import SolanaButton, { getSolanaProvider, type SolanaProvider } from "./SolanaButton";
 import WalletButton from "./WalletButton";
 import { useDraft } from "./DraftContext";
@@ -90,6 +91,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
   const [pumpNote, setPumpNote] = useState("");
   const [cost, setCost] = useState<LaunchCost | null>(null);
   const [costLoading, setCostLoading] = useState(false);
+  const [balanceWei, setBalanceWei] = useState<bigint | null>(null);
   const [slippageBps, setSlippageBps] = useState<number>(ETH_MIN_BPS);
   const { artworkFile, setArtworkFile } = useDraft();
 
@@ -166,6 +168,26 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       clearTimeout(id);
     };
   }, [isPump, chainId, account, slippageBps, draft.name, draft.ticker, draft.pooled, draft.liquidity]);
+
+  useEffect(() => {
+    if (isPump || chainId === null || !account) {
+      setBalanceWei(null);
+      return;
+    }
+    let alive = true;
+    (async () => {
+      try {
+        const cfg = getHoodConfig(chainId);
+        const wei = cfg ? await publicClientFor(cfg).getBalance({ address: account }) : null;
+        if (alive) setBalanceWei(wei);
+      } catch {
+        if (alive) setBalanceWei(null);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [isPump, chainId, account]);
 
   function fail(message: string): void {
     setNote(message);
@@ -257,7 +279,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
         throw inner;
       }
     } catch (e: unknown) {
-      const message = e instanceof Error ? e.message : "launch_failed";
+      const message = e instanceof Error ? walletLabel(e) : "launch_failed";
       fail(message);
     } finally {
       launchingRef.current = false;
@@ -303,7 +325,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       setHood("pool-done");
       succeed(tokenAddr, liq.hash);
     } catch (e: unknown) {
-      fail(e instanceof Error ? e.message : "launch_failed");
+      fail(e instanceof Error ? walletLabel(e) : "launch_failed");
     } finally {
       fundingRef.current = false;
     }
@@ -581,6 +603,16 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
                       ~{formatEth(cost.fee + liq)} {chainObj?.currency}
                     </span>
                   </div>
+                );
+              })()}
+              {(() => {
+                const liq = safeEthAmount(draft.liquidity);
+                if (!cost || liq === null || balanceWei === null) return null;
+                if (!isInsufficientFunds(balanceWei, cost.fee + liq)) return null;
+                return (
+                  <p role="alert" className="m-0 text-xs font-medium text-red-400">
+                    Insufficient funds: total exceeds wallet balance.
+                  </p>
                 );
               })()}
               {cost && cost.steps === 2 && (

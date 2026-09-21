@@ -331,6 +331,28 @@ describe("tokens route", () => {
     expect(mocked.saveToken).toHaveBeenCalledTimes(2);
   });
 
+  it("POST accepts numeric chainId 4663 (number) same as string, no 400", async () => {
+    mocked.isDbConfigured.mockReturnValue(true);
+    mocked.saveToken.mockResolvedValue(undefined);
+    const req = new Request("http://x/api/community/tokens", {
+      method: "POST",
+      body: JSON.stringify({
+        chainId: 4663,
+        address: EVM_ADDR,
+        txHash: EVM_HASH,
+        creator: "0x1111111111111111111111111111111111111111",
+      }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+    expect(mockedVerify.verifyEvmTx).toHaveBeenCalledWith(
+      4663,
+      EVM_ADDR,
+      EVM_HASH,
+      "0x1111111111111111111111111111111111111111",
+    );
+  });
+
   it("POST forwards Solana creator and rejects mismatch with invalid_tx", async () => {
     mocked.isDbConfigured.mockReturnValue(true);
     const mint = "Mint111111111111111111111111111111111111";

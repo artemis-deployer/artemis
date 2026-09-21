@@ -162,6 +162,26 @@ describe("pump-metadata route", () => {
     expect((await POST(req2)).status).toBe(502);
   });
 
+  it("throttles twenty rapid 2MB pins from one IP (quota + bandwidth guard)", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ data: { cid: "b" } }) });
+    vi.stubGlobal("fetch", fetchMock);
+    const bigImage = `data:image/png;base64,${"QUJD".repeat(500000)}`;
+    let okCount = 0;
+    let throttled = false;
+    for (let i = 0; i < 20; i++) {
+      const req = new Request("http://x/api/pump-metadata", {
+        method: "POST",
+        headers: { "x-forwarded-for": "8.8.8.8" },
+        body: JSON.stringify({ name: "Kopi", symbol: "KOPI", imageData: bigImage }),
+      });
+      const res = await POST(req);
+      if (res.status === 200) okCount += 1;
+      if (res.status === 429) throttled = true;
+    }
+    expect(throttled).toBe(true);
+    expect(okCount).toBeLessThanOrEqual(10);
+  });
+
   it("throttles 10/min per IP with 429", async () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ data: { cid: "b" } }) });
     vi.stubGlobal("fetch", fetchMock);

@@ -363,3 +363,12 @@ export function walletLabel(e: unknown): string {
   }
   return "Wallet connection failed.";
 }
+
+/** True when a known total spend exceeds a known balance. False when either unknown. */
+export function isInsufficientFunds(
+  balanceWei: bigint | null | undefined,
+  totalWei: bigint | null | undefined,
+): boolean {
+  if (balanceWei == null || totalWei == null) return false;
+  return totalWei > balanceWei;
+}

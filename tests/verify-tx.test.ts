@@ -203,3 +203,49 @@ describe("verifyEvmTx creator binding (no network)", () => {
     );
   });
 });
+
+describe("chain-confusion: string vs number chainId", () => {
+  const victim = "0x097716e767df17605627def0030110f8ee559ec4";
+  const attacker = "0x1111111111111111111111111111111111111111";
+  const hash = `0x${"ab".repeat(32)}`;
+  it('accepts string "4663" same as number 4663 (normalize with Number first)', async () => {
+    mockGetHood.mockImplementation(((id: unknown) =>
+      id === 4663 ? { router: null, factory: null, launcher: null } : undefined) as never);
+    mockPublicFor.mockReturnValue({
+      getTransactionReceipt: async () => ({ status: "success", from: attacker, contractAddress: victim, logs: [] }),
+    } as never);
+    await expect(verifyEvmTx("4663" as unknown as 4663, victim, hash, attacker)).resolves.toBe(true);
+  });
+  it('accepts string "46630" same as number 46630', async () => {
+    mockGetHood.mockImplementation(((id: unknown) =>
+      id === 46630 ? { router: null, factory: null, launcher: null } : undefined) as never);
+    mockPublicFor.mockReturnValue({
+      getTransactionReceipt: async () => ({ status: "success", from: attacker, contractAddress: victim, logs: [] }),
+    } as never);
+    await expect(verifyEvmTx("46630" as unknown as 46630, victim, hash, attacker)).resolves.toBe(true);
+  });
+});
+
+describe("cross-network replay: tx from different chain/RPC proves nothing", () => {
+  it("EVM testnet txhash looked up on mainnet RPC (null receipt) -> false", async () => {
+    mockGetHood.mockReturnValue({ router: null, factory: null, launcher: null } as never);
+    mockPublicFor.mockReturnValue({ getTransactionReceipt: async () => null } as never);
+    const addr = "0x097716e767df17605627def0030110f8ee559ec4";
+    const hash = `0x${"cd".repeat(32)}`;
+    await expect(
+      verifyEvmTx(4663, addr, hash, "0x1111111111111111111111111111111111111111"),
+    ).resolves.toBe(false);
+  });
+  it("mainnet solana sig submitted as devnet (null status) -> false", async () => {
+    const sig = "5".repeat(88);
+    MockConnection.mockImplementation(function (this: unknown) {
+      return {
+        getSignatureStatuses: async () => ({ value: [null] }),
+        getTransaction: async () => null,
+      };
+    } as never);
+    await expect(verifySolanaTx("https://devnet-rpc.test", "Mint111111111111111111111111111111111111", sig)).resolves.toBe(
+      false,
+    );
+  });
+});

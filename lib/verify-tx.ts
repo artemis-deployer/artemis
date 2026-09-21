@@ -35,7 +35,7 @@ export async function verifyEvmTx(
 ): Promise<boolean> {
   try {
     if (!/^0x[0-9a-fA-F]{64}$/.test(txHash)) return false;
-    const cfg = getHoodConfig(chainId);
+    const cfg = getHoodConfig(Number(chainId) as 4663 | 46630);
     if (!cfg) return false;
     const receipt = await publicClientFor(cfg).getTransactionReceipt({ hash: txHash as `0x${string}` });
     if (!receipt || receipt.status !== "success") return false;

@@ -8,6 +8,7 @@ import {
   getEvmBalance,
   getEvmChainId,
   getSolanaBalance,
+  isInsufficientFunds,
   loadWallet,
   SOLANA_WALLETS,
   solanaAddressOf,
@@ -221,5 +222,18 @@ describe("balances", () => {
       phantom: { solana: { connect: async () => undefined, publicKey: null } },
     });
     await expect(connectSolana("phantom")).rejects.toThrow("wallet_failed");
+  });
+});
+
+describe("isInsufficientFunds", () => {
+  it("returns false when balance or total unknown", () => {
+    expect(isInsufficientFunds(null, 10n)).toBe(false);
+    expect(isInsufficientFunds(10n, null)).toBe(false);
+  });
+
+  it("warns when total exceeds balance", () => {
+    expect(isInsufficientFunds(100n, 101n)).toBe(true);
+    expect(isInsufficientFunds(100n, 100n)).toBe(false);
+    expect(isInsufficientFunds(100n, 50n)).toBe(false);
   });
 });
