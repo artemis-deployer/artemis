@@ -6,6 +6,7 @@ import { CHAINS, DIRECT_SUPPLY } from "../lib/chains";
 import { stripNumericSeparators, validateDraft } from "../lib/draft";
 import { isSafeImageSrc, useDraft } from "./DraftContext";
 import ChainLogo from "./ChainLogo";
+import CropModal from "./CropModal";
 
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 
@@ -15,6 +16,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [pinning, setPinning] = useState(false);
+  const [cropSrc, setCropSrc] = useState<{ url: string; name: string; type: string } | null>(null);
   const [networkOpen, setNetworkOpen] = useState(false);
   const networkRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -57,19 +59,23 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
     const file = e.target.files?.[0];
     if (!file) return;
     setImageError("");
+    if (!file.type.startsWith("image/")) {
+      setImageError("Please choose an image file (PNG, JPEG, WebP, GIF).");
+      e.target.value = "";
+      return;
+    }
     if (file.size > MAX_IMAGE_BYTES) {
       setImageError("Image must be under 2MB. Try another file.");
       e.target.value = "";
       return;
     }
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
-    const url = URL.createObjectURL(file);
-    setPreviewUrl(url);
-    setFileName(file.name);
-    if (isSolana) {
-      setArtworkFile(file);
-      return;
-    }
+    if (cropSrc) URL.revokeObjectURL(cropSrc.url);
+    // Square 1:1 crop first — preview, showcase, and uploads all use the cropped file.
+    setCropSrc({ url: URL.createObjectURL(file), name: file.name, type: file.type });
+    e.target.value = "";
+  }
+
+  function pinEvmFile(file: File) {
     // EVM carries no onchain image: pin immediately so the URL lands in the showcase.
     setPinning(true);
     void (async () => {
@@ -94,6 +100,31 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
         setPinning(false);
       }
     })();
+  }
+
+  function handleCropDone(file: File) {
+    setCropSrc((prev) => {
+      if (prev) URL.revokeObjectURL(prev.url);
+      return null;
+    });
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    // Recompute rail at confirm time: user may switch network while cropping.
+    const solana = draft.route === "pumpfun" && String(draft.chainId).startsWith("solana");
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+    setFileName(file.name);
+    if (solana) {
+      setArtworkFile(file);
+      return;
+    }
+    pinEvmFile(file);
+  }
+
+  function handleCropCancel() {
+    setCropSrc((prev) => {
+      if (prev) URL.revokeObjectURL(prev.url);
+      return null;
+    });
   }
   const isSolana = draft.route === "pumpfun" && String(draft.chainId).startsWith("solana");
   const imageOk = isSafeImageSrc(draft.image);
@@ -141,7 +172,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
             <img
               src={previewUrl ?? draft.image ?? ""}
               alt={draft.name ? `${draft.name} artwork` : "Coin artwork preview"}
-              className="h-52 w-full object-cover"
+              className="aspect-square w-full bg-black/20 object-cover"
             />
           </button>
           ) : (
@@ -155,15 +186,21 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
             <span className="text-[11px] font-medium text-white/40">Your coin image appears here</span>
           </button>
           )
-        ) : draft.image && imageOk ? (
-          <div className="overflow-hidden rounded-lg border border-white/15">
-            {/* eslint-disable-next-line @next/next/no-img-element -- user draft image */}
+        ) : previewUrl || (draft.image && imageOk) ? (
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            title="Change artwork"
+            aria-label="Change coin artwork"
+            className="block w-full cursor-pointer overflow-hidden rounded-lg border border-white/15 bg-black/20 p-0"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element -- local preview or user draft image */}
             <img
-              src={draft.image}
+              src={previewUrl ?? draft.image ?? ""}
               alt={draft.name ? `${draft.name} artwork` : "Coin artwork preview"}
-              className="h-52 w-full object-cover"
+              className="aspect-square w-full bg-black/20 object-cover"
             />
-          </div>
+          </button>
         ) : (
           <p className="m-0 rounded-lg border border-white/10 bg-[#1a1b1f] p-3 text-xs text-white/50">
             Coin artwork shows in the community showcase — upload a file or paste a URL below.
@@ -345,7 +382,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
       <div className="flex flex-col gap-[5px]">
         <label className="flex items-center justify-between text-xs font-bold tracking-[0.02em] text-white/90">
           <span>Token Brand Icon</span>
-          <span className="text-[11px] font-medium text-white/40">Optional · Max 2MB</span>
+          <span className="text-[11px] font-medium text-white/40">Optional · 1:1 · Max 2MB</span>
         </label>
         <input
           ref={fileRef}
@@ -371,6 +408,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
                 setPreviewUrl(null);
                 setFileName(null);
                 setArtworkFile(null);
+                setDraft((prev) => ({ ...prev, image: undefined }));
                 if (fileRef.current) fileRef.current.value = "";
               }}
               aria-label="Remove coin image"
@@ -420,7 +458,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
           onChange={(e) => setDraft((prev) => ({ ...prev, image: e.target.value || undefined }))}
         />
         {previewUrl && !draft.image && (
-          <p className="m-0 text-xs text-white/50">Uploaded file pins to IPFS on Solana launch. EVM ignores artwork.</p>
+          <p className="m-0 text-xs text-white/50">{pinning ? "Pinning artwork to IPFS…" : "Local preview — IPFS URL fills in after pin completes."}</p>
         )}
         {imageError && (
           <p role="alert" className="m-0 text-xs font-medium text-red-300">
@@ -495,6 +533,15 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
         <span>Review Your Launch</span>
         <ArrowRight size={16} />
       </button>
+      {cropSrc && (
+        <CropModal
+          src={cropSrc.url}
+          fileName={cropSrc.name}
+          fileType={cropSrc.type}
+          onCancel={handleCropCancel}
+          onDone={handleCropDone}
+        />
+      )}
     </section>
   );
 }

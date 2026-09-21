@@ -54,9 +54,8 @@ export const ArrivalPreloader: React.FC = () => {
     <div className={`arrival ${stage === 'ready' ? 'arrival-ready' : ''}`} aria-hidden="true">
       <div className="arrival-paper font-sans">
         <div className="arrival-masthead flex justify-between items-center text-[10px] tracking-[0.14em] text-[#18191c]/60">
-          <span className="arrival-brand flex items-center gap-2.5 text-2xl font-bold tracking-tight text-[#18191c]">
-            <img src="/assets/logo.png" className="w-7 h-7 rounded-full object-cover" alt="" />
-            Artemis
+          <span className="arrival-brand flex items-center">
+            <img src="/assets/logo.webp" className="h-7 w-auto object-contain [filter:invert(1)]" alt="Artemis" />
           </span>
           <span>AUTONOMOUS LAUNCHPAD · ROBINHOOD & SOLANA</span>
         </div>

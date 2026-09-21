@@ -36,9 +36,8 @@ export const Footer: React.FC<FooterProps> = () => {
           {/* Col 1: Brand & Tagline */}
           <div>
             <p className="label">&#123;ARTEMIS&#125;</p>
-            <Link className="brand" href="/" onClick={handleHomeClick}>
-              <img src="/assets/logo.png" alt="Artemis Logo" />
-              <span>Artemis</span>
+            <Link className="brand" href="/" onClick={handleHomeClick} aria-label="Artemis home">
+              <img src="/assets/logo.webp" alt="Artemis" />
             </Link>
             <p>
               Autonomous non-custodial token launcher.<br />

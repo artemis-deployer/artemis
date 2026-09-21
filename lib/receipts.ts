@@ -7,6 +7,7 @@ export type Receipt = {
   hash: string;
   createdAt: string;
   ticker?: string;
+  image?: string;
 };
 
 const KEY = "artemis.receipts.v1";
@@ -34,7 +35,12 @@ export function listReceipts(): Receipt[] {
     const raw = s.getItem(KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw) as Receipt[];
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+    // Corrupt/hand-edited entries without a hash crash render (r.hash.slice):
+    // drop them here so one bad row never blanks the showcase.
+    return parsed.filter(
+      (r) => typeof r === "object" && r !== null && typeof (r as Receipt).hash === "string" && (r as Receipt).hash.length > 0,
+    );
   } catch {
     return [];
   }

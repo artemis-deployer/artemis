@@ -44,7 +44,7 @@ export const SoonModal: React.FC<SoonModalProps> = ({ isOpen, feature, onClose }
           ×
         </button>
 
-        <img src="/assets/logo.png" className="w-14 h-14 rounded-full mb-6 object-cover" alt="" />
+        <img src="/assets/logo.webp" className="h-8 w-auto mb-6 object-contain [filter:invert(1)]" alt="Artemis" />
 
         <h2 className="font-unbounded text-2xl md:text-3xl font-bold tracking-tight mb-3">
           Coming soon.

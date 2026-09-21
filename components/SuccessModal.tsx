@@ -45,7 +45,7 @@ export default function SuccessModal({ info, onClose }: { info: LaunchSuccess | 
           <div>
             <p className="m-0 flex items-center gap-1.5 font-mono text-[11px] font-bold tracking-[0.15em] text-emerald-300 uppercase">
               <BadgeCheck size={14} aria-hidden="true" />
-              <span>{info.rehearsal ? "Rehearsal built — not broadcast" : "Launch successful"}</span>
+              <span>{info.rehearsal ? "Rehearsal — token only, pool stubbed" : "Launch successful"}</span>
             </p>
             <h3 className="m-0 mt-1 text-xl font-bold font-unbounded text-white">
               {info.name || info.ticker || "Your coin"} {info.rehearsal ? "is ready" : "is live"}
@@ -72,7 +72,7 @@ export default function SuccessModal({ info, onClose }: { info: LaunchSuccess | 
           <dt className="font-medium text-white/50">Token:</dt>
           <dd className="m-0 text-right font-mono break-all">
             {info.rehearsal ? (
-              <span className="text-white/70">{info.token.slice(0, 10)}…{info.token.slice(-8)} (unbroadcast)</span>
+              <span className="text-white/70">{info.token.slice(0, 10)}…{info.token.slice(-8)} (pool stubbed)</span>
             ) : (
             <a
               href={explorerTokenUrl(info.chainId, info.token)}

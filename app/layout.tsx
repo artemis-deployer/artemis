@@ -6,7 +6,8 @@ export const metadata: Metadata = {
   title: "Artemis — Autonomous Non-Custodial Token Launchpad",
   description: "Deploy fixed-supply tokens directly into Robinhood Chain Uniswap V2 pools or Solana pump.fun. 100% non-custodial, zero platform fees.",
   icons: {
-    icon: "/assets/logo.png",
+    icon: "/assets/icon.png",
+    apple: "/assets/icon.png",
   },
 };
 

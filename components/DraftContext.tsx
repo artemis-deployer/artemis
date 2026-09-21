@@ -4,7 +4,7 @@ import { createContext, useContext, useState, type Dispatch, type SetStateAction
 import { EMPTY_DRAFT, type Draft } from "../lib/draft";
 import type { Receipt } from "../lib/receipts";
 
-const IMAGE_DATA_RE = /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/;
+const IMAGE_DATA_RE = /^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/;
 const MAX_IMAGE_DATA_LEN = 500000;
 const MAX_IMAGE_URL_LEN = 2048;
 

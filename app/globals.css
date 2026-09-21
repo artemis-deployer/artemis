@@ -45,31 +45,35 @@ body {
   min-height: 100vh;
 }
 
-/* Typography matching darkpoolfi.tech */
-h1, h2, h3, h4, p {
-  margin: 0;
-  font-weight: 400;
-}
+/* Typography matching darkpoolfi.tech.
+   Layered so Tailwind utilities (text-*, font-*, leading-*) win on demand:
+   unlayered author CSS beats all @layer output, which made every h3 36px. */
+@layer base {
+  h1, h2, h3, h4, p {
+    margin: 0;
+    font-weight: 400;
+  }
 
-h1 {
-  font-size: 60px;
-  line-height: 1.07;
-  letter-spacing: -2.4px;
-}
+  h1 {
+    font-size: 60px;
+    line-height: 1.07;
+    letter-spacing: -2.4px;
+  }
 
-h2 {
-  font-size: 48px;
-  line-height: 1.2;
-  letter-spacing: -0.96px;
-}
+  h2 {
+    font-size: 48px;
+    line-height: 1.2;
+    letter-spacing: -0.96px;
+  }
 
-h3 {
-  font-size: 36px;
-  line-height: 1.1;
-}
+  h3 {
+    font-size: 36px;
+    line-height: 1.1;
+  }
 
-p {
-  line-height: 1.5;
+  p {
+    line-height: 1.5;
+  }
 }
 
 .font-unbounded, .heading-font {
@@ -120,8 +124,8 @@ p {
 .button, .dp-button {
   border: 0;
   border-radius: 3px;
-  background: #f7f5f8;
-  color: #17151e;
+  background: #f8f6f0;
+  color: #18191c;
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
@@ -141,8 +145,8 @@ p {
   place-items: center;
   width: 36px;
   height: 36px;
-  background: #17151e;
-  color: #f7f5f8;
+  background: #18191c;
+  color: #f8f6f0;
   border-radius: 1px;
   font-size: 22px;
   transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
@@ -960,10 +964,13 @@ textarea:focus:not(:focus-visible) {
 }
 
 .nav .brand img, .nav-dialog-top .brand img {
-  width: 26px;
-  height: 26px;
-  object-fit: cover;
-  border-radius: 50%;
+  width: auto;
+  height: 28px;
+  object-fit: contain;
+}
+
+.nav.light-nav .brand img {
+  filter: invert(1);
 }
 
 .nav-context {
@@ -1164,8 +1171,8 @@ textarea:focus:not(:focus-visible) {
   max-height: none;
   margin: 0;
   padding: 0;
-  background: #15121e;
-  color: #f7f3fa;
+  background: #131416;
+  color: #f8f6f0;
   box-shadow: none;
   overflow: auto;
   border: 0;
@@ -1214,10 +1221,8 @@ textarea:focus:not(:focus-visible) {
 
 .nav-dialog-top .brand img {
   width: auto;
-  height: 29px;
-  aspect-ratio: 1/1;
+  height: 28px;
   object-fit: contain;
-  border-radius: 50%;
 }
 
 .menu-close {
@@ -1359,7 +1364,7 @@ textarea:focus:not(:focus-visible) {
 }
 
 .navigation-dialog .nav-launch:hover {
-  background: #b4dff6;
+  background: #cadcf0;
 }
 
 .nav-art {
@@ -1390,7 +1395,7 @@ textarea:focus:not(:focus-visible) {
 .nav-art-frame:after {
   content: '';
   position: absolute;
-  background: #15121e;
+  background: #131416;
   width: 40px;
   height: 40px;
   z-index: 2;
@@ -1420,7 +1425,7 @@ textarea:focus:not(:focus-visible) {
 .nav-art > p {
   font-size: 20px;
   margin: 22px 0;
-  color: #f7f3fa;
+  color: #f8f6f0;
   min-height: 30px;
 }
 
@@ -1691,10 +1696,8 @@ textarea:focus:not(:focus-visible) {
 
 .footer-grid .brand img {
   width: auto;
-  height: 29px;
-  aspect-ratio: 1/1;
+  height: 32px;
   object-fit: contain;
-  border-radius: 50%;
 }
 
 .footer-grid p {

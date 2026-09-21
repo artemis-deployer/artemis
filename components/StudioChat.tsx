@@ -219,9 +219,12 @@ export default function StudioChat() {
     <section className="flex h-[640px] flex-col overflow-hidden rounded-xl border border-white/10 bg-[#131416] shadow-2xl max-sm:h-[560px]" aria-label="Talk to Artemis">
       <div className="flex items-center justify-between border-b border-white/10 bg-[#1a1b1f] px-5 py-3.5">
         <div className="flex items-center gap-2.5">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#fae8a4] font-unbounded text-sm text-[#18191c]" aria-hidden="true">
-            K
-          </span>
+          <img
+            src="/assets/icon.png"
+            className="h-8 w-8 rounded-full border border-white/10 bg-[#131416] p-1 object-contain"
+            alt=""
+            aria-hidden="true"
+          />
           <div className="flex flex-col">
             <span className="font-mono text-xs font-bold tracking-[0.08em] text-white uppercase">
               Artemis Copilot

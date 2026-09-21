@@ -137,8 +137,7 @@ export const NavigationDialog: React.FC<NavigationDialogProps> = ({ isOpen, onCl
           onClick={(e) => handleLinkClick(e, '/')}
           aria-label="Artemis home"
         >
-          <img src="/assets/logo.png" alt="" />
-          <span>Artemis</span>
+          <img src="/assets/logo.webp" alt="Artemis" />
         </Link>
         <button
           ref={closeRef}

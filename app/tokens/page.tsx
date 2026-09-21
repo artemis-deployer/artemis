@@ -98,9 +98,8 @@ export default function TokensPage() {
     <div className="min-h-screen bg-[#131416] text-[#f8f6f0] font-sans">
       <header className="sticky top-0 z-50 border-b border-white/10 bg-[#131416]/90 backdrop-blur-md">
         <div className="mx-auto flex min-h-[80px] max-w-[1800px] items-center justify-between gap-4 px-[max(6.25vw,24px)]">
-          <TransitionLink href="/" className="flex items-center gap-3 no-underline text-inherit">
-            <img src="/assets/logo.png" className="w-8 h-8 rounded-full object-cover" alt="" />
-            <span className="font-unbounded text-xl font-bold tracking-tight">artemis</span>
+          <TransitionLink href="/" className="flex items-center no-underline text-inherit" aria-label="Artemis home">
+            <img src="/assets/logo.webp" className="h-7 w-auto object-contain" alt="Artemis" />
           </TransitionLink>
 
           <nav className="flex items-center gap-1" aria-label="Main Navigation">
@@ -197,16 +196,16 @@ export default function TokensPage() {
         )}
 
         {/* Community Tokens Grid */}
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(min(320px,100%),1fr))] gap-5">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {filteredCommunity.map((t) => {
             const chainInfo = getChain(t.chain_id);
             return (
               <article
                 key={`${t.chain_id}:${t.address}`}
-                className="flex flex-col gap-3 rounded-xl border border-white/10 bg-[#1a1b1f] p-6 shadow-xl hover:border-white/25 transition-all"
+                className="flex h-full flex-col gap-3 rounded-xl border border-white/10 bg-[#1a1b1f] p-6 shadow-xl hover:border-white/25 transition-all"
               >
-                <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-3.5">
-                  <div className="flex items-center gap-3">
+                <div className="flex items-center justify-between gap-3 border-b border-white/10 pb-3.5">
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
                     {(() => {
                       const art = displayArtworkUrl(t.image);
                       return art ? (
@@ -215,15 +214,26 @@ export default function TokensPage() {
                           src={art}
                           alt=""
                           aria-hidden="true"
+                          loading="lazy"
                           className="h-10 w-10 shrink-0 rounded-full border border-white/15 object-cover"
                           onError={(e) => {
                             e.currentTarget.style.display = "none";
                           }}
                         />
-                      ) : null;
+                      ) : (
+                        <span
+                          aria-hidden="true"
+                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/5 font-unbounded text-sm font-bold text-white/50"
+                        >
+                          {(t.symbol || t.name || "T").slice(0, 1).toUpperCase()}
+                        </span>
+                      );
                     })()}
-                    <div>
-                      <h3 className="m-0 text-base font-bold text-white">
+                    <div className="min-w-0 flex-1">
+                      <h3
+                        title={t.name || t.symbol || "Untitled Coin"}
+                        className="m-0 truncate text-sm leading-snug font-bold text-white"
+                      >
                         {t.name || t.symbol || "Untitled Coin"}
                       </h3>
                       <span className="font-mono text-xs font-bold tracking-wider text-[#fae8a4]">
@@ -231,28 +241,28 @@ export default function TokensPage() {
                       </span>
                     </div>
                   </div>
-                  <span className="rounded border border-white/15 bg-white/5 px-2 py-0.5 font-mono text-[10px] text-white/70 uppercase">
+                  <span className="shrink-0 self-start rounded border border-white/15 bg-white/5 px-2 py-0.5 font-mono text-[10px] whitespace-nowrap text-white/70 uppercase">
                     {chainInfo?.name ?? `Chain ${t.chain_id}`}
                   </span>
                 </div>
 
                 <div className="flex flex-col gap-2 font-mono text-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="text-white/50">Contract:</span>
-                    <div className="flex items-center gap-1.5">
+                  <div className="flex min-h-5 items-center justify-between gap-2">
+                    <span className="shrink-0 text-white/50">Contract:</span>
+                    <div className="flex min-w-0 items-center gap-1.5">
                       <a
                         href={getExplorerUrl(t.chain_id, t.address)}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-[#cadcf0] underline hover:text-white"
+                        className="inline-flex min-w-0 items-center gap-1 text-[#cadcf0] underline hover:text-white"
                       >
-                        <span>{t.address.slice(0, 6)}…{t.address.slice(-4)}</span>
-                        <ExternalLink size={11} />
+                        <span className="truncate">{t.address.slice(0, 6)}…{t.address.slice(-4)}</span>
+                        <ExternalLink size={11} className="shrink-0" />
                       </a>
                       <button
                         type="button"
                         onClick={() => copyText(t.address)}
-                        className="rounded p-1 text-white/50 hover:bg-white/10 hover:text-white cursor-pointer"
+                        className="shrink-0 rounded p-1 text-white/50 hover:bg-white/10 hover:text-white cursor-pointer"
                         title="Copy address"
                       >
                         {copied === t.address ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
@@ -261,23 +271,23 @@ export default function TokensPage() {
                   </div>
 
                   {t.pool && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-white/50">Pool:</span>
+                    <div className="flex min-h-5 items-center justify-between gap-2">
+                      <span className="shrink-0 text-white/50">Pool:</span>
                       <span className="max-w-[180px] truncate text-white/80">{t.pool}</span>
                     </div>
                   )}
 
                   {t.tx_hash && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-white/50">Tx:</span>
+                    <div className="flex min-h-5 items-center justify-between gap-2">
+                      <span className="shrink-0 text-white/50">Tx:</span>
                       <a
                         href={getTxUrl(t.chain_id, t.tx_hash)}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-[#cadcf0] underline hover:text-white"
+                        className="inline-flex min-w-0 items-center gap-1 text-[#cadcf0] underline hover:text-white"
                       >
-                        <span>{t.tx_hash.slice(0, 8)}…</span>
-                        <ExternalLink size={11} />
+                        <span className="truncate">{t.tx_hash.slice(0, 8)}…</span>
+                        <ExternalLink size={11} className="shrink-0" />
                       </a>
                     </div>
                   )}
@@ -291,43 +301,71 @@ export default function TokensPage() {
             filteredLocal.map((r, i) => (
               <article
                 key={`${r.hash}:${i}`}
-                className="flex flex-col gap-3 rounded-xl border border-dashed border-white/20 bg-[#1a1b1f] p-6 shadow-xl hover:border-white/35 transition-all"
+                className="flex h-full flex-col gap-3 rounded-xl border border-dashed border-white/20 bg-[#1a1b1f] p-6 shadow-xl hover:border-white/35 transition-all"
               >
-                <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-3.5">
-                  <div>
-                    <h3 className="m-0 text-base font-bold text-white">
-                      {r.ticker ? `$${r.ticker}` : "Local Launch Receipt"}
-                    </h3>
-                    <span className="text-xs text-white/50">Saved in this browser</span>
+                <div className="flex items-center justify-between gap-3 border-b border-white/10 pb-3.5">
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    {(() => {
+                      const art = displayArtworkUrl(r.image);
+                      return art ? (
+                        /* eslint-disable-next-line @next/next/no-img-element -- user-supplied https token artwork */
+                        <img
+                          src={art}
+                          alt=""
+                          aria-hidden="true"
+                          loading="lazy"
+                          className="h-10 w-10 shrink-0 rounded-full border border-white/15 object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                          }}
+                        />
+                      ) : (
+                        <span
+                          aria-hidden="true"
+                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/5 font-unbounded text-sm font-bold text-white/50"
+                        >
+                          {(r.ticker || "L").slice(0, 1).toUpperCase()}
+                        </span>
+                      );
+                    })()}
+                    <div className="min-w-0 flex-1">
+                      <h3
+                        title={r.ticker ? `$${r.ticker}` : "Local Launch Receipt"}
+                        className="m-0 truncate text-sm leading-snug font-bold text-white"
+                      >
+                        {r.ticker ? `$${r.ticker}` : "Local Launch Receipt"}
+                      </h3>
+                      <span className="text-xs text-white/50">Saved in this browser</span>
+                    </div>
                   </div>
-                  <span className="rounded border border-[#cadcf0]/30 bg-[#cadcf0]/10 px-2 py-0.5 font-mono text-[10px] text-[#cadcf0] uppercase">
+                  <span className="shrink-0 self-start rounded border border-[#cadcf0]/30 bg-[#cadcf0]/10 px-2 py-0.5 font-mono text-[10px] whitespace-nowrap text-[#cadcf0] uppercase">
                     Local
                   </span>
                 </div>
 
                 <div className="flex flex-col gap-2 font-mono text-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="text-white/50">Chain:</span>
-                    <span className="text-white/80">{String(r.chainId)}</span>
+                  <div className="flex min-h-5 items-center justify-between gap-2">
+                    <span className="shrink-0 text-white/50">Chain:</span>
+                    <span className="truncate text-white/80">{getChain(r.chainId)?.name ?? String(r.chainId)}</span>
                   </div>
 
                   {r.token && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-white/50">Token:</span>
-                      <div className="flex items-center gap-1.5">
+                    <div className="flex min-h-5 items-center justify-between gap-2">
+                      <span className="shrink-0 text-white/50">Token:</span>
+                      <div className="flex min-w-0 items-center gap-1.5">
                         <a
                           href={getExplorerUrl(r.chainId, r.token)}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center gap-1 text-[#cadcf0] underline hover:text-white"
+                          className="inline-flex min-w-0 items-center gap-1 text-[#cadcf0] underline hover:text-white"
                         >
-                          <span>{r.token.slice(0, 6)}…{r.token.slice(-4)}</span>
-                          <ExternalLink size={11} />
+                          <span className="truncate">{r.token.slice(0, 6)}…{r.token.slice(-4)}</span>
+                          <ExternalLink size={11} className="shrink-0" />
                         </a>
                         <button
                           type="button"
                           onClick={() => copyText(r.token!)}
-                          className="rounded p-1 text-white/50 hover:bg-white/10 hover:text-white cursor-pointer"
+                          className="shrink-0 rounded p-1 text-white/50 hover:bg-white/10 hover:text-white cursor-pointer"
                           title="Copy address"
                         >
                           {copied === r.token ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
@@ -336,16 +374,16 @@ export default function TokensPage() {
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between">
-                    <span className="text-white/50">Tx:</span>
+                  <div className="flex min-h-5 items-center justify-between gap-2">
+                    <span className="shrink-0 text-white/50">Tx:</span>
                     <a
                       href={getTxUrl(r.chainId, r.hash)}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1 text-[#cadcf0] underline hover:text-white"
+                      className="inline-flex min-w-0 items-center gap-1 text-[#cadcf0] underline hover:text-white"
                     >
-                      <span>{r.hash.slice(0, 8)}…</span>
-                      <ExternalLink size={11} />
+                      <span className="truncate">{r.hash.slice(0, 8)}…</span>
+                      <ExternalLink size={11} className="shrink-0" />
                     </a>
                   </div>
                 </div>

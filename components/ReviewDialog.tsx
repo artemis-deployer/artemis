@@ -95,6 +95,12 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
   const [slippageBps, setSlippageBps] = useState<number>(ETH_MIN_BPS);
   const { artworkFile, setArtworkFile } = useDraft();
 
+  // Local receipts mirror the showcase avatar. Https only: data URLs would
+  // blow the ~5MB localStorage quota and never render remotely anyway.
+  function receiptImage(): string | undefined {
+    return draft.image?.startsWith("https://") ? draft.image : undefined;
+  }
+
   async function artworkDataUrl(): Promise<string | undefined> {
     if (!artworkFile) return undefined;
     try {
@@ -230,7 +236,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       slippageBps,
     });
     setToken(one.token);
-    saveReceipt({ chainId: chainId as 4663 | 46630, token: one.token, hash: one.hash, pool: one.hash, createdAt: new Date().toISOString(), ticker: draft.ticker });
+    saveReceipt({ chainId: chainId as 4663 | 46630, token: one.token, hash: one.hash, pool: one.hash, createdAt: new Date().toISOString(), ticker: draft.ticker, image: receiptImage() });
     const oneShowcase = await recordShowcase({ chainId: chainId as 4663 | 46630, address: one.token, creator: acc, name: draft.name || draft.ticker, symbol: draft.ticker, txHash: one.hash });
     setHood("pool-done");
     setNote(`One transaction: token deployed and pool funded together (${launcher.slice(0, 10)}…).`);
@@ -262,7 +268,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
         supply: toTokenUnits(String(DIRECT_SUPPLY)),
       });
       setToken(dep.token);
-      saveReceipt({ chainId, token: dep.token, hash: dep.hash, createdAt: new Date().toISOString(), ticker: draft.ticker });
+      saveReceipt({ chainId, token: dep.token, hash: dep.hash, createdAt: new Date().toISOString(), ticker: draft.ticker, image: receiptImage() });
       const depShowcase = await recordShowcase({ chainId, address: dep.token, creator: acc, name: draft.name || draft.ticker, symbol: draft.ticker, txHash: dep.hash });
       setHood("token-done");
       try {
@@ -275,7 +281,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
           ethAmount: parseEther(draft.liquidity || "0"),
           slippageBps,
         });
-        saveReceipt({ chainId, token: dep.token, hash: liq.hash, pool: liq.hash, createdAt: new Date().toISOString(), ticker: draft.ticker });
+        saveReceipt({ chainId, token: dep.token, hash: liq.hash, pool: liq.hash, createdAt: new Date().toISOString(), ticker: draft.ticker, image: receiptImage() });
         const liqShowcase = await recordShowcase({ chainId, address: dep.token, creator: acc, name: draft.name || draft.ticker, symbol: draft.ticker, txHash: liq.hash });
         setHood("pool-done");
         succeed(dep.token, liq.hash, false, liqShowcase);
@@ -347,7 +353,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
         ethAmount: parseEther(draft.liquidity || "0"),
         slippageBps,
       });
-      saveReceipt({ chainId, token: tokenAddr, hash: liq.hash, pool: liq.hash, createdAt: new Date().toISOString(), ticker: draft.ticker });
+      saveReceipt({ chainId, token: tokenAddr, hash: liq.hash, pool: liq.hash, createdAt: new Date().toISOString(), ticker: draft.ticker, image: receiptImage() });
       const fundShowcase = await recordShowcase({ chainId, address: tokenAddr, creator: acc, name: draft.name || draft.ticker, symbol: draft.ticker, txHash: liq.hash });
       setHood("pool-done");
       succeed(tokenAddr, liq.hash, false, fundShowcase);
@@ -428,7 +434,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
         });
         await confirmTx(rpc, sig);
         setMint(mintBase58);
-        saveReceipt({ chainId: draft.chainId, token: mintBase58, hash: sig, createdAt: new Date().toISOString(), ticker: draft.ticker });
+        saveReceipt({ chainId: draft.chainId, token: mintBase58, hash: sig, createdAt: new Date().toISOString(), ticker: draft.ticker, image: receiptImage() });
         const devShowcase = await recordShowcase({ chainId: draft.chainId, address: mintBase58, creator: payerAddr, name: meta.name, symbol: meta.symbol, txHash: sig });
         setPump("sent");
         succeed(mintBase58, sig, false, devShowcase);
@@ -482,9 +488,9 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
         wallet: { publicKey: p.publicKey, signTransaction },
       });
       await confirmTx(MAINNET_RPC, sig);
-      setMint(mintBase58);
-      saveReceipt({ chainId: draft.chainId, token: mintBase58, hash: sig, createdAt: new Date().toISOString(), ticker: draft.ticker });
-      const pumpShowcase = await recordShowcase({ chainId: draft.chainId, address: mintBase58, creator: payerAddr, name: meta.name, symbol: meta.symbol, txHash: sig });
+        setMint(mintBase58);
+        saveReceipt({ chainId: draft.chainId, token: mintBase58, hash: sig, createdAt: new Date().toISOString(), ticker: draft.ticker, image: receiptImage() });
+        const pumpShowcase = await recordShowcase({ chainId: draft.chainId, address: mintBase58, creator: payerAddr, name: meta.name, symbol: meta.symbol, txHash: sig });
       setPump("sent");
       succeed(mintBase58, sig, false, pumpShowcase);
     } catch (e: unknown) {
@@ -678,7 +684,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
               <p className="m-0 flex items-center gap-1 font-mono text-xs text-white">
                 <span className="text-white/50">Mint:</span>
                 {rpc !== MAINNET_RPC ? (
-                  <span className="text-white/70">{mint.slice(0, 10)}…{mint.slice(-8)} (unbroadcast)</span>
+                  <span className="text-white/70">{mint.slice(0, 10)}…{mint.slice(-8)} (devnet drill mint)</span>
                 ) : (
                 <a
                   href={explorerTokenUrl(draft.chainId, mint)}

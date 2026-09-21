@@ -29,6 +29,19 @@ describe("receipts", () => {
     (localStorage as Storage).setItem("artemis.receipts.v1", "not-json{{{");
     expect(listReceipts()).toEqual([]);
   });
+
+  it("drops entries without hash so one bad row never blanks the showcase", () => {
+    (localStorage as Storage).setItem(
+      "artemis.receipts.v1",
+      JSON.stringify([
+        { chainId: 4663, hash: "0xaaa", createdAt: "t1" },
+        { chainId: 4663, createdAt: "t2" },
+        { chainId: 4663, hash: "", createdAt: "t3" },
+        null,
+      ]),
+    );
+    expect(listReceipts().map((r) => r.hash)).toEqual(["0xaaa"]);
+  });
 });
 
 describe("findResumableEvmReceipt", () => {
