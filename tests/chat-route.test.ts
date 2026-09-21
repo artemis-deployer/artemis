@@ -79,6 +79,15 @@ describe("chat route", () => {
     expect(SYSTEM_PROMPT).toContain("sensible defaults");
   });
 
+  it("states chainId optional without exactly-keys contradiction", () => {
+    expect(SYSTEM_PROMPT).not.toContain("exactly these keys");
+    expect(SYSTEM_PROMPT).toContain("chainId optional");
+  });
+
+  it("states max 18 decimals to match server validator", () => {
+    expect(SYSTEM_PROMPT).toContain("18 decimals");
+  });
+
   it("retries once and applies the corrected draft", async () => {
     const fetchMock = vi
       .fn()

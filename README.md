@@ -35,6 +35,8 @@ npm run dev                  # http://localhost:3000
 | `npm test` | Vitest suite |
 | `npm run lint` | ESLint, 0 errors required |
 | `node scripts/compile-token.mjs` | Rebuild `lib/token-artifact.ts` + `lib/launcher-artifact.ts` from `contracts/` |
+| `node scripts/gen-verify-input.mjs` | Rebuild `blockscout-verify-input.json` (standard-JSON) from `contracts/` |
+| `PRIVATE_KEY=0x... node scripts/deploy-launcher.mjs --mainnet` | Deploy `ArtemisLauncher` to Hood mainnet 4663 (local, one-time) |
 | `psql "$DATABASE_URL" -f migrations/0001_init.sql` | Create the showcase table once |
 
 ## Launch rails

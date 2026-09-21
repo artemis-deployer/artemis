@@ -88,7 +88,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
   const [cost, setCost] = useState<LaunchCost | null>(null);
   const [costLoading, setCostLoading] = useState(false);
   const [slippageBps, setSlippageBps] = useState<number>(ETH_MIN_BPS);
-  const { artworkFile } = useDraft();
+  const { artworkFile, setArtworkFile } = useDraft();
 
   async function artworkDataUrl(): Promise<string | undefined> {
     if (!artworkFile) return undefined;
@@ -169,6 +169,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
   }
 
   function succeed(token: string, hash: string): void {
+    setArtworkFile(null);
     onLaunched?.({
       chainId: draft.chainId,
       token,
