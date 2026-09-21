@@ -260,4 +260,29 @@ describe("pump-metadata route", () => {
     expect(res.status).toBe(400);
     expect(fetchMock).not.toHaveBeenCalled();
   });
+
+  it("pins artwork-only files without metadata fields", async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ data: { cid: "bafyimg" } }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const req = new Request("http://x/api/pump-metadata", {
+      method: "POST",
+      body: JSON.stringify({ imageData: "data:image/png;base64,aGk=", artworkOnly: true }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+    expect(((await res.json()) as { imageUri: string }).imageUri).toBe("https://ipfs.io/ipfs/bafyimg");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects artwork-only without image data", async () => {
+    vi.stubGlobal("fetch", vi.fn());
+    const req = new Request("http://x/api/pump-metadata", {
+      method: "POST",
+      body: JSON.stringify({ artworkOnly: true }),
+    });
+    expect((await POST(req)).status).toBe(400);
+  });
 });

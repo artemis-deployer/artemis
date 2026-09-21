@@ -45,15 +45,19 @@ export async function POST(req: Request) {
   const description = str(b.description, 500) ?? "";
   const rawImage = typeof b.image === "string" ? b.image.trim().slice(0, 2048) : "";
   const image = rawImage === "" ? undefined : rawImage;
-  if (!name || !symbol) return NextResponse.json({ error: "bad_request" }, { status: 400 });
+  const imageData = typeof b.imageData === "string" ? b.imageData : null;
+  // Artwork-only mode (EVM showcase images): file only, no metadata needed.
+  const artworkOnly = b.artworkOnly === true;
+  if (artworkOnly && !imageData) return NextResponse.json({ error: "bad_request" }, { status: 400 });
+  if (!artworkOnly && (!name || !symbol)) return NextResponse.json({ error: "bad_request" }, { status: 400 });
   // Attackers burn our Pinata quota via junk pins; only https images allowed.
   if (image !== undefined && !image.startsWith("https://")) {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
   }
 
   // Uploaded artwork file (data URL) is pinned first; its IPFS uri becomes the image.
-  let imageUri: string | undefined = image;
-  const imageData = typeof b.imageData === "string" ? b.imageData : null;
+  // Artwork-only mode ignores any URL field: only a fresh pin counts.
+  let imageUri: string | undefined = artworkOnly ? undefined : image;
   if (imageData) {
     const m = /^data:image\/(png|jpeg|webp|gif);base64,([A-Za-z0-9+/=]+)$/.exec(imageData);
     if (!m) return NextResponse.json({ error: "bad_request" }, { status: 400 });
@@ -69,6 +73,13 @@ export async function POST(req: Request) {
     imageUri = pinned;
   }
 
+  // Artwork-only mode (EVM showcase images): pin the file, skip metadata.
+  if (artworkOnly) {
+    return NextResponse.json(imageUri ? { imageUri } : { error: "pin_offline" }, {
+      status: imageUri ? 200 : 502,
+    });
+  }
+
   const file = new File(
     [JSON.stringify({ name, symbol, description, ...(imageUri ? { image: imageUri } : {}) })],
     "metadata.json",
@@ -76,7 +87,7 @@ export async function POST(req: Request) {
   );
   const uri = await pinFile(jwt, file);
   if (!uri) return NextResponse.json({ error: "pin_offline" }, { status: 502 });
-  return NextResponse.json({ uri });
+  return NextResponse.json(imageData ? { uri, imageUri } : { uri });
 }
 
 async function pinFile(jwt: string, file: File): Promise<string | null> {

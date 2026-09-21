@@ -14,6 +14,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
   const [imageError, setImageError] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [pinning, setPinning] = useState(false);
   const [networkOpen, setNetworkOpen] = useState(false);
   const networkRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -51,6 +52,49 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
       if (previewRef.current) URL.revokeObjectURL(previewRef.current);
     };
   }, []);
+
+  function onPickFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageError("");
+    if (file.size > MAX_IMAGE_BYTES) {
+      setImageError("Image must be under 2MB. Try another file.");
+      e.target.value = "";
+      return;
+    }
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+    setFileName(file.name);
+    if (isSolana) {
+      setArtworkFile(file);
+      return;
+    }
+    // EVM carries no onchain image: pin immediately so the URL lands in the showcase.
+    setPinning(true);
+    void (async () => {
+      try {
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => (typeof reader.result === "string" ? resolve(reader.result) : reject(new Error("read")));
+          reader.onerror = () => reject(new Error("read"));
+          reader.readAsDataURL(file);
+        });
+        const res = await fetch("/api/pump-metadata", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ imageData: dataUrl, artworkOnly: true }),
+        });
+        const json = (await res.json().catch(() => null)) as { imageUri?: string } | null;
+        if (!res.ok || !json?.imageUri) throw new Error("pin");
+        setDraft((prev) => ({ ...prev, image: json.imageUri }));
+      } catch {
+        setImageError("Artwork pin failed. Paste an https URL instead.");
+      } finally {
+        setPinning(false);
+      }
+    })();
+  }
   const isSolana = draft.route === "pumpfun" && String(draft.chainId).startsWith("solana");
   const imageOk = isSafeImageSrc(draft.image);
   const errors = imageOk
@@ -111,9 +155,18 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
             <span className="text-[11px] font-medium text-white/40">Your coin image appears here</span>
           </button>
           )
+        ) : draft.image && imageOk ? (
+          <div className="overflow-hidden rounded-lg border border-white/15">
+            {/* eslint-disable-next-line @next/next/no-img-element -- user draft image */}
+            <img
+              src={draft.image}
+              alt={draft.name ? `${draft.name} artwork` : "Coin artwork preview"}
+              className="h-52 w-full object-cover"
+            />
+          </div>
         ) : (
           <p className="m-0 rounded-lg border border-white/10 bg-[#1a1b1f] p-3 text-xs text-white/50">
-            Coin artwork applies to Solana launches only — EVM tokens carry no onchain image.
+            Coin artwork shows in the community showcase — upload a file or paste a URL below.
           </p>
         )}
         <div className="font-unbounded text-[24px] font-bold leading-none text-[#fae8a4] max-sm:text-xl">
@@ -294,29 +347,16 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
           <span>Token Brand Icon</span>
           <span className="text-[11px] font-medium text-white/40">Optional · Max 2MB</span>
         </label>
-        {isSolana && (
-        <>
         <input
           ref={fileRef}
           type="file"
           accept="image/*"
           className="hidden"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (!file) return;
-            setImageError("");
-            if (file.size > MAX_IMAGE_BYTES) {
-              setImageError("Image must be under 2MB. Try another file.");
-              e.target.value = "";
-              return;
-            }
-            if (previewUrl) URL.revokeObjectURL(previewUrl);
-            const url = URL.createObjectURL(file);
-            setPreviewUrl(url);
-            setFileName(file.name);
-            setArtworkFile(file);
-          }}
+          onChange={onPickFile}
         />
+        {pinning && (
+          <p role="status" className="m-0 text-xs text-white/50">Pinning artwork to IPFS…</p>
+        )}
         {previewUrl ? (
           <div className="flex items-center justify-between rounded-lg border border-white/15 bg-[#1a1b1f] p-2.5">
             <div className="flex items-center gap-2.5">
@@ -364,8 +404,6 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
             <ImagePlus size={16} aria-hidden="true" />
             <span>Drop artwork here or upload</span>
           </button>
-        )}
-        </>
         )}
         <label className="flex items-center justify-between text-xs font-bold tracking-[0.02em] text-white/90" htmlFor="artwork-url">
           <span>Artwork URL</span>
