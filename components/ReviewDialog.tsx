@@ -328,58 +328,6 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       setPump("error");
       return;
     }
-    if (rpc !== MAINNET_RPC) {
-      const mintKp = Keypair.generate();
-      const mintBase58 = mintKp.publicKey.toBase58();
-      if (!mintBase58) {
-        setPumpNote("pump_failed");
-        setPump("error");
-        return;
-      }
-      const payer = (() => {
-        try {
-          return getSolanaProvider()?.publicKey.toBase58() ?? provider?.publicKey.toBase58() ?? null;
-        } catch {
-          return null;
-        }
-      })();
-      if (!payer) {
-        setPumpNote("Connect a Solana wallet first.");
-        setPump("error");
-        return;
-      }
-      let uri = "devnet-rehearsal";
-      try {
-        uri = await uploadMetadata(meta, await artworkDataUrl());
-      } catch {
-        uri = "devnet-rehearsal";
-      }
-      const payload = buildTradePayload({
-        publicKey: payer,
-        mint: mintBase58,
-        name: meta.name,
-        symbol: meta.symbol,
-        uri,
-        amountSol,
-      });
-      setPump("working");
-      setPumpNote("");
-      let size: number;
-      try {
-        const tx = await buildCreateTx(payload);
-        validateTxBytes(tx);
-        size = tx.serialize().length;
-      } catch (e: unknown) {
-        setPumpNote(mapPumpError(e));
-        setPump("error");
-        return;
-      }
-      setMint(mintBase58);
-      setPumpNote(`Devnet rehearsal: transaction built (${size} bytes), broadcast omitted by design.`);
-      setPump("built");
-      succeed(mintBase58, "", true);
-      return;
-    }
     const p = getSolanaProvider() ?? provider;
     if (!p) {
       setPumpNote("Connect a Solana wallet first.");
@@ -417,13 +365,14 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
         amountSol,
       });
       const tx = await buildCreateTx(payload);
+      validateTxBytes(tx);
       const sig = await signAndSend({
-        rpc: MAINNET_RPC,
+        rpc,
         tx,
         mintSecret: mintKp.secretKey,
         wallet: { publicKey: p.publicKey, signTransaction },
       });
-      await confirmTx(MAINNET_RPC, sig);
+      await confirmTx(rpc, sig);
       setMint(mintBase58);
       saveReceipt({ chainId: draft.chainId, token: mintBase58, hash: sig, createdAt: new Date().toISOString(), ticker: draft.ticker });
       void submitShowcase({ chainId: draft.chainId, address: mintBase58, creator: payerAddr, name: meta.name, symbol: meta.symbol, txHash: sig });
