@@ -43,6 +43,11 @@ export function shouldAutoApply(patch: Partial<Draft>): boolean {
   return Object.keys(patch).length > 0;
 }
 
+/** Mainnet consent must not carry across chains (pickers, AI, undo). */
+export function shouldResetConsentOnChainChange(prevChainId: number | string, nextChainId: number | string): boolean {
+  return String(prevChainId) !== String(nextChainId);
+}
+
 export function applyAutoPatch(prev: Draft, patch: Partial<Draft>): { next: Draft; prevSnapshot: Draft } {
   return { next: { ...prev, ...patch }, prevSnapshot: { ...prev } };
 }

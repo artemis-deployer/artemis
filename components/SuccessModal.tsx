@@ -11,6 +11,7 @@ export type LaunchSuccess = {
   ticker: string;
   name: string;
   rehearsal?: boolean;
+  showcase?: "listed" | "pending";
 };
 
 export default function SuccessModal({ info, onClose }: { info: LaunchSuccess | null; onClose: () => void }) {
@@ -84,6 +85,12 @@ export default function SuccessModal({ info, onClose }: { info: LaunchSuccess | 
             </a>
             )}
           </dd>
+          {info.showcase !== undefined && (
+            <>
+              <dt className="font-medium text-white/50">Showcase:</dt>
+              <dd className="m-0 text-right font-semibold break-all text-white">{info.showcase}</dd>
+            </>
+          )}
           <dt className="font-medium text-white/50">Transaction:</dt>
           <dd className="m-0 text-right font-mono break-all">
             {info.hash ? (

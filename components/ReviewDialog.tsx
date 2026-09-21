@@ -41,7 +41,7 @@ import {
   SPL_MINT_SPACE,
 } from "../lib/launcher-solana";
 import { findResumableEvmReceipt, listReceipts, saveReceipt } from "../lib/receipts";
-import { submitShowcase } from "../lib/showcase";
+import { submitShowcase, toShowcaseDisplay, type ShowcaseInput } from "../lib/showcase";
 import { isInsufficientFunds, solanaAddressOf, walletLabel } from "../lib/wallets";
 import SolanaButton, { getSolanaProvider, type SolanaProvider } from "./SolanaButton";
 import WalletButton from "./WalletButton";
@@ -194,7 +194,15 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
     setHood("error");
   }
 
-  function succeed(token: string, hash: string, rehearsal = false): void {
+  async function recordShowcase(input: ShowcaseInput): Promise<"listed" | "pending"> {
+    try {
+      return toShowcaseDisplay(await submitShowcase(input));
+    } catch {
+      return "pending";
+    }
+  }
+
+  function succeed(token: string, hash: string, rehearsal = false, showcase: "listed" | "pending" = "pending"): void {
     setArtworkFile(null);
     onLaunched?.({
       chainId: draft.chainId,
@@ -203,6 +211,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       ticker: draft.ticker,
       name: draft.name || draft.ticker,
       rehearsal,
+      showcase,
     });
     if (ref && typeof ref !== "function") ref.current?.close();
   }
@@ -220,10 +229,10 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
     });
     setToken(one.token);
     saveReceipt({ chainId: chainId as 4663 | 46630, token: one.token, hash: one.hash, pool: one.hash, createdAt: new Date().toISOString(), ticker: draft.ticker });
-    void submitShowcase({ chainId: chainId as 4663 | 46630, address: one.token, creator: acc, name: draft.name || draft.ticker, symbol: draft.ticker, txHash: one.hash });
+    const oneShowcase = await recordShowcase({ chainId: chainId as 4663 | 46630, address: one.token, creator: acc, name: draft.name || draft.ticker, symbol: draft.ticker, txHash: one.hash });
     setHood("pool-done");
     setNote(`One transaction: token deployed and pool funded together (${launcher.slice(0, 10)}…).`);
-    succeed(one.token, one.hash);
+    succeed(one.token, one.hash, false, oneShowcase);
   }
 
   async function launch() {
@@ -252,7 +261,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       });
       setToken(dep.token);
       saveReceipt({ chainId, token: dep.token, hash: dep.hash, createdAt: new Date().toISOString(), ticker: draft.ticker });
-      void submitShowcase({ chainId, address: dep.token, creator: acc, name: draft.name || draft.ticker, symbol: draft.ticker, txHash: dep.hash });
+      const depShowcase = await recordShowcase({ chainId, address: dep.token, creator: acc, name: draft.name || draft.ticker, symbol: draft.ticker, txHash: dep.hash });
       setHood("token-done");
       try {
         await validateRouter(cfg);
@@ -265,15 +274,15 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
           slippageBps,
         });
         saveReceipt({ chainId, token: dep.token, hash: liq.hash, pool: liq.hash, createdAt: new Date().toISOString(), ticker: draft.ticker });
-        void submitShowcase({ chainId, address: dep.token, creator: acc, name: draft.name || draft.ticker, symbol: draft.ticker, txHash: liq.hash });
+        const liqShowcase = await recordShowcase({ chainId, address: dep.token, creator: acc, name: draft.name || draft.ticker, symbol: draft.ticker, txHash: liq.hash });
         setHood("pool-done");
-        succeed(dep.token, liq.hash);
+        succeed(dep.token, liq.hash, false, liqShowcase);
       } catch (inner: unknown) {
         const m = inner instanceof Error ? inner.message : "launch_failed";
         if (m === "pool_unsupported_on_testnet") {
           setHood("stub");
           setNote("Testnet rehearsal: token deployed, pool step unavailable (no V2 router on testnet).");
-          succeed(dep.token, dep.hash, true);
+          succeed(dep.token, dep.hash, true, depShowcase);
           return;
         }
         throw inner;
@@ -289,7 +298,15 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
   async function resumePool() {
     if (!token) return;
     if (chainId === null) return;
-    const acc = account ?? (await connectWallet().catch(() => null));
+    let acc = account;
+    if (!acc) {
+      try {
+        acc = await connectWallet();
+      } catch (e: unknown) {
+        fail(e instanceof Error ? walletLabel(e) : "launch_failed");
+        return;
+      }
+    }
     if (!acc) return;
     setAccount(acc);
     await fundPool(token, acc);
@@ -298,7 +315,15 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
   async function resumeFromReceipt() {
     const receiptToken = evmResume?.token;
     if (!receiptToken || chainId === null) return;
-    const acc = account ?? (await connectWallet().catch(() => null));
+    let acc = account;
+    if (!acc) {
+      try {
+        acc = await connectWallet();
+      } catch (e: unknown) {
+        fail(e instanceof Error ? walletLabel(e) : "launch_failed");
+        return;
+      }
+    }
     if (!acc) return;
     setAccount(acc);
     setToken(receiptToken as Address);
@@ -321,9 +346,9 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
         slippageBps,
       });
       saveReceipt({ chainId, token: tokenAddr, hash: liq.hash, pool: liq.hash, createdAt: new Date().toISOString(), ticker: draft.ticker });
-      void submitShowcase({ chainId, address: tokenAddr, creator: acc, name: draft.name || draft.ticker, symbol: draft.ticker, txHash: liq.hash });
+      const fundShowcase = await recordShowcase({ chainId, address: tokenAddr, creator: acc, name: draft.name || draft.ticker, symbol: draft.ticker, txHash: liq.hash });
       setHood("pool-done");
-      succeed(tokenAddr, liq.hash);
+      succeed(tokenAddr, liq.hash, false, fundShowcase);
     } catch (e: unknown) {
       fail(e instanceof Error ? walletLabel(e) : "launch_failed");
     } finally {
@@ -344,7 +369,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
         image: draft.image,
       });
     } catch (e: unknown) {
-      setPumpNote(e instanceof Error ? e.message : "bad_metadata");
+      setPumpNote(mapPumpError(e));
       setPump("error");
       return;
     }
@@ -402,9 +427,9 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
         await confirmTx(rpc, sig);
         setMint(mintBase58);
         saveReceipt({ chainId: draft.chainId, token: mintBase58, hash: sig, createdAt: new Date().toISOString(), ticker: draft.ticker });
-        void submitShowcase({ chainId: draft.chainId, address: mintBase58, creator: payerAddr, name: meta.name, symbol: meta.symbol, txHash: sig });
+        const devShowcase = await recordShowcase({ chainId: draft.chainId, address: mintBase58, creator: payerAddr, name: meta.name, symbol: meta.symbol, txHash: sig });
         setPump("sent");
-        succeed(mintBase58, sig);
+        succeed(mintBase58, sig, false, devShowcase);
       } catch (e: unknown) {
         setPumpNote(mapPumpError(e));
         setPump("error");
@@ -457,9 +482,9 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       await confirmTx(MAINNET_RPC, sig);
       setMint(mintBase58);
       saveReceipt({ chainId: draft.chainId, token: mintBase58, hash: sig, createdAt: new Date().toISOString(), ticker: draft.ticker });
-      void submitShowcase({ chainId: draft.chainId, address: mintBase58, creator: payerAddr, name: meta.name, symbol: meta.symbol, txHash: sig });
+      const pumpShowcase = await recordShowcase({ chainId: draft.chainId, address: mintBase58, creator: payerAddr, name: meta.name, symbol: meta.symbol, txHash: sig });
       setPump("sent");
-      succeed(mintBase58, sig);
+      succeed(mintBase58, sig, false, pumpShowcase);
     } catch (e: unknown) {
       setPumpNote(mapPumpError(e));
       setPump("error");

@@ -10,6 +10,10 @@ export type ShowcaseInput = {
 
 // ponytail: fire-and-forget, local receipt stays source of truth when DB offline
 export type ShowcaseStatus = "saved" | "rejected" | "offline";
+export type ShowcaseDisplay = "listed" | "pending";
+export function toShowcaseDisplay(s: ShowcaseStatus): ShowcaseDisplay {
+  return s === "saved" ? "listed" : "pending";
+}
 
 export async function submitShowcase(input: ShowcaseInput): Promise<ShowcaseStatus> {
   // ponytail: server 400s these anyway; skip network, same status
@@ -19,6 +23,8 @@ export async function submitShowcase(input: ShowcaseInput): Promise<ShowcaseStat
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(input),
+      // Bounded: success modal waits on this, never hang the celebration.
+      signal: AbortSignal.timeout(15000),
     });
     if (res.ok) return "saved";
     if (res.status >= 500 || res.status === 429) return "offline";

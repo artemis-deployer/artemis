@@ -1,13 +1,16 @@
 import { describe, expect, it } from "vitest";
 import {
   applyAutoPatch,
+  EMPTY_DRAFT,
   exceedsDirectSupply,
   parseDraftReply,
   resolveAutoPatch,
   shouldAutoApply,
+  shouldResetConsentOnChainChange,
   stripNumericSeparators,
   validateDraft,
 } from "../lib/draft";
+import { CHAINS } from "../lib/chains";
 import { toTokenUnits } from "../lib/launcher-evm";
 import { explorerTokenUrl, explorerTxUrl } from "../lib/chains";
 
@@ -344,5 +347,29 @@ describe("explorer urls", () => {
       "https://explorer.testnet.chain.robinhood.com/address/0xabc",
     );
     expect(explorerTxUrl(4663, "0xhash")).toBe("https://robinhoodchain.blockscout.com/tx/0xhash");
+  });
+});
+
+describe("newcomer defaults", () => {
+  it("defaults to testnet direct draft", () => {
+    expect(EMPTY_DRAFT.chainId).toBe(46630);
+    expect(EMPTY_DRAFT.route).toBe("direct");
+    expect(EMPTY_DRAFT.name).toBe("");
+    expect(EMPTY_DRAFT.ticker).toBe("");
+  });
+});
+
+describe("shouldResetConsentOnChainChange", () => {
+  it("resets when chain differs, keeps when same", () => {
+    expect(shouldResetConsentOnChainChange(46630, 4663)).toBe(true);
+    expect(shouldResetConsentOnChainChange(46630, 46630)).toBe(false);
+    expect(shouldResetConsentOnChainChange(4663, "4663")).toBe(false);
+    expect(shouldResetConsentOnChainChange(46630, "solana-devnet")).toBe(true);
+  });
+});
+
+describe("live chains telemetry", () => {
+  it("counts only enabled chains", () => {
+    expect(CHAINS.filter((c) => !c.disabled).length).toBe(2);
   });
 });

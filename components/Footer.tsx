@@ -59,7 +59,7 @@ export const Footer: React.FC<FooterProps> = () => {
           {/* Col 3: Protocol & Resources */}
           <div>
             <p className="label">&#123;PROTOCOL&#125;</p>
-            <a href="#intro">About</a>
+            <a href="#about">About</a>
             <a href="#transparency">Transparency</a>
             <a href="https://robinhoodchain.blockscout.com" target="_blank" rel="noreferrer">
               Robinhood Chain ↗

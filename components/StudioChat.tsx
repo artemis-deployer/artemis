@@ -5,7 +5,7 @@ import Markdown from "react-markdown";
 import rehypeSanitize from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
 import { Check, ChevronDown, RotateCcw, SendHorizonal, Sparkles } from "lucide-react";
-import { parseDraftReply, resolveAutoPatch } from "../lib/draft";
+import { parseDraftReply, resolveAutoPatch, shouldResetConsentOnChainChange } from "../lib/draft";
 import type { Draft } from "../lib/draft";
 import { CHAINS, defaultRouteFor, getChain } from "../lib/chains";
 import { useDraft } from "./DraftContext";
@@ -125,6 +125,7 @@ export default function StudioChat() {
   function undoAuto() {
     if (!undo) return;
     const snapshot = undo.snapshot;
+    if (shouldResetConsentOnChainChange(draftRef.current.chainId, snapshot.chainId)) setConsent(false);
     setDraft(() => snapshot);
     setUndo(null);
   }
@@ -149,8 +150,12 @@ export default function StudioChat() {
         }),
       });
 
-      if (res.status === 400) {
+      if (res.status === 400 || res.status === 429) {
         setLog([...next, { role: "assistant" as const, content: LIMIT_LINE, kind: "error" }]);
+        return;
+      }
+      if (res.status >= 500) {
+        setLog([...next, { role: "assistant" as const, content: OFFLINE_LINE, kind: "error" }]);
         return;
       }
 
@@ -188,7 +193,7 @@ export default function StudioChat() {
         setDraft(() => nextDraft);
         // Manual chain picks reset consent; AI chain changes must too,
         // else mainnet consent carries across chains (consent bypass).
-        if (nextChainId !== latest.chainId) setConsent(false);
+        if (shouldResetConsentOnChainChange(latest.chainId, nextChainId)) setConsent(false);
         setUndo({ snapshot: resolved.prevSnapshot });
       }
       const shown = displayOf(reply, auto);

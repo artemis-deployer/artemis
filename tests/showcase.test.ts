@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 vi.mock("postgres", () => ({ default: vi.fn() }));
 
 import postgres from "postgres";
-import { submitShowcase } from "../lib/showcase";
+import { submitShowcase, toShowcaseDisplay } from "../lib/showcase";
 import { listTokens, normalizeTokenInput } from "../lib/community-db";
 
 describe("submitShowcase", () => {
@@ -60,6 +60,14 @@ describe("submitShowcase", () => {
     await expect(submitShowcase({ chainId: "", address: "" })).resolves.toBe("rejected");
     await expect(submitShowcase({ chainId: 4663, address: "   " })).resolves.toBe("rejected");
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("toShowcaseDisplay", () => {
+  it('maps saved to listed, rejected/offline to pending (never failed)', () => {
+    expect(toShowcaseDisplay("saved")).toBe("listed");
+    expect(toShowcaseDisplay("rejected")).toBe("pending");
+    expect(toShowcaseDisplay("offline")).toBe("pending");
   });
 });
 
