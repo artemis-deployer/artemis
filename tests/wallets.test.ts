@@ -69,11 +69,33 @@ describe("wallet registry", () => {
     expect(formatWei(99999999999999n)).not.toBe("0");
   });
 
+  it("table: zero, dust, thousand, huge", () => {
+    expect(formatWei(0n)).toBe("0");
+    expect(formatWei(1n)).toBe("<0.0001");
+    expect(formatWei(99999999999999n)).toBe("<0.0001");
+    expect(formatWei(1000n * 10n ** 18n)).toBe("1000");
+    expect(formatWei(10n ** 30n)).toBe("1000000000000");
+  });
+
   it("reads chain id hex or null", async () => {
     const ok = { request: async () => "0x122B" } as never;
     await expect(getEvmChainId(ok)).resolves.toBe(4651);
     const bad = { request: async () => { throw new Error("x"); } } as never;
     await expect(getEvmChainId(bad)).resolves.toBeNull();
+  });
+
+  it("rejects non-string chainId (number input never misparsed)", async () => {
+    const num = { request: async () => 4663 } as never;
+    await expect(getEvmChainId(num)).resolves.toBeNull();
+    const empty = { request: async () => "0x" } as never;
+    await expect(getEvmChainId(empty)).resolves.toBeNull();
+    const nil = { request: async () => null } as never;
+    await expect(getEvmChainId(nil)).resolves.toBeNull();
+  });
+
+  it("formats negative wei with sign (never malformed)", () => {
+    expect(formatWei(-1500000000000000000n)).toBe("-1.5");
+    expect(formatWei(-1000000000000000000n)).toBe("-1");
   });
 });
 
@@ -163,6 +185,11 @@ describe("balances", () => {
     await expect(getEvmBalance(provider, "0xabc")).resolves.toBeNull();
   });
 
+  it("returns null when balance is non-string", async () => {
+    const provider = { request: vi.fn().mockResolvedValue(12345) };
+    await expect(getEvmBalance(provider, "0xabc")).resolves.toBeNull();
+  });
+
   it("parses Solana getBalance lamports", async () => {
     vi.stubGlobal(
       "fetch",
@@ -192,6 +219,21 @@ describe("balances", () => {
       vi.fn().mockResolvedValue(new Response(JSON.stringify({ result: { value: 1 } }))),
     );
     await expect(getSolanaBalance("addr")).resolves.not.toBe("0");
+  });
+
+  it("table: zero, dust, thousand, huge", async () => {
+    const bal = async (lamports: number) => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue(new Response(JSON.stringify({ result: { value: lamports } }))),
+      );
+      return getSolanaBalance("addr");
+    };
+    await expect(bal(0)).resolves.toBe("0");
+    await expect(bal(1)).resolves.toBe("<0.0001");
+    await expect(bal(1000000000)).resolves.toBe("1");
+    await expect(bal(1000000000000)).resolves.toBe("1,000");
+    await expect(bal(1e15)).resolves.toBe("1,000,000");
   });
 
   it("retries transient Solana RPC failures", async () => {

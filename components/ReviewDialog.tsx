@@ -71,8 +71,8 @@ function safeEthAmount(value: string): bigint | null {
   }
 }
 
-function trimSol(value: number): string {
-  return String(Number(value.toFixed(9)));
+export function trimSol(value: number): string {
+  return value.toFixed(9).replace(/\.?0+$/, "") || "0";
 }
 
 const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: boolean; onLaunched?: (info: LaunchSuccess) => void }>(function ReviewDialog(

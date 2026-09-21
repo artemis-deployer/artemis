@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Address } from "viem";
 import { ensureChain, getHoodConfig, publicClientFor } from "../lib/launcher-evm";
 import {
@@ -35,10 +35,20 @@ export default function WalletButton({
   const [wrongNetwork, setWrongNetwork] = useState(false);
   const currency = getChain(chainId)?.currency ?? "ETH";
   const chainName = getChain(chainId)?.name ?? "Hood";
+  // Stabilize parent callback: inline arrows would retrigger refresh + resubscribe loops.
+  const onConnectRef = useRef(onConnect);
+  useEffect(() => {
+    onConnectRef.current = onConnect;
+  }, [onConnect]);
+  // Seq guard: overlapping refresh() calls (chain flip / wallet events) must not
+  // let a stale async response overwrite newer account/balance state.
+  const seqRef = useRef(0);
 
   const refresh = useCallback(async () => {
+    const my = ++seqRef.current;
     const stored = loadWallet();
     if (!stored || stored.kind !== "evm") {
+      if (seqRef.current !== my) return;
       setAccount(null);
       setBalance(null);
       setWrongNetwork(false);
@@ -47,8 +57,9 @@ export default function WalletButton({
     // No auto-switch here: read quietly, flag a wrong network instead.
     // Auto-switching fired surprise wallet popups and looked like "connect again".
     const addr = await silentEvmAccount(stored.id as EvmWalletId);
+    if (seqRef.current !== my) return;
     setAccount(addr as Address | null);
-    if (onConnect) onConnect(addr as Address | null);
+    onConnectRef.current?.(addr as Address | null);
     if (!addr) {
       setBalance(null);
       setWrongNetwork(false);
@@ -56,16 +67,19 @@ export default function WalletButton({
     }
     const provider = detectEvm(stored.id as EvmWalletId);
     const walletChain = provider ? await getEvmChainId(provider) : null;
+    if (seqRef.current !== my) return;
     setWrongNetwork(walletChain !== null && walletChain !== chainId);
     try {
       const cfg = getHoodConfig(chainId);
       const wei = cfg ? await publicClientFor(cfg).getBalance({ address: addr as Address }) : null;
+      if (seqRef.current !== my) return;
       setBalance(wei === null ? null : formatWei(wei));
     } catch {
+      if (seqRef.current !== my) return;
       setBalance(null);
     }
     setError("");
-  }, [chainId, onConnect]);
+  }, [chainId]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- mount-only hydrate from wallet extension
@@ -84,7 +98,7 @@ export default function WalletButton({
         setAccount(null);
         setBalance(null);
         setWrongNetwork(false);
-        if (onConnect) onConnect(null);
+        onConnectRef.current?.(null);
       } else {
         void refresh();
       }
@@ -106,16 +120,17 @@ export default function WalletButton({
         // already gone
       }
     };
-    // account: resubscribe when the stored wallet changes (stale provider otherwise)
-  }, [refresh, account, onConnect]);
+    // refresh already tracks chainId; resub only on wallet transport change.
+  }, [refresh]);
 
   function disconnect() {
+    seqRef.current++;
     clearWallet();
     setAccount(null);
     setBalance(null);
     setWrongNetwork(false);
     setError("");
-    if (onConnect) onConnect(null);
+    onConnectRef.current?.(null);
   }
 
   async function switchChain() {

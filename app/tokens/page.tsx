@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Search, Copy, Check, ExternalLink, ArrowLeft } from "lucide-react";
 import { TransitionLink } from "../../components/PageTransition";
@@ -23,21 +23,32 @@ export default function TokensPage() {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "hood" | "solana" | "local">("all");
   const [copied, setCopied] = useState<string | null>(null);
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    let alive = true;
     fetch("/api/community/tokens")
       .then((r) => r.json())
-      .then((j: { tokens?: Token[] }) => setTokens(Array.isArray(j.tokens) ? j.tokens : []))
-      .catch(() => setTokens([]));
+      .then((j: { tokens?: Token[] }) => {
+        if (alive) setTokens(Array.isArray(j.tokens) ? j.tokens : []);
+      })
+      .catch(() => {
+        if (alive) setTokens([]);
+      });
     // eslint-disable-next-line react-hooks/set-state-in-effect -- mount-only sync
     setLocal(listReceipts());
+    return () => {
+      alive = false;
+      if (copyTimer.current) clearTimeout(copyTimer.current);
+    };
   }, []);
 
   function copyText(text: string) {
     if (typeof navigator !== "undefined" && navigator.clipboard) {
       void navigator.clipboard.writeText(text);
       setCopied(text);
-      setTimeout(() => setCopied(null), 2000);
+      if (copyTimer.current) clearTimeout(copyTimer.current);
+      copyTimer.current = setTimeout(() => setCopied(null), 2000);
     }
   }
 

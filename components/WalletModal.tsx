@@ -32,6 +32,12 @@ export default function WalletModal({
   const [tab, setTab] = useState<WalletKind>(kind);
   const [syncedKind, setSyncedKind] = useState<WalletKind>(kind);
   const closeRef = useRef<HTMLButtonElement>(null);
+  // Stable close: parent inline onClose would retrigger effect, overwrite
+  // nothing here but resubscribe + refocus needlessly.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     if (!open) return;
@@ -39,14 +45,14 @@ export default function WalletModal({
     document.body.style.overflow = "hidden";
     closeRef.current?.focus();
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") onCloseRef.current();
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => {
       document.body.style.overflow = prevOverflow;
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [open, onClose]);
+  }, [open]);
   if (open && syncedKind !== kind) {
     setSyncedKind(kind);
     setTab(kind);

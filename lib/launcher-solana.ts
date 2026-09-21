@@ -117,9 +117,14 @@ export async function buildCreateTx(payload: TradePayload): Promise<VersionedTra
   }
   if (!res) throw new Error("pump_offline");
   if (!res.ok) throw new Error("pump_rejected: trade-local failed");
-  const tx = decodeTxResponse(await res.arrayBuffer());
-  validateTxBytes(tx);
-  return tx;
+  try {
+    const tx = decodeTxResponse(await res.arrayBuffer());
+    validateTxBytes(tx);
+    return tx;
+  } catch (e) {
+    if (e instanceof Error && e.message.startsWith("pump_")) throw e;
+    throw new Error("pump_rejected: bad tx bytes");
+  }
 }
 
 /** Decode trade-local bodies: JSON array of base58 (create), legacy base64 text, or raw bytes. */

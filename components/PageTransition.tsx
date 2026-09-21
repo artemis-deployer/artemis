@@ -21,6 +21,8 @@ export const PageTransitionProvider: React.FC<{ children: React.ReactNode }> = (
   const prevPathname = useRef(pathname);
   const pushTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const failsafeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Sync guard: state lags a tick, so rapid double-navigate bypasses the check.
+  const transitioningRef = useRef(false);
 
   const clearPendingTimers = () => {
     if (pushTimer.current) clearTimeout(pushTimer.current);
@@ -55,11 +57,12 @@ export const PageTransitionProvider: React.FC<{ children: React.ReactNode }> = (
     }
 
     // Ignore re-entrant navigations while a transition is already running.
-    if (transitionState !== '') {
+    if (transitioningRef.current || transitionState !== '') {
       return;
     }
 
     // Trigger leaving transition (blue -> lavender -> pink -> dark wipe)
+    transitioningRef.current = true;
     setTransitionState('leaving');
 
     clearPendingTimers();
@@ -71,6 +74,7 @@ export const PageTransitionProvider: React.FC<{ children: React.ReactNode }> = (
     // Failsafe: if router.push fails the pathname effect never fires, so
     // release the overlay instead of leaving the wipe stuck on screen.
     failsafeTimer.current = setTimeout(() => {
+      transitioningRef.current = false;
       setTransitionState((prev) => (prev === 'leaving' ? '' : prev));
     }, 3000);
   };
@@ -85,6 +89,7 @@ export const PageTransitionProvider: React.FC<{ children: React.ReactNode }> = (
         setTransitionState('entering');
       });
       const timer = setTimeout(() => {
+        transitioningRef.current = false;
         setTransitionState('');
       }, 700);
       return () => {

@@ -17,6 +17,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
   const [networkOpen, setNetworkOpen] = useState(false);
   const networkRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const previewRef = useRef<string | null>(null);
   const [prevChainId, setPrevChainId] = useState(draft.chainId);
   if (draft.chainId !== prevChainId) {
     setPrevChainId(draft.chainId);
@@ -39,11 +40,17 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
     };
   }, [networkOpen]);
 
+  // StrictMode-safe: change/remove paths revoke the old URL synchronously;
+  // the effect only tracks latest for unmount revoke, never revokes live URL
+  // on re-run (prior [previewUrl] cleanup revoked the new URL on double-invoke).
+  useEffect(() => {
+    previewRef.current = previewUrl;
+  }, [previewUrl]);
   useEffect(() => {
     return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      if (previewRef.current) URL.revokeObjectURL(previewRef.current);
     };
-  }, [previewUrl]);
+  }, []);
   const isSolana = draft.route === "pumpfun" && String(draft.chainId).startsWith("solana");
   const imageOk = imageOkForDraft(draft);
   const errors = imageOk
@@ -172,7 +179,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
                       type="button"
                       disabled={c.disabled}
                       onClick={() => {
-                        setDraft({ ...draft, chainId: c.id, route: sol ? "pumpfun" : "direct" });
+                        setDraft((prev) => ({ ...prev, chainId: c.id, route: sol ? "pumpfun" : "direct" }));
                         setConsent(false);
                         setNetworkOpen(false);
                       }}
@@ -217,7 +224,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
             maxLength={32}
             autoComplete="off"
             spellCheck={false}
-            onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+            onChange={(e) => setDraft((prev) => ({ ...prev, name: e.target.value }))}
           />
         </div>
 
@@ -236,7 +243,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
             autoCapitalize="characters"
             spellCheck={false}
             aria-required="true"
-            onChange={(e) => setDraft({ ...draft, ticker: e.target.value.toUpperCase() })}
+            onChange={(e) => setDraft((prev) => ({ ...prev, ticker: e.target.value.toUpperCase() }))}
           />
         </div>
 
@@ -257,7 +264,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
             autoComplete="off"
             spellCheck={false}
             aria-required={!isSolana}
-            onChange={(e) => setDraft({ ...draft, pooled: stripNumericSeparators(e.target.value) })}
+            onChange={(e) => setDraft((prev) => ({ ...prev, pooled: stripNumericSeparators(e.target.value) }))}
           />
         </div>
 
@@ -276,7 +283,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
             autoComplete="off"
             spellCheck={false}
             aria-required="true"
-            onChange={(e) => setDraft({ ...draft, liquidity: stripNumericSeparators(e.target.value) })}
+            onChange={(e) => setDraft((prev) => ({ ...prev, liquidity: stripNumericSeparators(e.target.value) }))}
           />
         </div>
       </div>
@@ -340,7 +347,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
             </div>
             <button
               type="button"
-              onClick={() => setDraft({ ...draft, image: undefined })}
+              onClick={() => setDraft((prev) => ({ ...prev, image: undefined }))}
               aria-label="Remove coin image"
               className="cursor-pointer rounded-md border border-white/15 p-2 text-white/60 hover:border-white/30 hover:text-white"
             >
@@ -369,7 +376,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
           maxLength={2048}
           autoComplete="off"
           spellCheck={false}
-          onChange={(e) => setDraft({ ...draft, image: e.target.value || undefined })}
+          onChange={(e) => setDraft((prev) => ({ ...prev, image: e.target.value || undefined }))}
         />
         {previewUrl && !draft.image && (
           <p className="m-0 text-xs text-white/50">Uploaded file pins to IPFS on Solana launch. EVM ignores artwork.</p>

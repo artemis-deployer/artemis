@@ -59,6 +59,13 @@ export const NavigationDialog: React.FC<NavigationDialogProps> = ({ isOpen, onCl
   const dialogRef = useRef<HTMLDialogElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const prevFocus = useRef<Element | null>(null);
+  // Stable close: parent inline onClose changes identity each render; without
+  // ref the effect re-runs while open and overwrites prevFocus with an
+  // inside-dialog element, breaking focus restore.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     if (isOpen) {
@@ -67,7 +74,7 @@ export const NavigationDialog: React.FC<NavigationDialogProps> = ({ isOpen, onCl
       closeRef.current?.focus();
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
-          onClose();
+          onCloseRef.current();
           return;
         }
         if (e.key !== 'Tab') return;
@@ -96,7 +103,7 @@ export const NavigationDialog: React.FC<NavigationDialogProps> = ({ isOpen, onCl
     } else {
       document.body.classList.remove('menu-is-open');
     }
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

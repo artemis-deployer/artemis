@@ -6,6 +6,7 @@ vi.mock("@solana/web3.js", async (importOriginal) => {
 });
 
 import { Connection } from "@solana/web3.js";
+import { trimSol } from "../components/ReviewDialog";
 import {
   buildCreateTx,
   buildMetadata,
@@ -56,8 +57,7 @@ describe("buildTradePayload", () => {
     });
   });
 
-  it("locks full PumpPortal contract: each field once, no flat leakage", () => {
-    const p = buildTradePayload({
+  it("locks full PumpPortal contract: each field once, no flat leakage", () => {    const p = buildTradePayload({
       publicKey: "11111111111111111111111111111111",
       mint: "22222222222222222222222222222222222222222222",
       name: "Kopi",
@@ -273,6 +273,27 @@ describe("buildCreateTx", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce({ ok: false, status: 500 }));
     await expect(buildCreateTx(payload)).rejects.toThrow("pump_rejected: trade-local failed");
   });
+
+  it("maps unreadable trade-local body to coded rejection (never raw throw)", async () => {
+    const payload = buildTradePayload({
+      publicKey: "11111111111111111111111111111111",
+      mint: "22222222222222222222222222222222222222222222",
+      name: "Kopi",
+      symbol: "KOPI",
+      uri: "https://example.test/m.json",
+      amountSol: 0.1,
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValueOnce({
+        ok: true,
+        arrayBuffer: async () => {
+          throw new Error("body gone");
+        },
+      }),
+    );
+    await expect(buildCreateTx(payload)).rejects.toThrow("pump_rejected");
+  });
 });
 
 describe("signAndSend / confirmTx error paths", () => {
@@ -442,5 +463,33 @@ describe("devnet SPL drill mint", () => {
     expect(() => decodeTxResponse(new Uint8Array([0, 1, 2]).buffer)).toThrow(
       "pump_rejected: bad tx bytes",
     );
+  });
+});
+
+describe("numeric-precision warfare: solana dust", () => {
+  it("passes 1-lamport dust through trade payload without crash", () => {
+    const amountSol = Number("0.000000001");
+    expect(amountSol).toBe(1e-9);
+    const p = buildTradePayload({
+      publicKey: "11111111111111111111111111111111",
+      mint: "22222222222222222222222222222222222222222222",
+      name: "Kopi",
+      symbol: "KOPI",
+      uri: "https://example.test/m.json",
+      amountSol,
+    });
+    expect(p.amount).toBe(1e-9);
+  });
+});
+
+describe("trimSol fee display", () => {
+  it("table: zero, fee, thousand, huge", () => {
+    expect(trimSol(0)).toBe("0");
+    expect(trimSol(0.0205)).toBe("0.0205");
+    expect(trimSol(PUMP_FEE_SOL + PUMP_PRIORITY_FEE)).toBe("0.0205");
+    expect(trimSol(1000)).toBe("1000");
+  });
+  it("renders 1-lamport dust as decimal, never exponential", () => {
+    expect(trimSol(0.000000001)).toBe("0.000000001");
   });
 });

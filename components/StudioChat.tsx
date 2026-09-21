@@ -81,6 +81,9 @@ export default function StudioChat() {
   const logRef = useRef<HTMLDivElement>(null);
   const areaRef = useRef<HTMLTextAreaElement>(null);
   const draftRef = useRef(draft);
+  // Same-tick guard: `busy` state flips only after re-render, so rapid
+  // double-clicks see stale `busy=false` + stale `log` and double-POST.
+  const busyRef = useRef(false);
 
   useEffect(() => {
     draftRef.current = draft;
@@ -112,7 +115,7 @@ export default function StudioChat() {
   }, [input]);
 
   function reset() {
-    if (busy) return;
+    if (busy || busyRef.current) return;
     setReveal(null);
     setLog([{ role: "assistant", content: GREETING }]);
     setInput("");
@@ -121,13 +124,15 @@ export default function StudioChat() {
 
   function undoAuto() {
     if (!undo) return;
-    setDraft(undo.snapshot);
+    const snapshot = undo.snapshot;
+    setDraft(() => snapshot);
     setUndo(null);
   }
 
   async function send(text: string) {
     const content = text.trim().slice(0, 1000);
-    if (!content || busy) return;
+    if (!content || busy || busyRef.current) return;
+    busyRef.current = true;
     setBusy(true);
     const snapshot = draftRef.current;
     const next: Line[] = [...log, { role: "user" as const, content }];
@@ -174,10 +179,16 @@ export default function StudioChat() {
       const resolved = resolveAutoPatch(latest, patch, activeId);
       const auto = resolved !== null;
       if (resolved) {
-        setDraft(resolved.next);
+        const nextDraft = resolved.next;
+        const nextChainId = resolved.next.chainId;
+        // Functional update: response may land after user typed in Manual
+        // Parameters; updater form avoids clobbering on stale `latest`.
+        // ponytail: patch already merged over ref-fresh latest, updater only
+        // guards the commit, no re-merge inside (StrictMode-impure otherwise).
+        setDraft(() => nextDraft);
         // Manual chain picks reset consent; AI chain changes must too,
         // else mainnet consent carries across chains (consent bypass).
-        if (resolved.next.chainId !== latest.chainId) setConsent(false);
+        if (nextChainId !== latest.chainId) setConsent(false);
         setUndo({ snapshot: resolved.prevSnapshot });
       }
       const shown = displayOf(reply, auto);
@@ -187,6 +198,7 @@ export default function StudioChat() {
     } catch {
       setLog([...next, { role: "assistant" as const, content: OFFLINE_LINE, kind: "error" }]);
     } finally {
+      busyRef.current = false;
       setBusy(false);
     }
   }

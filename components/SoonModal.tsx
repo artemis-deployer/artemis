@@ -10,6 +10,10 @@ interface SoonModalProps {
 
 export const SoonModal: React.FC<SoonModalProps> = ({ isOpen, feature, onClose }) => {
   const closeRef = useRef<HTMLButtonElement>(null);
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -17,14 +21,14 @@ export const SoonModal: React.FC<SoonModalProps> = ({ isOpen, feature, onClose }
     document.body.style.overflow = 'hidden';
     closeRef.current?.focus();
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') onCloseRef.current();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       document.body.style.overflow = prevOverflow;
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

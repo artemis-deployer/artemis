@@ -62,6 +62,7 @@ export function extractServerDraft(reply: string): { draft: ServerDraft | null; 
   const matches = [...reply.matchAll(/```json\s*([\s\S]*?)```/g)];
   if (matches.length === 0) return { draft: null, draftErrors: ["missing-json-block"] };
   const rawBlock = (matches[matches.length - 1][1] ?? "").trim();
+  if (rawBlock.length > 20000) return { draft: null, draftErrors: ["invalid-json"] };
   let parsed: unknown;
   try {
     parsed = JSON.parse(rawBlock) as unknown;
@@ -212,11 +213,15 @@ async function callUpstream(
 }
 
 async function readReply(upstream: Response): Promise<string> {
-  let data: { choices?: { message?: { content?: string } }[] };
+  let data: unknown;
   try {
-    data = (await upstream.json()) as { choices?: { message?: { content?: string } }[] };
+    data = (await upstream.json()) as unknown;
   } catch {
     return "";
   }
-  return data.choices?.[0]?.message?.content ?? "";
+  const content =
+    typeof data === "object" && data !== null
+      ? (data as { choices?: { message?: { content?: unknown } }[] }).choices?.[0]?.message?.content
+      : undefined;
+  return typeof content === "string" ? content : "";
 }

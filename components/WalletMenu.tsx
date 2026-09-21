@@ -23,6 +23,14 @@ export default function WalletMenu({
   const [copied, setCopied] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reloadingRef = useRef(false);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimer.current) clearTimeout(copyTimer.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -44,17 +52,21 @@ export default function WalletMenu({
     try {
       await navigator.clipboard.writeText(address);
       setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
+      if (copyTimer.current) clearTimeout(copyTimer.current);
+      copyTimer.current = setTimeout(() => setCopied(false), 1500);
     } catch {
       setCopied(false);
     }
   }
 
   async function reload() {
+    if (reloadingRef.current) return;
+    reloadingRef.current = true;
     setRefreshing(true);
     try {
       await onRefresh();
     } finally {
+      reloadingRef.current = false;
       setRefreshing(false);
     }
   }

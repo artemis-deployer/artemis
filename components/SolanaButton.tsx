@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   clearWallet,
   detectSolana,
@@ -37,10 +37,18 @@ export default function SolanaButton({
   const [account, setAccount] = useState<string | null>(null);
   const [balance, setBalance] = useState<string | null>(null);
   const [modal, setModal] = useState(false);
+  const onConnectRef = useRef(onConnect);
+  useEffect(() => {
+    onConnectRef.current = onConnect;
+  }, [onConnect]);
+  // Seq guard: rpc flip mid-flight must not let stale balance win.
+  const seqRef = useRef(0);
 
   const refresh = useCallback(async () => {
+    const my = ++seqRef.current;
     const stored = loadWallet();
     if (!stored || stored.kind !== "solana") {
+      if (seqRef.current !== my) return;
       setAccount(null);
       setBalance(null);
       return;
@@ -52,23 +60,25 @@ export default function SolanaButton({
     } catch {
       // extension locked: fall back to the stored address
     }
+    if (seqRef.current !== my) return;
     setAccount(addr);
-    if (p && onConnect) onConnect(p as unknown as SolanaProvider);
+    if (p) onConnectRef.current?.(p as unknown as SolanaProvider);
     // Query the active network only: mainnet-first fallback shows the wrong balance on devnet.
-    setBalance(await getSolanaBalance(addr, rpc ?? MAINNET_RPC));
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- onConnect is a stable-ish dialog callback
+    const bal = await getSolanaBalance(addr, rpc ?? MAINNET_RPC);
+    if (seqRef.current !== my) return;
+    setBalance(bal);
   }, [rpc]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- mount-only hydrate from wallet extension
     void refresh();
   }, [refresh]);
 
   function disconnect() {
+    seqRef.current++;
     clearWallet();
     setAccount(null);
     setBalance(null);
-    if (onConnect) onConnect(null);
+    onConnectRef.current?.(null);
   }
 
   if (account) {

@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
   applyAutoPatch,
+  exceedsDirectSupply,
   parseDraftReply,
   resolveAutoPatch,
   shouldAutoApply,
   stripNumericSeparators,
   validateDraft,
 } from "../lib/draft";
+import { toTokenUnits } from "../lib/launcher-evm";
 import { explorerTokenUrl, explorerTxUrl } from "../lib/chains";
 
 describe("parseDraftReply", () => {
@@ -288,6 +290,45 @@ describe("stripNumericSeparators", () => {
   it("removes commas and whitespace, keeps digits and dot", () => {
     expect(stripNumericSeparators("1,000 000")).toBe("1000000");
     expect(stripNumericSeparators(" 0.5 ")).toBe("0.5");
+  });
+
+  it("keeps underscores so strict validators reject them", () => {
+    expect(stripNumericSeparators("1_000")).toBe("1_000");
+  });
+});
+
+describe("numeric-precision warfare: supply boundary", () => {
+  const good = (pooled: string) =>
+    validateDraft({ ticker: "X", route: "direct", pooled, liquidity: "1" });
+  it("accepts exact supply", () => {
+    expect(good("999000000")).toEqual([]);
+    expect(exceedsDirectSupply("999000000")).toBe(false);
+  });
+  it("rejects 12-decimal dust over supply", () => {
+    expect(good("999000000.000000000001")).toContain("pooled exceeds fixed supply");
+    expect(exceedsDirectSupply("999000000.000000000001")).toBe(true);
+  });
+  it("rejects .5 over supply", () => {
+    expect(good("999000000.5")).toContain("pooled exceeds fixed supply");
+  });
+  it("rejects 19-decimal dust, accepts 18-decimal 1-wei dust", () => {
+    expect(good("0.0000000000000000001")).toContain("pooled must be a positive number");
+    expect(good("0.000000000000000001")).toEqual([]);
+    expect(toTokenUnits("0.000000000000000001")).toBe(1n);
+  });
+});
+
+describe("numeric-precision warfare: strict shape parity", () => {
+  const badBoth = (v: string) => {
+    expect(
+      validateDraft({ ticker: "X", pooled: v, liquidity: "1", route: "direct" }).length,
+    ).toBeGreaterThan(0);
+    expect(
+      validateDraft({ ticker: "X", pooled: "1", liquidity: v, route: "direct" }).length,
+    ).toBeGreaterThan(0);
+  };
+  it("rejects underscore, multi-dot, leading/trailing dot", () => {
+    for (const bad of ["1_000", "1.2.3", ".5", "5."]) badBoth(bad);
   });
 });
 

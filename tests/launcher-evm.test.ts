@@ -77,6 +77,24 @@ describe("eth min slippage", () => {
     expect(() => calcEthMin(10n ** 18n, 4999)).toThrow("bad_slippage");
     expect(() => calcEthMin(10n ** 18n, 10001)).toThrow("bad_slippage");
   });
+
+  it("handles exact, half, and non-integer/NaN", () => {
+    expect(calcEthMin(10n ** 18n, 10000)).toBe(10n ** 18n);
+    expect(calcEthMin(10n ** 18n, 5000)).toBe(5n * 10n ** 17n);
+    expect(calcEthMin(1n, 10000)).toBe(1n);
+    expect(calcEthMin(1n, 5000)).toBe(1n);
+    for (const bad of [9800.5, NaN, Infinity, -1]) {
+      expect(() => calcEthMin(10n ** 18n, bad as number)).toThrow("bad_slippage");
+    }
+  });
+
+  it("handles huge 21-digit liquidity without overflow", () => {
+    const huge = toTokenUnits("999999999999999999999");
+    expect(huge).toBe(999999999999999999999n * 10n ** 18n);
+    expect(huge < 2n ** 256n).toBe(true);
+    expect(calcEthMin(huge)).toBe((huge * 9800n) / 10000n);
+    expect(() => formatEth(huge)).not.toThrow();
+  });
 });
 
 describe("formatEth", () => {
@@ -89,6 +107,15 @@ describe("formatEth", () => {
   it("keeps tiny values instead of zeroing them", () => {
     expect(formatEth(200000000000n)).toBe("0.0000002");
     expect(formatEth(100000000000000000000n)).toBe("100");
+  });
+
+  it("table: zero, dust, thousand, huge", () => {
+    expect(formatEth(0n)).toBe("0");
+    // 1 wei truncates to 8 decimals: zero-looking but distinct from "0", never crashes.
+    expect(formatEth(1n)).toBe("0.00000000");
+    expect(formatEth(1n)).not.toBe("0");
+    expect(formatEth(1000n * 10n ** 18n)).toBe("1000");
+    expect(formatEth(10n ** 30n)).toBe("1000000000000");
   });
 });
 

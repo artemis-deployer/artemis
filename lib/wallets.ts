@@ -293,7 +293,8 @@ export function getActiveSolanaProvider(): SolanaProviderLike | null {
 /** Chain id of an EVM provider, null when unreadable. */
 export async function getEvmChainId(provider: EvmProvider): Promise<number | null> {
   try {
-    const hex = (await withTimeout(provider.request({ method: "eth_chainId" }), 5000)) as string;
+    const hex: unknown = await withTimeout(provider.request({ method: "eth_chainId" }), 5000);
+    if (typeof hex !== "string" || !/^0x[0-9a-fA-F]+$/.test(hex)) return null;
     const n = Number.parseInt(hex, 16);
     return Number.isFinite(n) ? n : null;
   } catch {
@@ -303,6 +304,7 @@ export async function getEvmChainId(provider: EvmProvider): Promise<number | nul
 
 /** Format wei as a short decimal string (e.g. "1.2345"). */
 export function formatWei(wei: bigint): string {
+  if (wei < 0n) return `-${formatWei(-wei)}`;
   const whole = wei / 10n ** 18n;
   const frac = ((wei % 10n ** 18n) / 10n ** 14n).toString().padStart(4, "0").replace(/0+$/, "");
   if (!frac) return whole > 0n ? `${whole}` : wei > 0n ? "<0.0001" : "0";
@@ -312,7 +314,11 @@ export function formatWei(wei: bigint): string {
 /** Native balance of an EVM account, formatted (e.g. "1.2345"). Null when unreadable. */
 export async function getEvmBalance(provider: EvmProvider, address: string): Promise<string | null> {
   try {
-    const hex = (await withTimeout(provider.request({ method: "eth_getBalance", params: [address, "latest"] }), 8000)) as string;
+    const hex: unknown = await withTimeout(
+      provider.request({ method: "eth_getBalance", params: [address, "latest"] }),
+      8000,
+    );
+    if (typeof hex !== "string" || !/^0x[0-9a-fA-F]+$/.test(hex)) return null;
     return formatWei(BigInt(hex));
   } catch {
     return null;
