@@ -193,6 +193,16 @@ describe("balances", () => {
     await expect(getSolanaBalance("addr")).resolves.not.toBe("0");
   });
 
+  it("retries transient Solana RPC failures", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("429"))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ result: { value: 2500000000 } })));
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(getSolanaBalance("addr")).resolves.toBe("2.5");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
   it("rejects connect when publicKey stays null post-connect", async () => {
     vi.stubGlobal("window", {
       phantom: { solana: { connect: async () => undefined, publicKey: null } },
