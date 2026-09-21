@@ -110,6 +110,7 @@ export const Footer: React.FC<FooterProps> = () => {
         <div className="footer-bottom">
           <span>© 2026 Artemis. All rights reserved.</span>
           <span>Non-custodial autonomous launch rails.</span>
+          <span>Nothing here is financial advice. Tokens are user-created; do your own research. Availability varies by jurisdiction.</span>
         </div>
       </div>
 
