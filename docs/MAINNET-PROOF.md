@@ -1,15 +1,31 @@
-# Artemis Mainnet Proof (Hood Chain, chain 4663)
+# Proof of Mainnet
 
-First atomic 1-transaction launch via `contracts/ArtemisLauncher.sol`
-(deployed at `0xeea9d0f7ee0958c6d59f25162be4e69ba60a0f71`, source verified
-exact match on Blockscout, MIT, solc 0.8.26, optimizer 200 runs).
+ArtemisLauncher Implementation (source verified, exact match, MIT):
+0xeea9d0f7ee0958c6d59f25162be4e69ba60a0f71
+Blockscout:
+https://robinhoodchain.blockscout.com/address/0xeea9d0f7ee0958c6d59f25162be4e69ba60a0f71
+Deploy Tx:
+0x4fa871c14627052b968198e3598a1e27832e5aaa17d1997a093c5d47a8cbf235
+Compiler: solc 0.8.26, optimizer enabled, 200 runs
+Constructor: router 0x89e5db8b5aa49aa85ac63f691524311aeb649eba (Uniswap V2)
 
-- Token: `0x1b497f3577df58f5a15f062d3f8a22999b4e86cc`
-- Name: Asif Alchemy / Symbol: ASIF / Supply: 999000000 * 1e18 fixed, no mint
-- Pool: 1000 ASIF + 0.0002 ETH into Uniswap V2, one transaction (launch amounts; live reserves move — see DexScreener link)
-- Launch tx: `0x3bebcd4dd28b55c3fa5d56a2b1dde41ff91adf8ac6a996c8534e835e68585ab0`
-- Pair: `0xc682AeFee57c0fbe890238f6F09d0066d450f834`
-- Gas used: 3178008 (estimate was 3278258), block 67920183, status success, 12 logs
-- Live reserves (2026-09-21): 201998778000000 wei WETH (~0.000202) + 990134391686851893666 (~990.13 ASIF); LP supply 447213595499957939; DexScreener liquidity $1.04
-- DexScreener: https://dexscreener.com/robinhood/0xc682AeFee57c0fbe890238f6F09d0066d450f834
-- Showcase: verified onchain (`invalid_tx` rejects fakes), listed at `/tokens`
+Asif Alchemy Token (ASIF, 999M fixed, no mint, 18 decimals):
+0x1b497f3577df58f5a15f062d3f8a22999b4e86cc
+Blockscout:
+https://robinhoodchain.blockscout.com/token/0x1b497f3577df58f5a15f062d3f8a22999b4e86cc
+
+Atomic Launch Transaction (token + pool, 1 tx):
+0x3bebcd4dd28b55c3fa5d56a2b1dde41ff91adf8ac6a996c8534e835e68585ab0
+Block: 67920183
+Gas used: 3178008
+https://robinhoodchain.blockscout.com/tx/0x3bebcd4dd28b55c3fa5d56a2b1dde41ff91adf8ac6a996c8534e835e68585ab0
+
+Uniswap V2 Pool ASIF/WETH (1000 ASIF + 0.0002 ETH):
+0xc682aefee57c0fbe890238f6f09d0066d450f834
+DexScreener:
+https://dexscreener.com/robinhood/0xc682aefee57c0fbe890238f6f09d0066d450f834
+
+Showcase entry (verified onchain, fake txs rejected):
+https://artemis-olive.vercel.app/tokens
+
+Hood Chain Mainnet 4663. Live token, verified on-chain.
