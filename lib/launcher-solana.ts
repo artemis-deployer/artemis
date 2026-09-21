@@ -19,7 +19,7 @@ export function buildMetadata(args: { name: string; symbol: string; description:
   return { name, symbol, description: args.description.trim().slice(0, 500), image: args.image?.trim() || undefined };
 }
 
-export async function uploadMetadata(meta: TokenMeta): Promise<string> {
+export async function uploadMetadata(meta: TokenMeta, imageDataUrl?: string): Promise<string> {
   // Pinned server-side (PINATA_JWT never leaves the server): the old
   // PumpPortal /api/ipfs endpoint is dead ("Cannot POST /api/ipfs").
   let res: Response;
@@ -27,7 +27,7 @@ export async function uploadMetadata(meta: TokenMeta): Promise<string> {
     res = await fetch("/api/pump-metadata", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify(meta),
+      body: JSON.stringify(imageDataUrl ? { ...meta, imageData: imageDataUrl } : meta),
     });
   } catch {
     throw new Error("pump_offline");

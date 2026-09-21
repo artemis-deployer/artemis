@@ -38,17 +38,22 @@ const DraftCtx = createContext<{
   setDraft: Dispatch<SetStateAction<Draft>>;
   consent: boolean;
   setConsent: (b: boolean) => void;
+  artworkFile: File | null;
+  setArtworkFile: (f: File | null) => void;
 }>({
   draft: EMPTY_DRAFT,
   setDraft: () => undefined,
   consent: false,
   setConsent: () => undefined,
+  artworkFile: null,
+  setArtworkFile: () => undefined,
 });
 
 export function DraftProvider({ children }: { children: React.ReactNode }) {
   const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT);
   const [consent, setConsent] = useState(false);
-  return <DraftCtx.Provider value={{ draft, setDraft, consent, setConsent }}>{children}</DraftCtx.Provider>;
+  const [artworkFile, setArtworkFile] = useState<File | null>(null);
+  return <DraftCtx.Provider value={{ draft, setDraft, consent, setConsent, artworkFile, setArtworkFile }}>{children}</DraftCtx.Provider>;
 }
 
 export function useDraft() {

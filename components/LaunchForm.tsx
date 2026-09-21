@@ -10,7 +10,7 @@ import ChainLogo from "./ChainLogo";
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 
 export default function LaunchForm({ onReview }: { onReview: () => void }) {
-  const { draft, setDraft, consent, setConsent } = useDraft();
+  const { draft, setDraft, consent, setConsent, setArtworkFile } = useDraft();
   const [imageError, setImageError] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -292,6 +292,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
             const url = URL.createObjectURL(file);
             setPreviewUrl(url);
             setFileName(file.name);
+            setArtworkFile(file);
           }}
         />
         {previewUrl ? (
@@ -307,6 +308,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
                 if (previewUrl) URL.revokeObjectURL(previewUrl);
                 setPreviewUrl(null);
                 setFileName(null);
+                setArtworkFile(null);
                 if (fileRef.current) fileRef.current.value = "";
               }}
               aria-label="Remove coin image"
@@ -356,7 +358,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
           onChange={(e) => setDraft({ ...draft, image: e.target.value || undefined })}
         />
         {previewUrl && !draft.image && (
-          <p className="m-0 text-xs text-white/50">File preview only. Onchain metadata uses the URL above.</p>
+          <p className="m-0 text-xs text-white/50">Uploaded file pins to IPFS on Solana launch. EVM ignores artwork.</p>
         )}
         {imageError && (
           <p role="alert" className="m-0 text-xs font-medium text-red-300">

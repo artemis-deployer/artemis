@@ -41,7 +41,17 @@ import { submitShowcase } from "../lib/showcase";
 import { solanaAddressOf } from "../lib/wallets";
 import SolanaButton, { getSolanaProvider, type SolanaProvider } from "./SolanaButton";
 import WalletButton from "./WalletButton";
+import { useDraft } from "./DraftContext";
 import type { LaunchSuccess } from "./SuccessModal";
+
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "");
+    reader.onerror = () => reject(new Error("bad_metadata"));
+    reader.readAsDataURL(file);
+  });
+}
 
 type HoodState = "idle" | "working" | "token-done" | "pool-done" | "stub" | "error";
 type PumpState = "idle" | "working" | "built" | "sent" | "error";
@@ -75,6 +85,17 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
   const [cost, setCost] = useState<LaunchCost | null>(null);
   const [costLoading, setCostLoading] = useState(false);
   const [slippageBps, setSlippageBps] = useState<number>(ETH_MIN_BPS);
+  const { artworkFile } = useDraft();
+
+  async function artworkDataUrl(): Promise<string | undefined> {
+    if (!artworkFile) return undefined;
+    try {
+      const url = await fileToDataUrl(artworkFile);
+      return url || undefined;
+    } catch {
+      return undefined;
+    }
+  }
   // Resume unmounts once hood hits working, so disabled prop can't guard
   // same-tick double-clicks (TS narrows hood here). Ref guards instead.
   const fundingRef = useRef(false);
@@ -323,7 +344,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       }
       let uri = "devnet-rehearsal";
       try {
-        uri = await uploadMetadata(meta);
+        uri = await uploadMetadata(meta, await artworkDataUrl());
       } catch {
         uri = "devnet-rehearsal";
       }
@@ -375,7 +396,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
     setPump("working");
     setPumpNote("");
     try {
-      const uri = await uploadMetadata(meta);
+      const uri = await uploadMetadata(meta, await artworkDataUrl());
       if (!uri) throw new Error("pump_rejected: no metadata uri");
       const mintKp = Keypair.generate();
       const mintBase58 = mintKp.publicKey.toBase58();

@@ -204,6 +204,19 @@ describe("pump pin route", () => {
       "pump_rejected: no metadata uri",
     );
   });
+
+  it("uploadMetadata forwards imageData for uploaded artwork", async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ uri: "https://ipfs.io/ipfs/bafytest" }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(
+      uploadMetadata({ name: "Kopi", symbol: "KOPI", description: "d" }, "data:image/png;base64,aGk="),
+    ).resolves.toBe("https://ipfs.io/ipfs/bafytest");
+    const [, init] = fetchMock.mock.calls[0] as [string, { body?: string }];
+    expect(JSON.parse(init.body ?? "{}")).toMatchObject({ imageData: "data:image/png;base64,aGk=" });
+  });
 });
 
 describe("buildCreateTx", () => {

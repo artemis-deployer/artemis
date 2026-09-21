@@ -34,11 +34,35 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
   }
 
+  // Uploaded artwork file (data URL) is pinned first; its IPFS uri becomes the image.
+  let imageUri: string | undefined = image;
+  const imageData = typeof b.imageData === "string" ? b.imageData : null;
+  if (imageData) {
+    const m = /^data:image\/(png|jpeg|webp|gif);base64,([A-Za-z0-9+/=]+)$/.exec(imageData);
+    if (!m) return NextResponse.json({ error: "bad_request" }, { status: 400 });
+    const bytes = Buffer.from(m[2], "base64");
+    if (bytes.length === 0 || bytes.length > 2 * 1024 * 1024) {
+      return NextResponse.json({ error: "bad_request" }, { status: 400 });
+    }
+    const pinned = await pinFile(
+      jwt,
+      new File([bytes], `artwork.${m[1] === "jpeg" ? "jpg" : m[1]}`, { type: `image/${m[1]}` }),
+    );
+    if (!pinned) return NextResponse.json({ error: "pin_offline" }, { status: 502 });
+    imageUri = pinned;
+  }
+
   const file = new File(
-    [JSON.stringify({ name, symbol, description, ...(image ? { image } : {}) })],
+    [JSON.stringify({ name, symbol, description, ...(imageUri ? { image: imageUri } : {}) })],
     "metadata.json",
     { type: "application/json" },
   );
+  const uri = await pinFile(jwt, file);
+  if (!uri) return NextResponse.json({ error: "pin_offline" }, { status: 502 });
+  return NextResponse.json({ uri });
+}
+
+async function pinFile(jwt: string, file: File): Promise<string | null> {
   const form = new FormData();
   form.append("network", "public");
   form.append("file", file);
@@ -50,15 +74,15 @@ export async function POST(req: Request) {
       body: form,
     });
   } catch {
-    return NextResponse.json({ error: "pin_offline" }, { status: 502 });
+    return null;
   }
-  if (!upstream.ok) return NextResponse.json({ error: "pin_offline" }, { status: 502 });
+  if (!upstream.ok) return null;
   let data: { data?: { cid?: string } };
   try {
     data = (await upstream.json()) as { data?: { cid?: string } };
   } catch {
-    return NextResponse.json({ error: "pin_offline" }, { status: 502 });
+    return null;
   }
-  if (!data.data?.cid) return NextResponse.json({ error: "pin_offline" }, { status: 502 });
-  return NextResponse.json({ uri: `https://ipfs.io/ipfs/${data.data.cid}` });
+  if (!data.data?.cid) return null;
+  return `https://ipfs.io/ipfs/${data.data.cid}`;
 }

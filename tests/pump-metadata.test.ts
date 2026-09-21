@@ -178,4 +178,37 @@ describe("pump-metadata route", () => {
     }
     expect(throttled).toBe(true);
   });
+
+  it("pins uploaded artwork first, then metadata", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: { cid: "bafyimg" } }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: { cid: "bafymeta" } }) });
+    vi.stubGlobal("fetch", fetchMock);
+    const req = new Request("http://x/api/pump-metadata", {
+      method: "POST",
+      body: JSON.stringify({ name: "Kopi", symbol: "KOPI", imageData: "data:image/png;base64,aGk=" }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+    expect(((await res.json()) as { uri: string }).uri).toBe("https://ipfs.io/ipfs/bafymeta");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("rejects bad or oversized imageData with 400", async () => {
+    vi.stubGlobal("fetch", vi.fn());
+    for (const imageData of ["not-a-data-url", "data:image/svg+xml;base64,aGk=", "data:image/png;base64,!!!"]) {
+      const req = new Request("http://x/api/pump-metadata", {
+        method: "POST",
+        body: JSON.stringify({ name: "Kopi", symbol: "KOPI", imageData }),
+      });
+      expect((await POST(req)).status).toBe(400);
+    }
+    const huge = `data:image/png;base64,${"QUJD".repeat(700000)}`;
+    const big = new Request("http://x/api/pump-metadata", {
+      method: "POST",
+      body: JSON.stringify({ name: "Kopi", symbol: "KOPI", imageData: huge }),
+    });
+    expect((await POST(big)).status).toBe(400);
+  });
 });
