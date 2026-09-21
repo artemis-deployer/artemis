@@ -233,4 +233,31 @@ describe("pump-metadata route", () => {
     expect((await POST(big)).status).toBe(400);
     expect(fetchMock).not.toHaveBeenCalled();
   });
+
+  it("rejects oversized raw body >4MB before parse (JSON bomb guard)", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    const evil = "x".repeat(5 * 1024 * 1024);
+    const req = new Request("http://x/api/pump-metadata", {
+      method: "POST",
+      body: JSON.stringify({ name: "Kopi", symbol: "KOPI", evil }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as { error: string }).error).toBe("bad_request");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects lying Content-Length >4MB without pin", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    const req = new Request("http://x/api/pump-metadata", {
+      method: "POST",
+      headers: { "content-length": String(50 * 1024 * 1024) },
+      body: JSON.stringify({ name: "Kopi", symbol: "KOPI" }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(400);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
 });

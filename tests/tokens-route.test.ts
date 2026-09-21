@@ -393,4 +393,41 @@ describe("tokens route", () => {
     expect(((await res.json()) as { error: string }).error).toBe("invalid_tx");
     expect(mocked.saveToken).not.toHaveBeenCalled();
   });
+
+  it("rejects oversized raw body >64KB before parse (JSON bomb guard)", async () => {
+    mocked.isDbConfigured.mockReturnValue(true);
+    const evil = "x".repeat(70 * 1024);
+    const req = new Request("http://x/api/community/tokens", {
+      method: "POST",
+      body: JSON.stringify({
+        chainId: "4663",
+        address: EVM_ADDR,
+        txHash: EVM_HASH,
+        creator: "0x1111111111111111111111111111111111111111",
+        evil,
+      }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as { error: string }).error).toBe("bad_request");
+    expect(mocked.saveToken).not.toHaveBeenCalled();
+  });
+
+  it("rejects lying Content-Length >64KB without verify RPC", async () => {
+    mocked.isDbConfigured.mockReturnValue(true);
+    const req = new Request("http://x/api/community/tokens", {
+      method: "POST",
+      headers: { "content-length": String(200 * 1024) },
+      body: JSON.stringify({
+        chainId: "4663",
+        address: EVM_ADDR,
+        txHash: EVM_HASH,
+        creator: "0x1111111111111111111111111111111111111111",
+      }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(400);
+    expect(mockedVerify.verifyEvmTx).not.toHaveBeenCalled();
+    expect(mocked.saveToken).not.toHaveBeenCalled();
+  });
 });

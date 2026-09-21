@@ -1018,7 +1018,7 @@ describe("ADVERSARIAL AUDIT: replay/idempotency/cost", () => {
         };
       }),
     );
-    const evilDraft = { ticker: "ARTS", evil: "x".repeat(50000) };
+    const evilDraft = { ticker: "ARTS", evil: "x".repeat(10000) };
     const req = new Request("http://x/api/chat", {
       method: "POST",
       body: JSON.stringify({ messages: [{ role: "user", content: "hi" }], draft: evilDraft }),
@@ -1098,5 +1098,45 @@ describe("ADVERSARIAL AUDIT: replay/idempotency/cost", () => {
     expect(text).not.toContain("secret-url");
     const json = JSON.parse(text) as Record<string, unknown>;
     expect(Object.keys(json).sort()).toEqual(["configured", "model", "networks"]);
+  });
+
+  it("rejects oversized raw body >32KB before parse (JSON bomb guard)", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          choices: [
+            {
+              message: {
+                content:
+                  'Nice!\n```json\n{"name":"Arts Club","ticker":"ARTS","pooled":"500000","liquidity":"1.5","route":"direct"}\n```',
+              },
+            },
+          ],
+        }),
+      }),
+    );
+    const evil = "x".repeat(40 * 1024);
+    const req = new Request("http://x/api/chat", {
+      method: "POST",
+      body: JSON.stringify({ messages: [{ role: "user", content: "hi" }], evil }),
+    });
+    const res = await chatPOST(req);
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as { error: string }).error).toBe("bad_request");
+  });
+
+  it("rejects lying Content-Length >32KB without parsing", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    const req = new Request("http://x/api/chat", {
+      method: "POST",
+      headers: { "content-length": String(100 * 1024) },
+      body: JSON.stringify({ messages: [{ role: "user", content: "hi" }] }),
+    });
+    const res = await chatPOST(req);
+    expect(res.status).toBe(400);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { checkDailyLimit, checkRateLimit, clientIp } from "../../../lib/rate-limit";
 
+// Raw body cap before JSON.parse: 2MB imageData (base64 ~2.7MB) + JSON overhead fits in 4MB.
+export const MAX_PUMP_BODY_CHARS = 4 * 1024 * 1024;
+
 export async function POST(req: Request) {
   if (!(await checkRateLimit(`pin:${clientIp(req)}`, 10, 60000)).ok) {
     return NextResponse.json({ error: "too_many_requests" }, { status: 429 });
@@ -11,9 +14,23 @@ export async function POST(req: Request) {
   }
   const jwt = process.env.PINATA_JWT;
   if (!jwt) return NextResponse.json({ error: "pin_offline" }, { status: 502 });
+  // JSON bomb guard: check Content-Length + raw text length BEFORE JSON.parse.
+  const clen = Number(req.headers.get("content-length"));
+  if (Number.isFinite(clen) && clen > MAX_PUMP_BODY_CHARS) {
+    return NextResponse.json({ error: "bad_request" }, { status: 400 });
+  }
+  let raw: string;
+  try {
+    raw = await req.text();
+  } catch {
+    return NextResponse.json({ error: "bad_request" }, { status: 400 });
+  }
+  if (raw.length === 0 || raw.length > MAX_PUMP_BODY_CHARS) {
+    return NextResponse.json({ error: "bad_request" }, { status: 400 });
+  }
   let body: unknown;
   try {
-    body = (await req.json()) as unknown;
+    body = JSON.parse(raw) as unknown;
   } catch {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
   }

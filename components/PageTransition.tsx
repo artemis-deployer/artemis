@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useRef, useState, useTransition } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 
 interface PageTransitionContextValue {
@@ -31,7 +31,8 @@ export const PageTransitionProvider: React.FC<{ children: React.ReactNode }> = (
     failsafeTimer.current = null;
   };
 
-  const navigate = (href: string) => {
+  // ponytail: stable fn + value identity, else all TransitionLinks re-render per provider render
+  const navigate = useCallback((href: string) => {
     // If external link or anchor on current page, proceed immediately
     if (href.startsWith('http') || href.startsWith('#')) {
       if (href.startsWith('#')) {
@@ -77,7 +78,9 @@ export const PageTransitionProvider: React.FC<{ children: React.ReactNode }> = (
       transitioningRef.current = false;
       setTransitionState((prev) => (prev === 'leaving' ? '' : prev));
     }, 3000);
-  };
+  }, [router, pathname, transitionState]);
+
+  const value = useMemo(() => ({ navigate }), [navigate]);
 
   // When pathname changes after navigation, trigger entering animation
   useEffect(() => {
@@ -108,7 +111,7 @@ export const PageTransitionProvider: React.FC<{ children: React.ReactNode }> = (
   }, []);
 
   return (
-    <PageTransitionContext.Provider value={{ navigate }}>
+    <PageTransitionContext.Provider value={value}>
       {children}
       {/* 4-layer sliding transition panels from darkpoolfi.tech */}
       <div className={`transition-panels ${transitionState}`} aria-hidden="true">

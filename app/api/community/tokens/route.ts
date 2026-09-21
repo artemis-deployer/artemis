@@ -5,6 +5,9 @@ import { DEVNET_RPC, MAINNET_RPC } from "../../../../lib/launcher-solana";
 import { checkRateLimit, clientIp } from "../../../../lib/rate-limit";
 import { verifyEvmTx, verifySolanaTx } from "../../../../lib/verify-tx";
 
+// Raw body cap before JSON.parse: legit bodies <2KB.
+export const MAX_TOKENS_BODY_CHARS = 64 * 1024;
+
 export async function GET(req?: Request) {
   if (!isDbConfigured()) return NextResponse.json({ error: "db_offline" }, { status: 502 });
   const ip = req ? clientIp(req) : "local";
@@ -23,9 +26,23 @@ export async function POST(req: Request) {
   if (!(await checkRateLimit(`showcase:${clientIp(req)}`, 20, 60000)).ok) {
     return NextResponse.json({ error: "too_many_requests" }, { status: 429 });
   }
+  // JSON bomb guard: check Content-Length + raw text length BEFORE JSON.parse.
+  const clen = Number(req.headers.get("content-length"));
+  if (Number.isFinite(clen) && clen > MAX_TOKENS_BODY_CHARS) {
+    return NextResponse.json({ error: "bad_request" }, { status: 400 });
+  }
+  let raw: string;
+  try {
+    raw = await req.text();
+  } catch {
+    return NextResponse.json({ error: "bad_request" }, { status: 400 });
+  }
+  if (raw.length === 0 || raw.length > MAX_TOKENS_BODY_CHARS) {
+    return NextResponse.json({ error: "bad_request" }, { status: 400 });
+  }
   let body: unknown;
   try {
-    body = await req.json();
+    body = JSON.parse(raw) as unknown;
   } catch {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
   }

@@ -26,6 +26,9 @@ const RETRY_NOTE =
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
+// Raw body cap before JSON.parse: legit <22KB (20x1000 + 2KB draft + overhead).
+export const MAX_CHAT_BODY_CHARS = 32 * 1024;
+
 export type ServerDraft = {
   name?: string;
   ticker?: string;
@@ -131,9 +134,23 @@ export async function POST(req: Request) {
   const model = process.env.LLM_MODEL ?? "mimo-v2.5";
   if (!url || !key) return NextResponse.json({ error: "chat_offline" }, { status: 502 });
 
+  // JSON bomb guard: check Content-Length + raw text length BEFORE JSON.parse.
+  const clen = Number(req.headers.get("content-length"));
+  if (Number.isFinite(clen) && clen > MAX_CHAT_BODY_CHARS) {
+    return NextResponse.json({ error: "bad_request" }, { status: 400 });
+  }
+  let rawText: string;
+  try {
+    rawText = await req.text();
+  } catch {
+    return NextResponse.json({ error: "bad_request" }, { status: 400 });
+  }
+  if (rawText.length === 0 || rawText.length > MAX_CHAT_BODY_CHARS) {
+    return NextResponse.json({ error: "bad_request" }, { status: 400 });
+  }
   let body: unknown;
   try {
-    body = (await req.json()) as unknown;
+    body = JSON.parse(rawText) as unknown;
   } catch {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
   }

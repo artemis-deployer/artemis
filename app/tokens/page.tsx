@@ -208,7 +208,7 @@ export default function TokensPage() {
                   <div className="flex items-center gap-3">
                     {typeof t.image === "string" && t.image.startsWith("https://") ? (
                       /* eslint-disable-next-line @next/next/no-img-element -- user-supplied https token artwork */
-                      <img src={t.image} alt="" aria-hidden="true" className="h-10 w-10 shrink-0 rounded-full border border-white/15 object-cover" />
+                      <img src={t.image} alt="" aria-hidden="true" width={40} height={40} className="h-10 w-10 shrink-0 rounded-full border border-white/15 object-cover" />
                     ) : null}
                     <div>
                       <h3 className="m-0 text-base font-bold text-white">

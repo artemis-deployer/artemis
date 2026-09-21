@@ -39,6 +39,8 @@ function prefersReducedMotion(): boolean {
 
 const TYPE_STEP = 14;
 const TYPE_MS = 12;
+// ponytail: cap DOM nodes, state keeps full history
+const RENDER_LIMIT = 120;
 
 export default function StudioChat() {
   const { draft, setDraft, setConsent } = useDraft();
@@ -301,7 +303,9 @@ export default function StudioChat() {
       </div>
 
       <div className="chat-scroll flex flex-1 flex-col gap-3.5 overflow-y-auto p-5" aria-live="polite" ref={logRef}>
-        {log.map((l, i) => (
+        {(log.length > RENDER_LIMIT ? log.slice(log.length - RENDER_LIMIT) : log).map((l, vi) => {
+          const i = log.length > RENDER_LIMIT ? log.length - RENDER_LIMIT + vi : vi;
+          return (
           <div
             key={i}
             data-role={l.role}
@@ -341,7 +345,8 @@ export default function StudioChat() {
               </span>
             )}
           </div>
-        ))}
+          );
+        })}
 
         {busy && (
           <div className="flex items-center gap-1.5 self-start rounded-lg border border-white/10 bg-[#1a1b1f] px-4 py-3" aria-label="Artemis is thinking">

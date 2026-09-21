@@ -41,6 +41,8 @@ npm run dev                  # http://localhost:3000
 | `psql "$DATABASE_URL" -f migrations/0002_rate_limits.sql` | Create the shared rate-limit table (required for durable throttling) |
 | `psql "$DATABASE_URL" -f migrations/0003_showcase_image.sql` | Add artwork image column to showcase |
 
+Fresh DB: run all three in order 0001→0002→0003 (sequential, all required).
+
 ## Launch rails
 
 - **Hood Chain (4663):** 1 transaction via ArtemisLauncher — fixed-supply ERC20 deploy + Uniswap V2 pool funding atomically. Live and verified, see `docs/MAINNET-PROOF.md`. Testnet (46630) rehearses the deploy; the pool step is stubbed there because no V2 exists on testnet. See `docs/TESTNET-PROOF.md`.
