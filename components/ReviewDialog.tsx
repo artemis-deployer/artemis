@@ -168,7 +168,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
     setHood("error");
   }
 
-  function succeed(token: string, hash: string): void {
+  function succeed(token: string, hash: string, rehearsal = false): void {
     setArtworkFile(null);
     onLaunched?.({
       chainId: draft.chainId,
@@ -176,6 +176,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       hash,
       ticker: draft.ticker,
       name: draft.name || draft.ticker,
+      rehearsal,
     });
     if (ref && typeof ref !== "function") ref.current?.close();
   }
@@ -246,6 +247,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
         if (m === "pool_unsupported_on_testnet") {
           setHood("stub");
           setNote("Testnet rehearsal: token deployed, pool step unavailable (no V2 router on testnet).");
+          succeed(dep.token, dep.hash, true);
           return;
         }
         throw inner;
@@ -375,6 +377,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       setMint(mintBase58);
       setPumpNote(`Devnet rehearsal: transaction built (${size} bytes), broadcast omitted by design.`);
       setPump("built");
+      succeed(mintBase58, "", true);
       return;
     }
     const p = getSolanaProvider() ?? provider;
