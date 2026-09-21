@@ -123,7 +123,7 @@ export function extractServerDraft(reply: string): { draft: ServerDraft | null; 
 }
 
 export async function POST(req: Request) {
-  if (!checkRateLimit(`chat:${clientIp(req)}`, 10, 60000).ok) {
+  if (!(await checkRateLimit(`chat:${clientIp(req)}`, 10, 60000)).ok) {
     return NextResponse.json({ error: "too_many_requests" }, { status: 429 });
   }
   const url = process.env.LLM_API_URL;

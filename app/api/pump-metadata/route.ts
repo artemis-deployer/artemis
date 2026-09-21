@@ -2,11 +2,11 @@ import { NextResponse } from "next/server";
 import { checkDailyLimit, checkRateLimit, clientIp } from "../../../lib/rate-limit";
 
 export async function POST(req: Request) {
-  if (!checkRateLimit(`pin:${clientIp(req)}`, 10, 60000).ok) {
+  if (!(await checkRateLimit(`pin:${clientIp(req)}`, 10, 60000)).ok) {
     return NextResponse.json({ error: "too_many_requests" }, { status: 429 });
   }
   // Global daily pin cap: per-IP limits rotate away, JWT quota does not.
-  if (!checkDailyLimit("pin:daily", 200).ok) {
+  if (!(await checkDailyLimit("pin:daily", 200)).ok) {
     return NextResponse.json({ error: "too_many_requests" }, { status: 429 });
   }
   const jwt = process.env.PINATA_JWT;

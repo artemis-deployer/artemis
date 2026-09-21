@@ -8,7 +8,7 @@ import { verifyEvmTx, verifySolanaTx } from "../../../../lib/verify-tx";
 export async function GET(req?: Request) {
   if (!isDbConfigured()) return NextResponse.json({ error: "db_offline" }, { status: 502 });
   const ip = req ? clientIp(req) : "local";
-  if (!checkRateLimit(`showcase-get:${ip}`, 60, 60000).ok) {
+  if (!(await checkRateLimit(`showcase-get:${ip}`, 60, 60000)).ok) {
     return NextResponse.json({ error: "too_many_requests" }, { status: 429 });
   }
   try {
@@ -20,7 +20,7 @@ export async function GET(req?: Request) {
 
 export async function POST(req: Request) {
   if (!isDbConfigured()) return NextResponse.json({ error: "db_offline" }, { status: 502 });
-  if (!checkRateLimit(`showcase:${clientIp(req)}`, 20, 60000).ok) {
+  if (!(await checkRateLimit(`showcase:${clientIp(req)}`, 20, 60000)).ok) {
     return NextResponse.json({ error: "too_many_requests" }, { status: 429 });
   }
   let body: unknown;
