@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { ExternalLink, X } from "lucide-react";
+import { BadgeCheck, ExternalLink, X } from "lucide-react";
 import { explorerTokenUrl, explorerTxUrl, getChain } from "../lib/chains";
 
 export type LaunchSuccess = {
@@ -15,11 +15,6 @@ export type LaunchSuccess = {
 
 export default function SuccessModal({ info, onClose }: { info: LaunchSuccess | null; onClose: () => void }) {
   const closeRef = useRef<HTMLButtonElement>(null);
-  const onCloseRef = useRef(onClose);
-
-  useEffect(() => {
-    onCloseRef.current = onClose;
-  }, [onClose]);
 
   useEffect(() => {
     if (!info) return;
@@ -27,13 +22,8 @@ export default function SuccessModal({ info, onClose }: { info: LaunchSuccess | 
     const prevActive = document.activeElement as HTMLElement | null;
     document.body.style.overflow = "hidden";
     closeRef.current?.focus();
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onCloseRef.current();
-    };
-    window.addEventListener("keydown", handleKeyDown);
     return () => {
       document.body.style.overflow = prevOverflow;
-      window.removeEventListener("keydown", handleKeyDown);
       prevActive?.focus?.();
     };
   }, [info]);
@@ -46,16 +36,15 @@ export default function SuccessModal({ info, onClose }: { info: LaunchSuccess | 
       role="dialog"
       aria-modal="true"
       aria-label="Launch successful"
-      onClick={onClose}
     >
       <div
         className="modal-pop flex w-full max-w-[420px] flex-col gap-3.5 rounded-2xl border border-white/15 bg-[#1a1b1f] p-6 text-white shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
           <div>
-            <p className="m-0 font-mono text-[11px] font-bold tracking-[0.15em] text-emerald-300 uppercase">
-              {info.rehearsal ? "🎉 Rehearsal built — not broadcast" : "🎉 Launch successful"}
+            <p className="m-0 flex items-center gap-1.5 font-mono text-[11px] font-bold tracking-[0.15em] text-emerald-300 uppercase">
+              <BadgeCheck size={14} aria-hidden="true" />
+              <span>{info.rehearsal ? "Rehearsal built — not broadcast" : "Launch successful"}</span>
             </p>
             <h3 className="m-0 mt-1 text-xl font-bold font-unbounded text-white">
               {info.name || info.ticker || "Your coin"} {info.rehearsal ? "is ready" : "is live"}
