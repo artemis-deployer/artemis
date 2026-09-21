@@ -10,7 +10,6 @@ export type LaunchSuccess = {
   hash: string;
   ticker: string;
   name: string;
-  rehearsal?: boolean;
 };
 
 export default function SuccessModal({ info, onClose }: { info: LaunchSuccess | null; onClose: () => void }) {
@@ -44,10 +43,10 @@ export default function SuccessModal({ info, onClose }: { info: LaunchSuccess | 
           <div>
             <p className="m-0 flex items-center gap-1.5 font-mono text-[11px] font-bold tracking-[0.15em] text-emerald-300 uppercase">
               <BadgeCheck size={14} aria-hidden="true" />
-              <span>{info.rehearsal ? "Rehearsal built — not broadcast" : "Launch successful"}</span>
+              <span>Launch successful</span>
             </p>
             <h3 className="m-0 mt-1 text-xl font-bold font-unbounded text-white">
-              {info.name || info.ticker || "Your coin"} {info.rehearsal ? "is ready" : "is live"}
+              {info.name || info.ticker || "Your coin"} is live
             </h3>
           </div>
           <button
@@ -70,9 +69,6 @@ export default function SuccessModal({ info, onClose }: { info: LaunchSuccess | 
           <dd className="m-0 text-right font-semibold break-all text-white">{chain?.name ?? String(info.chainId)}</dd>
           <dt className="font-medium text-white/50">Token:</dt>
           <dd className="m-0 text-right font-mono break-all">
-            {info.rehearsal ? (
-              <span className="text-white/70">{info.token.slice(0, 10)}…{info.token.slice(-8)} (unbroadcast)</span>
-            ) : (
             <a
               href={explorerTokenUrl(info.chainId, info.token)}
               target="_blank"
@@ -82,11 +78,9 @@ export default function SuccessModal({ info, onClose }: { info: LaunchSuccess | 
               <span>{info.token.slice(0, 10)}…{info.token.slice(-8)}</span>
               <ExternalLink size={11} />
             </a>
-            )}
           </dd>
           <dt className="font-medium text-white/50">Transaction:</dt>
           <dd className="m-0 text-right font-mono break-all">
-            {info.hash ? (
             <a
               href={explorerTxUrl(info.chainId, info.hash)}
               target="_blank"
@@ -96,9 +90,6 @@ export default function SuccessModal({ info, onClose }: { info: LaunchSuccess | 
               <span>{info.hash.slice(0, 10)}…{info.hash.slice(-8)}</span>
               <ExternalLink size={11} />
             </a>
-            ) : (
-              <span className="text-white/50">—</span>
-            )}
           </dd>
         </dl>
 

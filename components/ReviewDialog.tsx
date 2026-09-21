@@ -168,7 +168,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
     setHood("error");
   }
 
-  function succeed(token: string, hash: string, rehearsal = false): void {
+  function succeed(token: string, hash: string): void {
     setArtworkFile(null);
     onLaunched?.({
       chainId: draft.chainId,
@@ -176,7 +176,6 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       hash,
       ticker: draft.ticker,
       name: draft.name || draft.ticker,
-      rehearsal,
     });
     if (ref && typeof ref !== "function") ref.current?.close();
   }
@@ -247,7 +246,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
         if (m === "pool_unsupported_on_testnet") {
           setHood("stub");
           setNote("Testnet rehearsal: token deployed, pool step unavailable (no V2 router on testnet).");
-          succeed(dep.token, dep.hash, true);
+          succeed(dep.token, dep.hash);
           return;
         }
         throw inner;
@@ -558,9 +557,6 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
             {mint && (
               <p className="m-0 flex items-center gap-1 font-mono text-xs text-white">
                 <span className="text-white/50">Mint:</span>
-                {rpc !== MAINNET_RPC ? (
-                  <span className="text-white/70">{mint.slice(0, 10)}…{mint.slice(-8)} (unbroadcast)</span>
-                ) : (
                 <a
                   href={explorerTokenUrl(draft.chainId, mint)}
                   target="_blank"
@@ -570,7 +566,6 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
                   <span>{mint.slice(0, 10)}…{mint.slice(-8)}</span>
                   <ExternalLink size={11} />
                 </a>
-                )}
               </p>
             )}
 
