@@ -251,6 +251,7 @@ export async function connectSolana(
 ): Promise<{ provider: SolanaProviderLike; address: string }> {
   const provider = detectSolana(id);
   if (!provider) throw new Error("wallet_missing");
+  if (typeof provider.connect !== "function") throw new Error("wallet_missing");
   try {
     await withTimeout(provider.connect());
   } catch (e) {

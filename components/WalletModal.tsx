@@ -58,7 +58,12 @@ export default function WalletModal({
 
   async function choose(id: EvmWalletId | SolanaWalletId, detected: boolean, installUrl: string) {
     if (!detected) {
-      window.open(installUrl, "_blank", "noopener");
+      try {
+        const win = window.open(installUrl, "_blank", "noopener");
+        if (!win) setError("Popup blocked by the browser — allow popups for this site, then retry.");
+      } catch {
+        setError("Popup blocked by the browser — allow popups for this site, then retry.");
+      }
       return;
     }
     if (choosingRef.current) return;
