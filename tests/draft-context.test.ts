@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   findNewCompletion,
+  imageOkForDraft,
   isSafeImageSrc,
   resetLaunchAmounts,
 } from "../components/DraftContext";
@@ -75,5 +76,20 @@ describe("isSafeImageSrc", () => {
     expect(isSafeImageSrc("http://example.com/img.png")).toBe(false);
     expect(isSafeImageSrc("javascript:alert(1)")).toBe(false);
     expect(isSafeImageSrc(`https://example.com/${"a".repeat(3000)}`)).toBe(false);
+  });
+});
+
+describe("imageOkForDraft", () => {
+  it("skips validation on EVM so bad image never blocks Review", () => {
+    expect(imageOkForDraft({ route: "direct", chainId: 4663, image: "javascript:alert(1)" })).toBe(true);
+    expect(imageOkForDraft({ route: "direct", chainId: 46630, image: "data:text/html,x" })).toBe(true);
+    expect(imageOkForDraft({ route: "pumpfun", chainId: 4663, image: "javascript:alert(1)" })).toBe(true);
+  });
+
+  it("enforces validation on Solana so invalid blocks Review", () => {
+    expect(imageOkForDraft({ route: "pumpfun", chainId: "solana-mainnet", image: "javascript:alert(1)" })).toBe(false);
+    expect(imageOkForDraft({ route: "pumpfun", chainId: "solana-devnet", image: "data:text/html,x" })).toBe(false);
+    expect(imageOkForDraft({ route: "pumpfun", chainId: "solana-mainnet", image: "https://example.com/a.png" })).toBe(true);
+    expect(imageOkForDraft({ route: "pumpfun", chainId: "solana-mainnet", image: undefined })).toBe(true);
   });
 });

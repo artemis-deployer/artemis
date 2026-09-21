@@ -47,7 +47,10 @@ import type { LaunchSuccess } from "./SuccessModal";
 function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "");
+    reader.onload = () => {
+      if (typeof reader.result === "string" && reader.result) resolve(reader.result);
+      else reject(new Error("bad_metadata"));
+    };
     reader.onerror = () => reject(new Error("bad_metadata"));
     reader.readAsDataURL(file);
   });

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Check, ChevronDown, ImagePlus, X } from "lucide-react";
 import { CHAINS, DIRECT_SUPPLY } from "../lib/chains";
 import { stripNumericSeparators, validateDraft } from "../lib/draft";
-import { isSafeImageSrc, useDraft } from "./DraftContext";
+import { imageOkForDraft, useDraft } from "./DraftContext";
 import ChainLogo from "./ChainLogo";
 
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
@@ -45,7 +45,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
     };
   }, [previewUrl]);
   const isSolana = draft.route === "pumpfun" && String(draft.chainId).startsWith("solana");
-  const imageOk = isSolana ? isSafeImageSrc(draft.image) : true;
+  const imageOk = imageOkForDraft(draft);
   const errors = imageOk
     ? validateDraft(draft)
     : [...validateDraft(draft), "image is invalid: upload a PNG/JPEG or use an https URL"];

@@ -196,7 +196,8 @@ describe("pump-metadata route", () => {
   });
 
   it("rejects bad or oversized imageData with 400", async () => {
-    vi.stubGlobal("fetch", vi.fn());
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
     for (const imageData of ["not-a-data-url", "data:image/svg+xml;base64,aGk=", "data:image/png;base64,!!!"]) {
       const req = new Request("http://x/api/pump-metadata", {
         method: "POST",
@@ -210,5 +211,6 @@ describe("pump-metadata route", () => {
       body: JSON.stringify({ name: "Kopi", symbol: "KOPI", imageData: huge }),
     });
     expect((await POST(big)).status).toBe(400);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

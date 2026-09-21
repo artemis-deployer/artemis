@@ -16,6 +16,12 @@ export function isSafeImageSrc(src: string | undefined): boolean {
   return src.startsWith("https://") && src.length <= MAX_IMAGE_URL_LEN && !/\s/.test(src);
 }
 
+/** EVM rail carries no onchain image: bad draft.image must never block Review. */
+export function imageOkForDraft(d: Pick<Draft, "route" | "chainId" | "image">): boolean {
+  const isSolana = d.route === "pumpfun" && String(d.chainId).startsWith("solana");
+  return isSolana ? isSafeImageSrc(d.image) : true;
+}
+
 /** Keep identity fields, drop amounts so a reopened dialog can't double-launch. */
 export function resetLaunchAmounts(d: Draft): Draft {
   return { ...d, pooled: "", liquidity: "" };
