@@ -117,10 +117,15 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
   const launchingRef = useRef(false);
   const pumpWorkingRef = useRef(false);
 
+  // localStorage reads must wait for mount: server renders without receipts,
+  // so render-time receipt UI would hydrate-mismatch for returning users.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => void setMounted(true), []);
   const isPump = draft.route === "pumpfun" && String(draft.chainId).startsWith("solana");
   const rpc = draft.chainId === "solana-mainnet" ? MAINNET_RPC : DEVNET_RPC;
-  const resume = isPump
-    ? listReceipts().find(
+  const resume =
+    mounted && isPump
+      ? listReceipts().find(
         (r) =>
           String(r.chainId).toLowerCase() === String(draft.chainId).toLowerCase() &&
           typeof r.token === "string" &&
@@ -133,7 +138,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       )
     : undefined;
   const evmResume =
-    !isPump && !token && chainId !== null
+    mounted && !isPump && !token && chainId !== null
       ? findResumableEvmReceipt(listReceipts(), chainId, draft.ticker)
       : undefined;
   const chainObj = getChain(draft.chainId);
