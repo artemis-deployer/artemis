@@ -6,8 +6,13 @@ Blockscout:
 https://robinhoodchain.blockscout.com/address/0xeea9d0f7ee0958c6d59f25162be4e69ba60a0f71
 Deploy Tx:
 0x4fa871c14627052b968198e3598a1e27832e5aaa17d1997a093c5d47a8cbf235
-Compiler: solc 0.8.26, optimizer enabled, 200 runs
+https://robinhoodchain.blockscout.com/tx/0x4fa871c14627052b968198e3598a1e27832e5aaa17d1997a093c5d47a8cbf235
+Deployer: 0x272568D25b9634Ad8A4e8E8CBB10b729f41C781d
+Compiler: solc 0.8.26, optimizer enabled, 200 runs, MIT
 Constructor: router 0x89e5db8b5aa49aa85ac63f691524311aeb649eba (Uniswap V2)
+Reads: router() returns the V2 router above
+Writes: launch(name, symbol, supply, pooled, ethMin, deadline) payable — deploys token + funds pool atomically, LP + leftover to creator
+Events: Launched(token, creator, pooledTokens, ethAdded, liquidity)
 
 Asif Alchemy Token (ASIF, 999M fixed, no mint, 18 decimals):
 0x1b497f3577df58f5a15f062d3f8a22999b4e86cc
