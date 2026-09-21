@@ -44,14 +44,14 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
       if (previewUrl) URL.revokeObjectURL(previewUrl);
     };
   }, [previewUrl]);
-  const imageOk = isSafeImageSrc(draft.image);
+  const isSolana = draft.route === "pumpfun" && String(draft.chainId).startsWith("solana");
+  const imageOk = isSolana ? isSafeImageSrc(draft.image) : true;
   const errors = imageOk
     ? validateDraft(draft)
     : [...validateDraft(draft), "image is invalid: upload a PNG/JPEG or use an https URL"];
   const chain = CHAINS.find((c) => c.id === draft.chainId) ?? CHAINS[2];
   const mainnet = !chain.testnet;
 
-  const isSolana = draft.route === "pumpfun" && String(draft.chainId).startsWith("solana");
   const totalSupply = isSolana ? 1_000_000_000 : DIRECT_SUPPLY;
   const pooledNumber = Number(draft.pooled) || 0;
   const liquidityNumber = Number(draft.liquidity) || 0;
@@ -77,7 +77,8 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
             {draft.ticker ? `${draft.ticker} / Draft` : "TICKER / Draft"}
           </span>
         </div>
-        {previewUrl || (draft.image && imageOk) ? (
+        {isSolana ? (
+          previewUrl || (draft.image && imageOk) ? (
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
@@ -92,7 +93,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
               className="h-52 w-full object-cover"
             />
           </button>
-        ) : (
+          ) : (
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
@@ -102,6 +103,11 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
             <span>Drop artwork here or upload</span>
             <span className="text-[11px] font-medium text-white/40">Your coin image appears here</span>
           </button>
+          )
+        ) : (
+          <p className="m-0 rounded-lg border border-white/10 bg-[#1a1b1f] p-3 text-xs text-white/50">
+            Coin artwork applies to Solana launches only — EVM tokens carry no onchain image.
+          </p>
         )}
         <div className="font-unbounded text-[24px] font-bold leading-none text-[#fae8a4] max-sm:text-xl">
           {draft.ticker ? `$${draft.ticker}` : "$TICKER"}
@@ -268,7 +274,8 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
         </div>
       </div>
 
-      {/* Upload Token Icon */}
+      {/* Upload Token Icon (Solana only) */}
+      {isSolana && (
       <div className="flex flex-col gap-[5px]">
         <label className="flex items-center justify-between text-xs font-bold tracking-[0.02em] text-white/90">
           <span>Token Brand Icon</span>
@@ -366,6 +373,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
           </p>
         )}
       </div>
+      )}
 
       {/* Economics Preview */}
       <div className="flex flex-col gap-1.5 rounded-lg border border-white/10 bg-[#1a1b1f] px-4 py-3">
