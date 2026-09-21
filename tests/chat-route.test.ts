@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET as statusGET } from "../app/api/status/route";
-import { POST as chatPOST, SYSTEM_PROMPT } from "../app/api/chat/route";
+import { POST as chatPOST, SYSTEM_PROMPT, extractServerDraft } from "../app/api/chat/route";
 import { clearRateLimits } from "../lib/rate-limit";
 
 describe("status route", () => {
@@ -654,5 +654,114 @@ describe("chat route", () => {
     const json = (await res.json()) as { draft: unknown; draftErrors: string[] };
     expect(json.draft).toBeNull();
     expect(json.draftErrors).toContain("invalid-pooled");
+  });
+
+  it("keeps first-reply errors when retry returns different invalid values", async () => {
+    const first =
+      'First!\n```json\n{"name":"X","ticker":"X","pooled":"-5","liquidity":"1","route":"direct"}\n```';
+    const second =
+      'Second!\n```json\n{"name":"X","ticker":"bad-ticker!!","pooled":"100","liquidity":"1","route":"direct"}\n```';
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ choices: [{ message: { content: first } }] }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ choices: [{ message: { content: second } }] }) });
+    vi.stubGlobal("fetch", fetchMock);
+    const req = new Request("http://x/api/chat", {
+      method: "POST",
+      body: JSON.stringify({ messages: [{ role: "user", content: "hi" }] }),
+    });
+    const res = await chatPOST(req);
+    const json = (await res.json()) as { reply: string; draft: unknown; draftErrors: string[] };
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(json.draft).toBeNull();
+    expect(json.draftErrors).toContain("invalid-pooled");
+    expect(json.reply).toBe(first);
+  });
+
+  it("maps empty first reply to offline without retry", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ choices: [{ message: { content: "" } }] }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const req = new Request("http://x/api/chat", {
+      method: "POST",
+      body: JSON.stringify({ messages: [{ role: "user", content: "hi" }] }),
+    });
+    const res = await chatPOST(req);
+    expect(res.status).toBe(502);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("extractServerDraft edges", () => {
+  const wrap = (json: string) => `Prose here\n\`\`\`json\n${json}\n\`\`\``;
+
+  it("ignores extra keys without error", () => {
+    const { draft, draftErrors } = extractServerDraft(
+      wrap('{"name":"X","ticker":"ARTS","pooled":"100","liquidity":"1","route":"direct","chainId":4663,"foo":1,"image":"https://x/y.png"}'),
+    );
+    expect(draftErrors).toEqual([]);
+    expect(draft).toMatchObject({ ticker: "ARTS" });
+    expect(draft).not.toHaveProperty("foo");
+    expect(draft).not.toHaveProperty("image");
+  });
+
+  it("rejects numeric zero pooled with invalid-pooled", () => {
+    const { draft, draftErrors } = extractServerDraft(wrap('{"ticker":"X","pooled":0,"liquidity":"1","route":"direct"}'));
+    expect(draft).toBeNull();
+    expect(draftErrors).toContain("invalid-pooled");
+  });
+
+  it("rejects negative numeric pooled with invalid-pooled", () => {
+    const { draft, draftErrors } = extractServerDraft(wrap('{"ticker":"X","pooled":-5,"liquidity":"1","route":"direct"}'));
+    expect(draft).toBeNull();
+    expect(draftErrors).toContain("invalid-pooled");
+  });
+
+  it("rejects boolean pooled with invalid-pooled", () => {
+    const { draft, draftErrors } = extractServerDraft(wrap('{"ticker":"X","pooled":true,"liquidity":"1","route":"direct"}'));
+    expect(draft).toBeNull();
+    expect(draftErrors).toContain("invalid-pooled");
+  });
+
+  it("rejects null pooled with invalid-pooled", () => {
+    const { draft, draftErrors } = extractServerDraft(wrap('{"ticker":"X","pooled":null,"liquidity":"1","route":"direct"}'));
+    expect(draft).toBeNull();
+    expect(draftErrors).toContain("invalid-pooled");
+  });
+
+  it("rejects ticker with spaces with invalid-ticker", () => {
+    const { draft, draftErrors } = extractServerDraft(wrap('{"ticker":"A B","pooled":"100","liquidity":"1","route":"direct"}'));
+    expect(draft).toBeNull();
+    expect(draftErrors).toContain("invalid-ticker");
+  });
+
+  it("rejects emoji ticker with invalid-ticker", () => {
+    const { draft, draftErrors } = extractServerDraft(wrap('{"ticker":"🚀🚀","pooled":"100","liquidity":"1","route":"direct"}'));
+    expect(draft).toBeNull();
+    expect(draftErrors).toContain("invalid-ticker");
+  });
+
+  it("rejects uppercase route DIRECT with invalid-route", () => {
+    const { draft, draftErrors } = extractServerDraft(wrap('{"ticker":"X","pooled":"100","liquidity":"1","route":"DIRECT"}'));
+    expect(draft).toBeNull();
+    expect(draftErrors).toContain("invalid-route");
+  });
+
+  it("drops empty chainId without error", () => {
+    const { draft, draftErrors } = extractServerDraft(
+      wrap('{"ticker":"X","pooled":"100","liquidity":"1","route":"direct","chainId":""}'),
+    );
+    expect(draftErrors).toEqual([]);
+    expect(draft).not.toHaveProperty("chainId");
+  });
+
+  it("rejects dust over fixed supply with invalid-pooled (precision parity)", () => {
+    const { draft, draftErrors } = extractServerDraft(
+      wrap('{"ticker":"X","pooled":"999000000.0000000001","liquidity":"1","route":"direct"}'),
+    );
+    expect(draft).toBeNull();
+    expect(draftErrors).toContain("invalid-pooled");
   });
 });

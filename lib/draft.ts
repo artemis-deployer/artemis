@@ -19,9 +19,14 @@ export const EMPTY_DRAFT: Draft = {
   chainId: 46630,
 };
 
+// ponytail: client lenient (strip ticker/commas) only for missing-json fallback;
+// server strict rejects to force retry, StudioChat blocks fallback on value errors.
 function sanitizeDraft(raw: Record<string, unknown>): Partial<Draft> {
   const out: Partial<Draft> = {};
-  if (typeof raw.name === "string") out.name = raw.name.slice(0, 32);
+  if (typeof raw.name === "string") {
+    const trimmed = raw.name.trim();
+    if (trimmed !== "") out.name = trimmed.slice(0, 32);
+  }
   if (typeof raw.ticker === "string") out.ticker = raw.ticker.replace(/[^A-Za-z0-9]/g, "").slice(0, 12).toUpperCase();
   if (typeof raw.pooled === "string") out.pooled = stripNumericSeparators(raw.pooled);
   if (typeof raw.liquidity === "string") out.liquidity = stripNumericSeparators(raw.liquidity);
@@ -98,6 +103,16 @@ export function parseDraftReply(text: string): Partial<Draft> {
   return {};
 }
 
+/** Precise > DIRECT_SUPPLY without Number rounding (e.g. 999000000.0000000001). */
+export function exceedsDirectSupply(value: string): boolean {
+  const [intPart, fracPart = ""] = value.split(".");
+  const intNorm = intPart.replace(/^0+/, "") || "0";
+  const supplyStr = String(DIRECT_SUPPLY);
+  if (intNorm.length !== supplyStr.length) return intNorm.length > supplyStr.length;
+  if (intNorm !== supplyStr) return intNorm > supplyStr;
+  return /[1-9]/.test(fracPart);
+}
+
 export function validateDraft(d: Partial<Draft>): string[] {
   const errors: string[] = [];
   if (!d.ticker || d.ticker.trim().length === 0) errors.push("ticker is required");
@@ -107,7 +122,7 @@ export function validateDraft(d: Partial<Draft>): string[] {
   if (!pump && (d.pooled === undefined || d.pooled === "")) errors.push("pooled is required");
   else if (d.pooled !== undefined && d.pooled !== "" && !isPositiveNumberString(d.pooled))
     errors.push("pooled must be a positive number");
-  else if (!pump && d.pooled !== undefined && d.pooled !== "" && Number(d.pooled) > DIRECT_SUPPLY)
+  else if (!pump && d.pooled !== undefined && d.pooled !== "" && exceedsDirectSupply(d.pooled))
     errors.push("pooled exceeds fixed supply");
   if (d.liquidity === undefined || d.liquidity === "") errors.push("liquidity is required");
   else if (!isPositiveNumberString(d.liquidity)) errors.push("liquidity must be a positive number");

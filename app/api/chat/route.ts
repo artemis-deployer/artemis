@@ -1,23 +1,24 @@
 import { NextResponse } from "next/server";
-import { DIRECT_SUPPLY, getChain } from "../../../lib/chains";
+import { getChain } from "../../../lib/chains";
+import { exceedsDirectSupply } from "../../../lib/draft";
 import { checkRateLimit, clientIp } from "../../../lib/rate-limit";
 
 export const SYSTEM_PROMPT = [
   "You are Artemis, a coin launch copilot.",
   "Help the user shape a token draft: name, ticker, pool tokens, starting liquidity, route.",
   "Strict output contract: reply with a short prose conclusion of max 80 words (summarize the concept first), then exactly ONE fenced ```json block LAST.",
-  "That block must be the last thing in the reply and hold exactly these keys: {name, ticker, pooled, liquidity, route, chainId}.",
+  "That block must be the last thing in the reply and hold exactly these keys: {name, ticker, pooled, liquidity, route, chainId} (omit chainId to keep current chain).",
   "Numbers are digits with optional decimal point ONLY, never units or words: pooled example \"799200000\" (NOT \"1 SOL\"), liquidity example \"0.5\" (NOT \"locked\").",
-  "Field rules: ticker must be uppercase alphanumeric, max 12 chars; pooled must be a numeric string > 0 and <= 999000000 for direct only; liquidity must be a numeric string > 0; route must be only direct or pumpfun (direct for EVM/Robinhood, pumpfun for Solana); chainId must be a known chain id.",
+  "Field rules: ticker must be uppercase alphanumeric, max 12 chars; pooled must be a numeric string > 0 and <= 999000000 for direct (pumpfun pooled optional); liquidity must be a numeric string > 0; route must be only direct or pumpfun (direct for EVM/Robinhood, pumpfun for Solana); chainId must be one of 4663, 46630, solana-mainnet, solana-devnet.",
   "If the user gives no numbers, choose sensible defaults instead of words: pooled 799200000, liquidity 0.5. Never emit placeholders like locked, TBD, or N/A.",
   "Supply is fixed and never editable: 999000000 for direct, 1000000000 for pumpfun.",
   "Revise incrementally from Current draft: replace only what user changed, always return FULL draft JSON.",
-  "Chain inference: Robinhood, Hood, or EVM keywords keep or switch EVM chain; Solana keyword uses solana chain id from CHAINS; defaulting to current chain when unclear.",
+  "Chain inference: Robinhood, Hood, or EVM keywords keep or switch EVM chain (4663 mainnet, 46630 testnet); Solana keyword uses solana-mainnet (or solana-devnet when user says devnet/test); defaulting to current chain when unclear.",
   "Never ask for private keys or seed phrases. Never claim to sign transactions.",
   "Example exchange:",
   'User: Arts club coin, ticker ARTS, 500M pooled, 1.5 liquidity, direct route.',
   "Assistant: Great pick for the arts club! I set ARTS with 500000000 pooled and 1.5 liquidity on direct.",
-  '```json {"name":"Arts Club","ticker":"ARTS","pooled":"500000000","liquidity":"1.5","route":"direct"} ```',
+  '```json {"name":"Arts Club","ticker":"ARTS","pooled":"500000000","liquidity":"1.5","route":"direct","chainId":46630} ```',
 ].join(" ");
 
 const RETRY_NOTE =
@@ -103,7 +104,7 @@ export function extractServerDraft(reply: string): { draft: ServerDraft | null; 
       else draft.pooled = pooled;
     }
   } else {
-    if (pooled === null || !isPositiveNumberString(pooled) || Number(pooled) > DIRECT_SUPPLY) {
+    if (pooled === null || !isPositiveNumberString(pooled) || exceedsDirectSupply(pooled)) {
       errors.push("invalid-pooled");
     } else {
       draft.pooled = pooled;
@@ -170,6 +171,7 @@ export async function POST(req: Request) {
   if (!reply) return NextResponse.json({ error: "chat_offline" }, { status: 502 });
   let parsed = extractServerDraft(reply);
   // One self-correction round: models often emit units/words on the first try.
+  // Keep first reply/errors when retry also fails (no overwrite on invalid).
   if (!parsed.draft) {
     try {
       const retry = await callUpstream(url, key, model, [
@@ -180,8 +182,11 @@ export async function POST(req: Request) {
       if (retry.ok) {
         const second = await readReply(retry);
         if (second) {
-          reply = second;
-          parsed = extractServerDraft(second);
+          const secondParsed = extractServerDraft(second);
+          if (secondParsed.draft) {
+            reply = second;
+            parsed = secondParsed;
+          }
         }
       }
     } catch {

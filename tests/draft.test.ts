@@ -145,6 +145,23 @@ describe("validateDraft", () => {
     expect(validateDraft({ ticker: "X", route: "direct", pooled: "999000000", liquidity: "1" })).toEqual([]);
   });
 
+  it("rejects dust over supply that Number rounds away (toTokenUnits parity)", () => {
+    expect(
+      validateDraft({ ticker: "X", route: "direct", pooled: "999000000.0000000001", liquidity: "1" }),
+    ).toContain("pooled exceeds fixed supply");
+    expect(
+      validateDraft({ ticker: "X", route: "direct", pooled: "999000000.0", liquidity: "1" }),
+    ).toEqual([]);
+  });
+
+  it("blocks every toTokenUnits throw: commas, dots, zero, negative, huge", () => {
+    for (const bad of ["1,000", "1.2.3", ".", "0", "-5", "0.0000000000000000001"]) {
+      expect(validateDraft({ ticker: "X", pooled: bad, liquidity: "1", route: "direct" }).length).toBeGreaterThan(0);
+      expect(validateDraft({ ticker: "X", pooled: "1", liquidity: bad, route: "direct" }).length).toBeGreaterThan(0);
+    }
+    expect(validateDraft({ ticker: "X", pooled: "1,000", liquidity: "0.5", route: "direct" }).length).toBeGreaterThan(0);
+  });
+
   it("rejects whitespace-only ticker", () => {
     expect(validateDraft({ ticker: "   ", pooled: "1", liquidity: "1", route: "direct" })).toContain(
       "ticker is required",
@@ -203,6 +220,29 @@ describe("validateDraft", () => {
       pooled: "500000",
       liquidity: "0.5",
     });
+  });
+
+  it("trims name like server validation (leading spaces parity)", () => {
+    expect(parseDraftReply('{"name":"  Arts Club  ","ticker":"X"}')).toMatchObject({ name: "Arts Club" });
+  });
+
+  it("drops whitespace-only name like server (no empty patch)", () => {
+    expect(parseDraftReply('{"name":"   ","ticker":"X"}')).toEqual({ ticker: "X" });
+  });
+
+  it("documents rapid-reply undo: second snapshot is immediate prev by design", () => {
+    const base = {
+      name: "Old",
+      ticker: "OLD",
+      pooled: "1",
+      liquidity: "1",
+      route: "direct" as const,
+      chainId: 46630,
+    };
+    const first = resolveAutoPatch(base, { ticker: "FIRST" }, null);
+    const second = resolveAutoPatch(first!.next, { ticker: "SECOND" }, null);
+    expect(second?.prevSnapshot.ticker).toBe("FIRST");
+    expect(second?.next.ticker).toBe("SECOND");
   });
 });
 
