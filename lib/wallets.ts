@@ -320,28 +320,35 @@ export async function getEvmBalance(provider: EvmProvider, address: string): Pro
 }
 
 /** Native SOL balance of an account via public RPC. Null when unreadable. */
-export async function getSolanaBalance(address: string, rpc = "https://api.mainnet-beta.solana.com"): Promise<string | null> {
-  // Public RPCs rate-limit aggressively: retry transient failures briefly.
-  for (let attempt = 0; attempt < 3; attempt++) {
-    if (attempt > 0) await new Promise((r) => setTimeout(r, 400 * attempt));
-    try {
-      const res = await fetch(rpc, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "getBalance", params: [address] }),
-        signal: AbortSignal.timeout(8000),
-      });
-      if (!res.ok) continue;
-      const data = (await res.json()) as { result?: { value?: number } };
-      const lamports = data.result?.value;
-      if (typeof lamports !== "number") continue;
-      const sol = lamports / 1e9;
-      if (sol >= 1000) return sol.toLocaleString("en-US", { maximumFractionDigits: 2 });
-      const rounded = Math.round(sol * 1e4) / 1e4;
-      if (rounded === 0) return lamports > 0 ? "<0.0001" : "0";
-      return String(rounded);
-    } catch {
-      continue;
+export async function getSolanaBalance(
+  address: string,
+  rpc: string | string[] = "https://api.mainnet-beta.solana.com",
+): Promise<string | null> {
+  // Public RPCs rate-limit aggressively: retry transient failures briefly,
+  // then fall through backup endpoints before giving up.
+  const endpoints = Array.isArray(rpc) ? rpc : [rpc];
+  for (const endpoint of endpoints) {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      if (attempt > 0) await new Promise((r) => setTimeout(r, 400 * attempt));
+      try {
+        const res = await fetch(endpoint, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "getBalance", params: [address] }),
+          signal: AbortSignal.timeout(8000),
+        });
+        if (!res.ok) continue;
+        const data = (await res.json()) as { result?: { value?: number } };
+        const lamports = data.result?.value;
+        if (typeof lamports !== "number") continue;
+        const sol = lamports / 1e9;
+        if (sol >= 1000) return sol.toLocaleString("en-US", { maximumFractionDigits: 2 });
+        const rounded = Math.round(sol * 1e4) / 1e4;
+        if (rounded === 0) return lamports > 0 ? "<0.0001" : "0";
+        return String(rounded);
+      } catch {
+        continue;
+      }
     }
   }
   return null;

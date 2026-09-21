@@ -203,6 +203,19 @@ describe("balances", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
+  it("falls through to backup RPC endpoints", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("down"))
+      .mockRejectedValueOnce(new Error("down"))
+      .mockRejectedValueOnce(new Error("down"))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ result: { value: 1000000000 } })));
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(getSolanaBalance("addr", ["https://a.test", "https://b.test"])).resolves.toBe("1");
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+    expect((fetchMock.mock.calls[3] as [string])[0]).toBe("https://b.test");
+  });
+
   it("rejects connect when publicKey stays null post-connect", async () => {
     vi.stubGlobal("window", {
       phantom: { solana: { connect: async () => undefined, publicKey: null } },

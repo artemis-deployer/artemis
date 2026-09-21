@@ -32,7 +32,7 @@ export default function SolanaButton({
   rpc,
 }: {
   onConnect?: (p: SolanaProvider | null) => void;
-  rpc?: string;
+  rpc?: string | string[];
 }) {
   const [account, setAccount] = useState<string | null>(null);
   const [balance, setBalance] = useState<string | null>(null);
@@ -72,7 +72,8 @@ export default function SolanaButton({
   }
 
   if (account) {
-    const solscan = rpc === DEVNET_RPC ? "https://solscan.io?cluster=devnet" : "https://solscan.io";
+    const firstRpc = Array.isArray(rpc) ? rpc[0] : rpc;
+    const solscan = firstRpc === DEVNET_RPC ? "https://solscan.io?cluster=devnet" : "https://solscan.io";
     return (
       <WalletMenu
         shortLabel={short(account)}

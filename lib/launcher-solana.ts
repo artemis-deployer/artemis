@@ -4,6 +4,7 @@ import bs58 from "bs58";
 export const PUMP_TRADE_URL = "https://pumpportal.fun/api/trade-local";
 export const MAINNET_RPC = "https://api.mainnet-beta.solana.com";
 export const DEVNET_RPC = "https://api.devnet.solana.com";
+export const MAINNET_RPC_FALLBACK = "https://solana.publicnode.com";
 export const PUMP_SLIPPAGE = 10;
 export const PUMP_PRIORITY_FEE = 0.0005;
 export const PUMP_POOL = "pump";
