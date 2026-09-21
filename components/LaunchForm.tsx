@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Check, ChevronDown, ImagePlus, X } from "lucide-react";
 import { CHAINS, DIRECT_SUPPLY } from "../lib/chains";
 import { stripNumericSeparators, validateDraft } from "../lib/draft";
-import { imageOkForDraft, useDraft } from "./DraftContext";
+import { isSafeImageSrc, useDraft } from "./DraftContext";
 import ChainLogo from "./ChainLogo";
 
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
@@ -52,7 +52,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
     };
   }, []);
   const isSolana = draft.route === "pumpfun" && String(draft.chainId).startsWith("solana");
-  const imageOk = imageOkForDraft(draft);
+  const imageOk = isSafeImageSrc(draft.image);
   const errors = imageOk
     ? validateDraft(draft)
     : [...validateDraft(draft), "image is invalid: upload a PNG/JPEG or use an https URL"];
@@ -288,13 +288,14 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
         </div>
       </div>
 
-      {/* Upload Token Icon (Solana only) */}
-      {isSolana && (
+      {/* Upload Token Icon */}
       <div className="flex flex-col gap-[5px]">
         <label className="flex items-center justify-between text-xs font-bold tracking-[0.02em] text-white/90">
           <span>Token Brand Icon</span>
           <span className="text-[11px] font-medium text-white/40">Optional · Max 2MB</span>
         </label>
+        {isSolana && (
+        <>
         <input
           ref={fileRef}
           type="file"
@@ -364,9 +365,11 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
             <span>Drop artwork here or upload</span>
           </button>
         )}
+        </>
+        )}
         <label className="flex items-center justify-between text-xs font-bold tracking-[0.02em] text-white/90" htmlFor="artwork-url">
           <span>Artwork URL</span>
-          <span className="text-[11px] font-medium text-white/40">For onchain metadata</span>
+          <span className="text-[11px] font-medium text-white/40">Shows in community showcase</span>
         </label>
         <input
           id="artwork-url"
@@ -387,7 +390,6 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
           </p>
         )}
       </div>
-      )}
 
       {/* Economics Preview */}
       <div className="flex flex-col gap-1.5 rounded-lg border border-white/10 bg-[#1a1b1f] px-4 py-3">
