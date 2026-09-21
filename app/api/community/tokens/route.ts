@@ -74,6 +74,7 @@ export async function POST(req: Request) {
       symbol: str(b.symbol),
       pool: str(b.pool),
       txHash: str(b.txHash),
+      image: typeof b.image === "string" ? b.image : "",
     });
   } catch {
     return NextResponse.json({ error: "db_offline" }, { status: 502 });

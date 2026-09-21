@@ -8,6 +8,7 @@ export type TokenRow = {
   symbol: string;
   pool: string;
   tx_hash: string;
+  image: string;
   created_at: string;
 };
 
@@ -36,13 +37,14 @@ export async function saveToken(input: {
   symbol?: string;
   pool?: string;
   txHash?: string;
+  image?: string;
 }): Promise<void> {
   const t = normalizeTokenInput(input);
-  await sql()`INSERT INTO tokens (chain_id, address, creator, name, symbol, pool, tx_hash)
-    VALUES (${t.chainId}, ${t.address}, ${t.creator}, ${t.name}, ${t.symbol}, ${t.pool}, ${t.txHash})
+  await sql()`INSERT INTO tokens (chain_id, address, creator, name, symbol, pool, tx_hash, image)
+    VALUES (${t.chainId}, ${t.address}, ${t.creator}, ${t.name}, ${t.symbol}, ${t.pool}, ${t.txHash}, ${t.image})
     ON CONFLICT (chain_id, address) DO UPDATE SET
       creator = EXCLUDED.creator, name = EXCLUDED.name, symbol = EXCLUDED.symbol,
-      pool = EXCLUDED.pool, tx_hash = EXCLUDED.tx_hash`;
+      pool = EXCLUDED.pool, tx_hash = EXCLUDED.tx_hash, image = EXCLUDED.image`;
 }
 
 // ponytail: route slices raw then verifies; trim-then-slice here keeps stored rows clean
@@ -54,6 +56,7 @@ export function normalizeTokenInput(input: {
   symbol?: string;
   pool?: string;
   txHash?: string;
+  image?: string;
 }): {
   chainId: string;
   address: string;
@@ -62,9 +65,11 @@ export function normalizeTokenInput(input: {
   symbol: string;
   pool: string;
   txHash: string;
+  image: string;
 } {
   // ponytail: Array.from slices by code point, never splits surrogate pairs (lone surrogates break Postgres UTF-8)
   const clean = (v: unknown) => (typeof v === "string" ? Array.from(v.trim()).slice(0, 200).join("") : "");
+  const rawImage = typeof input.image === "string" ? input.image.trim() : "";
   return {
     chainId: String(input.chainId ?? "").trim(),
     address: String(input.address ?? "").trim(),
@@ -73,5 +78,6 @@ export function normalizeTokenInput(input: {
     symbol: clean(input.symbol),
     pool: clean(input.pool),
     txHash: clean(input.txHash),
+    image: rawImage.startsWith("https://") ? rawImage.slice(0, 2048) : "",
   };
 }

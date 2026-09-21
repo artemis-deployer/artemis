@@ -15,6 +15,7 @@ type Token = {
   symbol: string;
   pool: string;
   tx_hash: string;
+  image?: string;
 };
 
 export default function TokensPage() {
@@ -204,13 +205,19 @@ export default function TokensPage() {
                 className="flex flex-col gap-3 rounded-xl border border-white/10 bg-[#1a1b1f] p-6 shadow-xl hover:border-white/25 transition-all"
               >
                 <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-3.5">
-                  <div>
-                    <h3 className="m-0 text-base font-bold text-white">
-                      {t.name || t.symbol || "Untitled Coin"}
-                    </h3>
-                    <span className="font-mono text-xs font-bold tracking-wider text-[#fae8a4]">
-                      ${t.symbol || "TOKEN"}
-                    </span>
+                  <div className="flex items-center gap-3">
+                    {typeof t.image === "string" && t.image.startsWith("https://") ? (
+                      /* eslint-disable-next-line @next/next/no-img-element -- user-supplied https token artwork */
+                      <img src={t.image} alt="" aria-hidden="true" className="h-10 w-10 shrink-0 rounded-full border border-white/15 object-cover" />
+                    ) : null}
+                    <div>
+                      <h3 className="m-0 text-base font-bold text-white">
+                        {t.name || t.symbol || "Untitled Coin"}
+                      </h3>
+                      <span className="font-mono text-xs font-bold tracking-wider text-[#fae8a4]">
+                        ${t.symbol || "TOKEN"}
+                      </span>
+                    </div>
                   </div>
                   <span className="rounded border border-white/15 bg-white/5 px-2 py-0.5 font-mono text-[10px] text-white/70 uppercase">
                     {chainInfo?.name ?? `Chain ${t.chain_id}`}

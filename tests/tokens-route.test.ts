@@ -39,7 +39,7 @@ describe("tokens route", () => {
 
   it("GET lists newest tokens", async () => {
     mocked.isDbConfigured.mockReturnValue(true);
-    mocked.listTokens.mockResolvedValue([{ chain_id: "4663", address: "0xabc", creator: "", name: "X", symbol: "", pool: "", tx_hash: "", created_at: "" }]);
+    mocked.listTokens.mockResolvedValue([{ chain_id: "4663", address: "0xabc", creator: "", name: "X", symbol: "", pool: "", tx_hash: "", image: "", created_at: "" }]);
     const res = await GET(new Request("http://x/api/community/tokens"));
     expect(res.status).toBe(200);
     expect(((await res.json()) as { tokens: unknown[] }).tokens).toHaveLength(1);
@@ -84,6 +84,25 @@ describe("tokens route", () => {
     const res = await POST(req);
     expect(res.status).toBe(200);
     expect(mocked.saveToken).toHaveBeenCalledTimes(1);
+  });
+
+  it("POST forwards artwork image to saveToken", async () => {
+    mocked.isDbConfigured.mockReturnValue(true);
+    mocked.saveToken.mockResolvedValue(undefined);
+    const req = new Request("http://x/api/community/tokens", {
+      method: "POST",
+      body: JSON.stringify({
+        chainId: "4663",
+        address: EVM_ADDR,
+        name: "Art",
+        txHash: EVM_HASH,
+        creator: "0x1111111111111111111111111111111111111111",
+        image: "https://example.test/art.png",
+      }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+    expect(mocked.saveToken).toHaveBeenCalledWith(expect.objectContaining({ image: "https://example.test/art.png" }));
   });
 
   it("POST rejects invalid tx with 400", async () => {

@@ -6,6 +6,7 @@ export type ShowcaseInput = {
   symbol?: string;
   pool?: string;
   txHash?: string;
+  image?: string;
 };
 
 // ponytail: fire-and-forget, local receipt stays source of truth when DB offline

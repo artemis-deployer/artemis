@@ -91,6 +91,7 @@ describe("normalizeTokenInput", () => {
       symbol: "X",
       pool: "p",
       txHash: "h",
+      image: "",
     });
   });
 
@@ -122,6 +123,17 @@ describe("normalizeTokenInput", () => {
     });
     expect(out.name).not.toMatch(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/);
     expect(Array.from(out.name).length).toBe(200);
+  });
+
+  it("keeps https artwork, drops the rest", () => {
+    expect(
+      normalizeTokenInput({ chainId: "4663", address: "0xabc", image: "https://example.test/a.png" }).image,
+    ).toBe("https://example.test/a.png");
+    expect(normalizeTokenInput({ chainId: "4663", address: "0xabc", image: "http://x/y.png" }).image).toBe("");
+    expect(normalizeTokenInput({ chainId: "4663", address: "0xabc", image: "data:image/png;base64,aGk=" }).image).toBe(
+      "",
+    );
+    expect(normalizeTokenInput({ chainId: "4663", address: "0xabc" }).image).toBe("");
   });
 });
 

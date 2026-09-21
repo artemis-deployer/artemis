@@ -39,6 +39,7 @@ npm run dev                  # http://localhost:3000
 | `PRIVATE_KEY=0x... node scripts/deploy-launcher.mjs --mainnet` | Deploy `ArtemisLauncher` to Hood mainnet 4663 (local, one-time) |
 | `psql "$DATABASE_URL" -f migrations/0001_init.sql` | Create the showcase table once |
 | `psql "$DATABASE_URL" -f migrations/0002_rate_limits.sql` | Create the shared rate-limit table (required for durable throttling) |
+| `psql "$DATABASE_URL" -f migrations/0003_showcase_image.sql` | Add artwork image column to showcase |
 
 ## Launch rails
 
