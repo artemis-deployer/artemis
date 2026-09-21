@@ -112,5 +112,5 @@ async function pinFile(jwt: string, file: File): Promise<string | null> {
     return null;
   }
   if (!data.data?.cid) return null;
-  return `https://ipfs.io/ipfs/${data.data.cid}`;
+  return `https://gateway.pinata.cloud/ipfs/${data.data.cid}`;
 }

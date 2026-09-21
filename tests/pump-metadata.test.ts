@@ -45,7 +45,7 @@ describe("pump-metadata route", () => {
     });
     const res = await POST(req);
     expect(res.status).toBe(200);
-    expect(((await res.json()) as { uri: string }).uri).toBe("https://ipfs.io/ipfs/bafytest");
+    expect(((await res.json()) as { uri: string }).uri).toBe("https://gateway.pinata.cloud/ipfs/bafytest");
     const [, init] = fetchMock.mock.calls[0] as [string, { headers?: Record<string, string> }];
     expect(fetchMock.mock.calls[0]?.[0]).toBe("https://uploads.pinata.cloud/v3/files");
     expect(init.headers?.authorization).toBe("Bearer test-jwt");
@@ -211,7 +211,7 @@ describe("pump-metadata route", () => {
     });
     const res = await POST(req);
     expect(res.status).toBe(200);
-    expect(((await res.json()) as { uri: string }).uri).toBe("https://ipfs.io/ipfs/bafymeta");
+    expect(((await res.json()) as { uri: string }).uri).toBe("https://gateway.pinata.cloud/ipfs/bafymeta");
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
@@ -273,7 +273,7 @@ describe("pump-metadata route", () => {
     });
     const res = await POST(req);
     expect(res.status).toBe(200);
-    expect(((await res.json()) as { imageUri: string }).imageUri).toBe("https://ipfs.io/ipfs/bafyimg");
+    expect(((await res.json()) as { imageUri: string }).imageUri).toBe("https://gateway.pinata.cloud/ipfs/bafyimg");
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 

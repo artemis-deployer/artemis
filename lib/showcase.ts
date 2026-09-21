@@ -16,6 +16,15 @@ export function toShowcaseDisplay(s: ShowcaseStatus): ShowcaseDisplay {
   return s === "saved" ? "listed" : "pending";
 }
 
+/** Render artwork through a reliable gateway (ipfs.io rate-limits hard). */
+export function displayArtworkUrl(url: unknown): string | null {
+  if (typeof url !== "string" || !url.startsWith("https://")) return null;
+  if (url.startsWith("https://ipfs.io/ipfs/")) {
+    return `https://gateway.pinata.cloud/ipfs/${url.slice("https://ipfs.io/ipfs/".length)}`;
+  }
+  return url;
+}
+
 export async function submitShowcase(input: ShowcaseInput): Promise<ShowcaseStatus> {
   // ponytail: server 400s these anyway; skip network, same status
   if (!String(input.chainId ?? "").trim() || !String(input.address ?? "").trim()) return "rejected";

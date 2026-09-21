@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 vi.mock("postgres", () => ({ default: vi.fn() }));
 
 import postgres from "postgres";
-import { submitShowcase, toShowcaseDisplay } from "../lib/showcase";
+import { displayArtworkUrl, submitShowcase, toShowcaseDisplay } from "../lib/showcase";
 import { listTokens, normalizeTokenInput } from "../lib/community-db";
 
 describe("submitShowcase", () => {
@@ -68,6 +68,19 @@ describe("toShowcaseDisplay", () => {
     expect(toShowcaseDisplay("saved")).toBe("listed");
     expect(toShowcaseDisplay("rejected")).toBe("pending");
     expect(toShowcaseDisplay("offline")).toBe("pending");
+  });
+});
+
+describe("displayArtworkUrl", () => {
+  it("reroutes ipfs.io through the reliable gateway", () => {
+    expect(displayArtworkUrl("https://ipfs.io/ipfs/bafyimg")).toBe("https://gateway.pinata.cloud/ipfs/bafyimg");
+  });
+
+  it("passes other https URLs through and rejects the rest", () => {
+    expect(displayArtworkUrl("https://example.test/a.png")).toBe("https://example.test/a.png");
+    expect(displayArtworkUrl("http://x/y.png")).toBeNull();
+    expect(displayArtworkUrl("")).toBeNull();
+    expect(displayArtworkUrl(undefined)).toBeNull();
   });
 });
 

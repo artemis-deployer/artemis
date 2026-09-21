@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Search, Copy, Check, ExternalLink, ArrowLeft } from "lucide-react";
 import { TransitionLink } from "../../components/PageTransition";
 import { dedupeLocalReceipts, listReceipts, type Receipt } from "../../lib/receipts";
+import { displayArtworkUrl } from "../../lib/showcase";
 import { explorerTokenUrl, explorerTxUrl, getChain } from "../../lib/chains";
 
 type Token = {
@@ -206,10 +207,21 @@ export default function TokensPage() {
               >
                 <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-3.5">
                   <div className="flex items-center gap-3">
-                    {typeof t.image === "string" && t.image.startsWith("https://") ? (
-                      /* eslint-disable-next-line @next/next/no-img-element -- user-supplied https token artwork */
-                      <img src={t.image} alt="" aria-hidden="true" width={40} height={40} className="h-10 w-10 shrink-0 rounded-full border border-white/15 object-cover" />
-                    ) : null}
+                    {(() => {
+                      const art = displayArtworkUrl(t.image);
+                      return art ? (
+                        /* eslint-disable-next-line @next/next/no-img-element -- user-supplied https token artwork */
+                        <img
+                          src={art}
+                          alt=""
+                          aria-hidden="true"
+                          className="h-10 w-10 shrink-0 rounded-full border border-white/15 object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                          }}
+                        />
+                      ) : null;
+                    })()}
                     <div>
                       <h3 className="m-0 text-base font-bold text-white">
                         {t.name || t.symbol || "Untitled Coin"}
