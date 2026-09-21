@@ -1,5 +1,6 @@
-import { Connection, Keypair, VersionedTransaction } from "@solana/web3.js";
+import { Connection, Keypair, PublicKey, SystemProgram, TransactionInstruction, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
 import bs58 from "bs58";
+import { Buffer } from "buffer";
 
 export const PUMP_TRADE_URL = "https://pumpportal.fun/api/trade-local";
 export const MAINNET_RPC = "https://api.mainnet-beta.solana.com";
@@ -185,4 +186,118 @@ export function mapPumpError(e: unknown): string {
   if (e instanceof Error && /fetch failed|network|offline|enotfound/i.test(e.message)) return "pump_offline";
   if (e instanceof Error && e.message) return e.message;
   return "pump_failed";
+}
+
+// --- Devnet SPL drill mint (no third party, no pump program) ---
+// Canonical program ids (same on every cluster).
+export const SPL_TOKEN_PROGRAM_ID = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
+export const SPL_ATA_PROGRAM_ID = "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL";
+export const SPL_MINT_SPACE = 82;
+export const SPL_DECIMALS = 9;
+export const SPL_SUPPLY = 1_000_000_000;
+
+export function splMintAmount(): bigint {
+  return BigInt(SPL_SUPPLY) * 10n ** BigInt(SPL_DECIMALS);
+}
+
+/** Associated token address for (mint, owner). Pure derivation. */
+export function findSplAta(mint: PublicKey, owner: PublicKey): PublicKey {
+  const [ata] = PublicKey.findProgramAddressSync(
+    [owner.toBuffer(), new PublicKey(SPL_TOKEN_PROGRAM_ID).toBuffer(), mint.toBuffer()],
+    new PublicKey(SPL_ATA_PROGRAM_ID),
+  );
+  return ata;
+}
+
+function u64le(value: bigint): Uint8Array {
+  const out = new Uint8Array(8);
+  let v = value;
+  for (let i = 0; i < 8; i++) {
+    out[i] = Number(v & 0xffn);
+    v >>= 8n;
+  }
+  if (v !== 0n) throw new Error("bad_amount");
+  return out;
+}
+
+/** 5 instructions: create mint account, init mint, create ATA, mint supply, revoke mint authority. */
+export function buildSplMintInstructions(args: {
+  payer: PublicKey;
+  mint: PublicKey;
+  ata: PublicKey;
+  mintLamports: number;
+  amount: bigint;
+  decimals?: number;
+}): TransactionInstruction[] {
+  const decimals = args.decimals ?? SPL_DECIMALS;
+  if (!Number.isInteger(decimals) || decimals < 0 || decimals > 9) throw new Error("bad_metadata");
+  const tokenProgram = new PublicKey(SPL_TOKEN_PROGRAM_ID);
+  const initData = new Uint8Array(35);
+  initData[0] = 20;
+  initData[1] = decimals;
+  initData.set(args.payer.toBuffer(), 2);
+  initData[34] = 0; // no freeze authority
+  const mintToData = new Uint8Array(9);
+  mintToData[0] = 7;
+  mintToData.set(u64le(args.amount), 1);
+  return [
+    SystemProgram.createAccount({
+      fromPubkey: args.payer,
+      newAccountPubkey: args.mint,
+      space: SPL_MINT_SPACE,
+      lamports: args.mintLamports,
+      programId: tokenProgram,
+    }),
+    new TransactionInstruction({
+      keys: [{ pubkey: args.mint, isSigner: false, isWritable: true }],
+      programId: tokenProgram,
+      data: Buffer.from(initData),
+    }),
+    new TransactionInstruction({
+      keys: [
+        { pubkey: args.payer, isSigner: true, isWritable: true },
+        { pubkey: args.ata, isSigner: false, isWritable: true },
+        { pubkey: args.payer, isSigner: false, isWritable: false },
+        { pubkey: args.mint, isSigner: false, isWritable: false },
+        { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+        { pubkey: tokenProgram, isSigner: false, isWritable: false },
+      ],
+      programId: new PublicKey(SPL_ATA_PROGRAM_ID),
+      data: Buffer.alloc(0),
+    }),
+    new TransactionInstruction({
+      keys: [
+        { pubkey: args.mint, isSigner: false, isWritable: true },
+        { pubkey: args.ata, isSigner: false, isWritable: true },
+        { pubkey: args.payer, isSigner: true, isWritable: false },
+      ],
+      programId: tokenProgram,
+      data: Buffer.from(mintToData),
+    }),
+    new TransactionInstruction({
+      keys: [
+        { pubkey: args.mint, isSigner: false, isWritable: true },
+        { pubkey: args.payer, isSigner: true, isWritable: false },
+      ],
+      programId: tokenProgram,
+      data: Buffer.from(new Uint8Array([6, 0, 0])),
+    }),
+  ];
+}
+
+/** Unsigned drill-mint transaction (blockhash filled at send time). */
+export function buildSplMintTx(args: {
+  payer: PublicKey;
+  mint: PublicKey;
+  ata: PublicKey;
+  mintLamports: number;
+  amount: bigint;
+}): VersionedTransaction {
+  return new VersionedTransaction(
+    new TransactionMessage({
+      payerKey: args.payer,
+      recentBlockhash: "11111111111111111111111111111111",
+      instructions: buildSplMintInstructions(args),
+    }).compileToV0Message(),
+  );
 }

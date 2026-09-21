@@ -317,7 +317,64 @@ describe("signAndSend / confirmTx error paths", () => {
   });
 });
 
-describe("decodeTxResponse", () => {
+describe("devnet SPL drill mint", () => {
+describe("devnet SPL drill mint", () => {
+  it("mints the 1B fixed supply", async () => {
+    const { splMintAmount, SPL_DECIMALS, SPL_MINT_SPACE } = await import("../lib/launcher-solana");
+    expect(splMintAmount()).toBe(1000000000n * 10n ** BigInt(SPL_DECIMALS));
+    expect(SPL_MINT_SPACE).toBe(82);
+  });
+
+  it("builds 5 well-formed drill instructions", async () => {
+    const { Keypair, SystemProgram } = await import("@solana/web3.js");
+    const { buildSplMintInstructions, findSplAta, splMintAmount, SPL_TOKEN_PROGRAM_ID } = await import(
+      "../lib/launcher-solana"
+    );
+    const payer = Keypair.generate().publicKey;
+    const mint = Keypair.generate().publicKey;
+    const ata = findSplAta(mint, payer);
+    expect(ata.equals(payer)).toBe(false);
+    expect(findSplAta(mint, payer).toBase58()).toBe(ata.toBase58());
+    const ixs = buildSplMintInstructions({ payer, mint, ata, mintLamports: 1461600, amount: splMintAmount() });
+    expect(ixs.length).toBe(5);
+    expect(ixs[0].programId.toBase58()).toBe(SystemProgram.programId.toBase58());
+    expect(ixs[2].programId.toBase58()).toBe("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL");
+    for (const ix of [ixs[1], ixs[3], ixs[4]]) expect(ix.programId.toBase58()).toBe(SPL_TOKEN_PROGRAM_ID);
+    expect(ixs[2].keys[0].pubkey.toBase58()).toBe(payer.toBase58());
+    const mintTo = ixs[3].data as Uint8Array;
+    expect(mintTo[0]).toBe(7);
+    const setAuth = ixs[4].data as Uint8Array;
+    expect(Array.from(setAuth)).toEqual([6, 0, 0]);
+  });
+
+  it("round-trips an unsigned drill transaction", async () => {
+    const { Keypair, VersionedTransaction } = await import("@solana/web3.js");
+    const { buildSplMintTx, findSplAta, splMintAmount } = await import("../lib/launcher-solana");
+    const payer = Keypair.generate().publicKey;
+    const mint = Keypair.generate().publicKey;
+    const tx = buildSplMintTx({
+      payer,
+      mint,
+      ata: findSplAta(mint, payer),
+      mintLamports: 1461600,
+      amount: splMintAmount(),
+    });
+    const back = VersionedTransaction.deserialize(tx.serialize());
+    expect(back.serialize().length).toBe(tx.serialize().length);
+  });
+
+  it("rejects bad decimals and overflowing amounts", async () => {
+    const { Keypair } = await import("@solana/web3.js");
+    const { buildSplMintInstructions, findSplAta } = await import("../lib/launcher-solana");
+    const payer = Keypair.generate().publicKey;
+    const mint = Keypair.generate().publicKey;
+    const ata = findSplAta(mint, payer);
+    expect(() => buildSplMintInstructions({ payer, mint, ata, mintLamports: 1, amount: 1n, decimals: 10 })).toThrow();
+    expect(() =>
+      buildSplMintInstructions({ payer, mint, ata, mintLamports: 1, amount: 2n ** 64n, decimals: 9 }),
+    ).toThrow();
+  });
+});
   function encodeJson(v: unknown): ArrayBuffer {
     return new TextEncoder().encode(JSON.stringify(v)).buffer;
   }

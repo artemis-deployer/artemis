@@ -1,7 +1,7 @@
 "use client";
 
 import { forwardRef, useEffect, useRef, useState } from "react";
-import { Keypair } from "@solana/web3.js";
+import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import { parseEther, type Address } from "viem";
 import { X, ExternalLink } from "lucide-react";
 import { DIRECT_SUPPLY, explorerTokenUrl, getChain } from "../lib/chains";
@@ -29,12 +29,15 @@ import {
   PUMP_PRIORITY_FEE,
   buildCreateTx,
   buildMetadata,
+  buildSplMintTx,
   buildTradePayload,
   confirmTx,
+  findSplAta,
   mapPumpError,
   signAndSend,
+  splMintAmount,
   uploadMetadata,
-  validateTxBytes,
+  SPL_MINT_SPACE,
 } from "../lib/launcher-solana";
 import { findResumableEvmReceipt, listReceipts, saveReceipt } from "../lib/receipts";
 import { submitShowcase } from "../lib/showcase";
@@ -329,55 +332,60 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       return;
     }
     if (rpc !== MAINNET_RPC) {
-      const mintKp = Keypair.generate();
-      const mintBase58 = mintKp.publicKey.toBase58();
-      if (!mintBase58) {
-        setPumpNote("pump_failed");
-        setPump("error");
-        return;
-      }
-      const payer = (() => {
-        try {
-          return getSolanaProvider()?.publicKey.toBase58() ?? provider?.publicKey.toBase58() ?? null;
-        } catch {
-          return null;
-        }
-      })();
-      if (!payer) {
+      // Devnet: real SPL drill mint (pump lookup tables don't exist on devnet).
+      const p = getSolanaProvider() ?? provider;
+      if (!p) {
         setPumpNote("Connect a Solana wallet first.");
         setPump("error");
         return;
       }
-      let uri = "devnet-rehearsal";
-      try {
-        uri = await uploadMetadata(meta, await artworkDataUrl());
-      } catch {
-        uri = "devnet-rehearsal";
-      }
-      const payload = buildTradePayload({
-        publicKey: payer,
-        mint: mintBase58,
-        name: meta.name,
-        symbol: meta.symbol,
-        uri,
-        amountSol,
-      });
-      setPump("working");
-      setPumpNote("");
-      let size: number;
-      try {
-        const tx = await buildCreateTx(payload);
-        validateTxBytes(tx);
-        size = tx.serialize().length;
-      } catch (e: unknown) {
-        setPumpNote(mapPumpError(e));
+      const payerAddr = solanaAddressOf(p);
+      if (!payerAddr) {
+        setPumpNote("Connect a Solana wallet first.");
         setPump("error");
         return;
       }
-      setMint(mintBase58);
-      setPumpNote(`Devnet rehearsal: transaction built (${size} bytes), broadcast omitted by design.`);
-      setPump("built");
-      succeed(mintBase58, "", true);
+      if (typeof (p as { signTransaction?: unknown }).signTransaction !== "function") {
+        setPumpNote("Wallet cannot sign transactions.");
+        setPump("error");
+        return;
+      }
+      setPump("working");
+      setPumpNote("");
+      try {
+        const connection = new Connection(rpc, "confirmed");
+        const mintKp = Keypair.generate();
+        const mintBase58 = mintKp.publicKey.toBase58();
+        if (!mintBase58) throw new Error("pump_failed");
+        const payerKey = new PublicKey(payerAddr);
+        const mintLamports = await connection.getMinimumBalanceForRentExemption(SPL_MINT_SPACE);
+        const ata = findSplAta(mintKp.publicKey, payerKey);
+        const tx = buildSplMintTx({
+          payer: payerKey,
+          mint: mintKp.publicKey,
+          ata,
+          mintLamports,
+          amount: splMintAmount(),
+        });
+        const sig = await signAndSend({
+          rpc,
+          tx,
+          mintSecret: mintKp.secretKey,
+          wallet: {
+            publicKey: p.publicKey,
+            signTransaction: (p as { signTransaction: <T>(tx: T) => Promise<T> }).signTransaction,
+          },
+        });
+        await confirmTx(rpc, sig);
+        setMint(mintBase58);
+        saveReceipt({ chainId: draft.chainId, token: mintBase58, hash: sig, createdAt: new Date().toISOString(), ticker: draft.ticker });
+        void submitShowcase({ chainId: draft.chainId, address: mintBase58, creator: payerAddr, name: meta.name, symbol: meta.symbol, txHash: sig });
+        setPump("sent");
+        succeed(mintBase58, sig);
+      } catch (e: unknown) {
+        setPumpNote(mapPumpError(e));
+        setPump("error");
+      }
       return;
     }
     const p = getSolanaProvider() ?? provider;
