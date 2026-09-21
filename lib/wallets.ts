@@ -294,14 +294,29 @@ export function getActiveSolanaProvider(): SolanaProviderLike | null {
   );
 }
 
+/** Chain id of an EVM provider, null when unreadable. */
+export async function getEvmChainId(provider: EvmProvider): Promise<number | null> {
+  try {
+    const hex = (await withTimeout(provider.request({ method: "eth_chainId" }), 5000)) as string;
+    const n = Number.parseInt(hex, 16);
+    return Number.isFinite(n) ? n : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Format wei as a short decimal string (e.g. "1.2345"). */
+export function formatWei(wei: bigint): string {
+  const whole = wei / 10n ** 18n;
+  const frac = ((wei % 10n ** 18n) / 10n ** 14n).toString().padStart(4, "0").replace(/0+$/, "");
+  return frac ? `${whole}.${frac}` : `${whole}`;
+}
+
 /** Native balance of an EVM account, formatted (e.g. "1.2345"). Null when unreadable. */
 export async function getEvmBalance(provider: EvmProvider, address: string): Promise<string | null> {
   try {
     const hex = (await withTimeout(provider.request({ method: "eth_getBalance", params: [address, "latest"] }), 8000)) as string;
-    const wei = BigInt(hex);
-    const whole = wei / 10n ** 18n;
-    const frac = ((wei % 10n ** 18n) / 10n ** 14n).toString().padStart(4, "0").replace(/0+$/, "");
-    return frac ? `${whole}.${frac}` : `${whole}`;
+    return formatWei(BigInt(hex));
   } catch {
     return null;
   }

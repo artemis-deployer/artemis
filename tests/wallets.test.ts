@@ -3,7 +3,9 @@ import {
   detectEvm,
   detectSolana,
   EVM_WALLETS,
+  formatWei,
   getEvmBalance,
+  getEvmChainId,
   getSolanaBalance,
   loadWallet,
   SOLANA_WALLETS,
@@ -52,6 +54,19 @@ describe("wallet registry", () => {
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+
+  it("formats wei compactly", () => {
+    expect(formatWei(1000000000000000000n)).toBe("1");
+    expect(formatWei(1234500000000000000n)).toBe("1.2345");
+    expect(formatWei(0n)).toBe("0");
+  });
+
+  it("reads chain id hex or null", async () => {
+    const ok = { request: async () => "0x122B" } as never;
+    await expect(getEvmChainId(ok)).resolves.toBe(4651);
+    const bad = { request: async () => { throw new Error("x"); } } as never;
+    await expect(getEvmChainId(bad)).resolves.toBeNull();
   });
 });
 

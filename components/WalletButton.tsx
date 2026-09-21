@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { Address } from "viem";
-import { ensureChain } from "../lib/launcher-evm";
+import { ensureChain, getHoodConfig, publicClientFor } from "../lib/launcher-evm";
 import {
   clearWallet,
   detectEvm,
-  getEvmBalance,
+  formatWei,
+  getEvmChainId,
   loadWallet,
   silentEvmAccount,
   walletLabel,
@@ -31,31 +32,39 @@ export default function WalletButton({
   const [balance, setBalance] = useState<string | null>(null);
   const [modal, setModal] = useState(false);
   const [error, setError] = useState("");
+  const [wrongNetwork, setWrongNetwork] = useState(false);
   const currency = getChain(chainId)?.currency ?? "ETH";
+  const chainName = getChain(chainId)?.name ?? "Hood";
 
   const refresh = useCallback(async () => {
     const stored = loadWallet();
     if (!stored || stored.kind !== "evm") {
       setAccount(null);
       setBalance(null);
+      setWrongNetwork(false);
       return;
     }
-    try {
-      await ensureChain(chainId);
-    } catch (e) {
-      setError(walletLabel(e));
-      return;
-    }
+    // No auto-switch here: read quietly, flag a wrong network instead.
+    // Auto-switching fired surprise wallet popups and looked like "connect again".
     const addr = await silentEvmAccount(stored.id as EvmWalletId);
     setAccount(addr as Address | null);
     if (onConnect) onConnect(addr as Address | null);
-    if (addr) {
-      const provider = detectEvm(stored.id as EvmWalletId);
-      setBalance(provider ? await getEvmBalance(provider, addr) : null);
-      setError("");
-    } else {
+    if (!addr) {
+      setBalance(null);
+      setWrongNetwork(false);
+      return;
+    }
+    const provider = detectEvm(stored.id as EvmWalletId);
+    const walletChain = provider ? await getEvmChainId(provider) : null;
+    setWrongNetwork(walletChain !== null && walletChain !== chainId);
+    try {
+      const cfg = getHoodConfig(chainId);
+      const wei = cfg ? await publicClientFor(cfg).getBalance({ address: addr as Address }) : null;
+      setBalance(wei === null ? null : formatWei(wei));
+    } catch {
       setBalance(null);
     }
+    setError("");
   }, [chainId, onConnect]);
 
   useEffect(() => {
@@ -74,16 +83,10 @@ export default function WalletButton({
         clearWallet();
         setAccount(null);
         setBalance(null);
+        setWrongNetwork(false);
         if (onConnect) onConnect(null);
       } else {
-        setAccount(next as Address);
-        if (onConnect) onConnect(next as Address);
-        // Balance belongs to the previous account until refetched.
-        void (async () => {
-          const id = (loadWallet()?.id ?? stored.id) as EvmWalletId;
-          const p = detectEvm(id);
-          setBalance(p ? await getEvmBalance(p, next) : null);
-        })();
+        void refresh();
       }
     };
     const onChain = () => {
@@ -110,8 +113,20 @@ export default function WalletButton({
     clearWallet();
     setAccount(null);
     setBalance(null);
+    setWrongNetwork(false);
     setError("");
     if (onConnect) onConnect(null);
+  }
+
+  async function switchChain() {
+    setError("");
+    try {
+      await ensureChain(chainId);
+    } catch (e) {
+      setError(walletLabel(e));
+      return;
+    }
+    await refresh();
   }
 
   if (!account) {
@@ -138,14 +153,30 @@ export default function WalletButton({
   }
 
   return (
-    <WalletMenu
-      shortLabel={short(account)}
-      address={account}
-      balance={balance !== null ? `${balance} ${currency}` : null}
-      explorerHref={`${getChain(chainId)?.explorer ?? "https://blockscout.com"}/address/${account}`}
-      explorerName="Explorer"
-      onRefresh={() => void refresh()}
-      onDisconnect={disconnect}
-    />
+    <div className="flex flex-col gap-2">
+      {wrongNetwork && (
+        <button
+          type="button"
+          onClick={() => void switchChain()}
+          className="inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-amber-300/40 bg-amber-300/10 px-3 py-1.5 text-xs font-bold text-amber-200 transition-all hover:bg-amber-300/20"
+        >
+          Switch to {chainName}
+        </button>
+      )}
+      <WalletMenu
+        shortLabel={short(account)}
+        address={account}
+        balance={balance !== null ? `${balance} ${currency}` : null}
+        explorerHref={`${getChain(chainId)?.explorer ?? "https://blockscout.com"}/address/${account}`}
+        explorerName="Explorer"
+        onRefresh={() => void refresh()}
+        onDisconnect={disconnect}
+      />
+      {error && (
+        <p role="alert" className="m-0 text-xs font-medium text-red-400">
+          {error}
+        </p>
+      )}
+    </div>
   );
 }
