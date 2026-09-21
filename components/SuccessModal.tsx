@@ -15,21 +15,28 @@ export type LaunchSuccess = {
 
 export default function SuccessModal({ info, onClose }: { info: LaunchSuccess | null; onClose: () => void }) {
   const closeRef = useRef<HTMLButtonElement>(null);
+  const onCloseRef = useRef(onClose);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     if (!info) return;
     const prevOverflow = document.body.style.overflow;
+    const prevActive = document.activeElement as HTMLElement | null;
     document.body.style.overflow = "hidden";
     closeRef.current?.focus();
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") onCloseRef.current();
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => {
       document.body.style.overflow = prevOverflow;
       window.removeEventListener("keydown", handleKeyDown);
+      prevActive?.focus?.();
     };
-  }, [info, onClose]);
+  }, [info]);
 
   if (!info) return null;
   const chain = getChain(info.chainId);

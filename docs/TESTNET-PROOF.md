@@ -12,6 +12,6 @@ https://explorer.testnet.chain.robinhood.com/tx/0x1bf4e9fd92c29e931c8a832c22ac2b
 
 Deployed with the repo template (`contracts/ArtemisToken.sol` via `scripts/compile-token.mjs`) from a drill wallet. Name, symbol, and supply read back onchain.
 
-Re-verified live 2026-09-21 (eth_call, block 122247518): name "Artemis Rehearsal", symbol "ARTS", totalSupply 1000000000000000000000000000 (1B).
+Re-verified live 2026-09-21 (eth_call, block 122252003): name "Artemis Rehearsal", symbol "ARTS", totalSupply 1000000000000000000000000000 (1B).
 
 Hood Testnet 46630. Test instruments, zero real funds.
