@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
 import {
+  connectSolana,
   detectEvm,
   detectSolana,
   EVM_WALLETS,
@@ -60,6 +61,11 @@ describe("wallet registry", () => {
     expect(formatWei(1000000000000000000n)).toBe("1");
     expect(formatWei(1234500000000000000n)).toBe("1.2345");
     expect(formatWei(0n)).toBe("0");
+  });
+
+  it("never renders nonzero dust as zero", () => {
+    expect(formatWei(1n)).not.toBe("0");
+    expect(formatWei(99999999999999n)).not.toBe("0");
   });
 
   it("reads chain id hex or null", async () => {
@@ -177,5 +183,20 @@ describe("balances", () => {
     await expect(getSolanaBalance("addr")).resolves.toBe("1");
     const init = fetchMock.mock.calls[0][1] as { signal?: unknown };
     expect(init.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it("never renders nonzero lamport dust as zero", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(new Response(JSON.stringify({ result: { value: 1 } }))),
+    );
+    await expect(getSolanaBalance("addr")).resolves.not.toBe("0");
+  });
+
+  it("rejects connect when publicKey stays null post-connect", async () => {
+    vi.stubGlobal("window", {
+      phantom: { solana: { connect: async () => undefined, publicKey: null } },
+    });
+    await expect(connectSolana("phantom")).rejects.toThrow("wallet_failed");
   });
 });

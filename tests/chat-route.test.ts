@@ -765,3 +765,115 @@ describe("extractServerDraft edges", () => {
     expect(draftErrors).toContain("invalid-pooled");
   });
 });
+
+describe("ADVERSARIAL AUDIT: replay/idempotency/cost", () => {
+  beforeEach(() => {
+    clearRateLimits();
+    vi.unstubAllGlobals();
+    vi.stubEnv("LLM_API_URL", "https://example.test/v1/chat/completions");
+    vi.stubEnv("LLM_API_KEY", "secret");
+  });
+
+  it("caps huge draft injection in upstream system context (bounds prompt growth)", async () => {
+    let sentBody: { messages?: { role: string; content: string }[] } = {};
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(async (_url: string, init: { body?: string }) => {
+        sentBody = JSON.parse(init.body ?? "{}") as typeof sentBody;
+        return {
+          ok: true,
+          json: async () => ({
+            choices: [
+              {
+                message: {
+                  content:
+                    'Nice!\n```json\n{"name":"Arts Club","ticker":"ARTS","pooled":"500000","liquidity":"1.5","route":"direct"}\n```',
+                },
+              },
+            ],
+          }),
+        };
+      }),
+    );
+    const evilDraft = { ticker: "ARTS", evil: "x".repeat(50000) };
+    const req = new Request("http://x/api/chat", {
+      method: "POST",
+      body: JSON.stringify({ messages: [{ role: "user", content: "hi" }], draft: evilDraft }),
+    });
+    const res = await chatPOST(req);
+    expect(res.status).toBe(200);
+    const system = sentBody.messages?.[0]?.content ?? "";
+    expect(system.length).toBeLessThan(6000);
+  });
+
+  it("bounds 20 stale messages to ~20KB context (slice(-20) x 1000 chars)", async () => {
+    let sentBody: { messages?: { role: string; content: string }[] } = {};
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(async (_url: string, init: { body?: string }) => {
+        sentBody = JSON.parse(init.body ?? "{}") as typeof sentBody;
+        return {
+          ok: true,
+          json: async () => ({
+            choices: [
+              {
+                message: {
+                  content:
+                    'Nice!\n```json\n{"name":"Arts Club","ticker":"ARTS","pooled":"500000","liquidity":"1.5","route":"direct"}\n```',
+                },
+              },
+            ],
+          }),
+        };
+      }),
+    );
+    const messages = Array.from({ length: 20 }, () => ({
+      role: "user" as const,
+      content: "y".repeat(1000),
+    }));
+    const req = new Request("http://x/api/chat", {
+      method: "POST",
+      body: JSON.stringify({ messages, draft: { ticker: "ARTS" } }),
+    });
+    const res = await chatPOST(req);
+    expect(res.status).toBe(200);
+    const total = (sentBody.messages ?? []).reduce((n, m) => n + m.content.length, 0);
+    expect(total).toBeLessThan(30000);
+  });
+
+  it("replays same message twice as 2 upstream calls bounded by 10/min throttle", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        choices: [
+          {
+            message: {
+              content:
+                'Nice!\n```json\n{"name":"Arts Club","ticker":"ARTS","pooled":"500000","liquidity":"1.5","route":"direct"}\n```',
+            },
+          },
+        ],
+      }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const makeReq = () =>
+      new Request("http://x/api/chat", {
+        method: "POST",
+        body: JSON.stringify({ messages: [{ role: "user", content: "same message" }] }),
+      });
+    expect((await chatPOST(makeReq())).status).toBe(200);
+    expect((await chatPOST(makeReq())).status).toBe(200);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("status route leaks no key or URL (model + networks only)", async () => {
+    vi.stubEnv("LLM_API_URL", "https://secret-url.test");
+    vi.stubEnv("LLM_API_KEY", "super-secret-key");
+    const res = await statusGET();
+    const text = await res.text();
+    expect(text).not.toContain("super-secret-key");
+    expect(text).not.toContain("secret-url");
+    const json = JSON.parse(text) as Record<string, unknown>;
+    expect(Object.keys(json).sort()).toEqual(["configured", "model", "networks"]);
+  });
+});

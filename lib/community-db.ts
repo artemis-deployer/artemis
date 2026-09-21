@@ -63,7 +63,8 @@ export function normalizeTokenInput(input: {
   pool: string;
   txHash: string;
 } {
-  const clean = (v: unknown) => (typeof v === "string" ? v.trim().slice(0, 200) : "");
+  // ponytail: Array.from slices by code point, never splits surrogate pairs (lone surrogates break Postgres UTF-8)
+  const clean = (v: unknown) => (typeof v === "string" ? Array.from(v.trim()).slice(0, 200).join("") : "");
   return {
     chainId: String(input.chainId ?? "").trim(),
     address: String(input.address ?? "").trim(),

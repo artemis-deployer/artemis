@@ -156,8 +156,9 @@ export async function POST(req: Request) {
     typeof rawDraft === "object" && rawDraft !== null && !Array.isArray(rawDraft)
       ? (rawDraft as Record<string, unknown>)
       : null;
+  // Cap draft JSON: attacker-controlled draft object could bloat upstream prompt/cost.
   const systemContent = draftForContext
-    ? `${SYSTEM_PROMPT} Current draft: ${JSON.stringify(draftForContext)}.`
+    ? `${SYSTEM_PROMPT} Current draft: ${JSON.stringify(draftForContext).slice(0, 2000)}.`
     : SYSTEM_PROMPT;
 
   let upstream: Response;

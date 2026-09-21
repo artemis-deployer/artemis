@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("postgres", () => ({ default: vi.fn() }));
+
+import postgres from "postgres";
 import { submitShowcase } from "../lib/showcase";
-import { normalizeTokenInput } from "../lib/community-db";
+import { listTokens, normalizeTokenInput } from "../lib/community-db";
 
 describe("submitShowcase", () => {
   afterEach(() => {
@@ -90,5 +94,42 @@ describe("normalizeTokenInput", () => {
     });
     expect(out.chainId).toBe("4663");
     expect(out.creator).toBe("a".repeat(200));
+  });
+
+  it("never splits surrogate pairs on 200-char+ emoji (no lone surrogate)", () => {
+    const out = normalizeTokenInput({
+      chainId: "4663",
+      address: "0xabc",
+      name: `${"a".repeat(199)}😀`,
+    });
+    expect(out.name).not.toMatch(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/);
+    expect(Array.from(out.name).length).toBeLessThanOrEqual(200);
+  });
+
+  it("caps 200 emoji without lone surrogates", () => {
+    const out = normalizeTokenInput({
+      chainId: "4663",
+      address: "0xabc",
+      name: "😀".repeat(250),
+    });
+    expect(out.name).not.toMatch(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/);
+    expect(Array.from(out.name).length).toBe(200);
+  });
+});
+
+describe("listTokens limit clamp (no NaN slips SQL)", () => {
+  it("maps abc/NaN to 50, -5 to 1, huge to 100", async () => {
+    const mockPostgres = vi.mocked(postgres);
+    const seen: unknown[] = [];
+    mockPostgres.mockReturnValue(((strings: TemplateStringsArray, ...values: unknown[]) => {
+      seen.push(values[0]);
+      return Promise.resolve([]);
+    }) as never);
+    await listTokens(Number("abc"));
+    await listTokens(NaN);
+    await listTokens(-5);
+    await listTokens(99999999);
+    await listTokens(1e9);
+    expect(seen).toEqual([50, 50, 1, 100, 100]);
   });
 });

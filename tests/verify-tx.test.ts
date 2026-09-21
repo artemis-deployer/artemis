@@ -178,4 +178,28 @@ describe("verifyEvmTx creator binding (no network)", () => {
     mockReceipt({ status: "0x1", from, contractAddress: addr, logs: [] });
     await expect(verifyEvmTx(4663, addr, hash, from)).resolves.toBe(false);
   });
+  it("rejects PENDING tx (null receipt) as invalid_tx path (user retries after mining)", async () => {
+    mockReceipt(null);
+    await expect(verifyEvmTx(4663, addr, hash, from)).resolves.toBe(false);
+  });
+  it("rejects RPC throw (pending/unmined) as false, never throws", async () => {
+    mockPublicFor.mockReturnValue({
+      getTransactionReceipt: async () => {
+        throw new Error("not found");
+      },
+    } as never);
+    await expect(verifyEvmTx(4663, addr, hash, from)).resolves.toBe(false);
+  });
+  it("rejects FAILED solana tx (err set) as false", async () => {
+    const sig = "5".repeat(88);
+    MockConnection.mockImplementation(function (this: unknown) {
+      return {
+        getSignatureStatuses: async () => ({ value: [{ err: { InstructionError: [0, "Custom"] }, confirmationStatus: "finalized" }] }),
+        getTransaction: async () => null,
+      };
+    } as never);
+    await expect(verifySolanaTx("https://rpc.test", "Mint111111111111111111111111111111111111", sig)).resolves.toBe(
+      false,
+    );
+  });
 });

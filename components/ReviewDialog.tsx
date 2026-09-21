@@ -76,6 +76,9 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
   // Resume unmounts once hood hits working, so disabled prop can't guard
   // same-tick double-clicks (TS narrows hood here). Ref guards instead.
   const fundingRef = useRef(false);
+  // Same-tick guard for Confirm buttons: disabled flips only after re-render.
+  const launchingRef = useRef(false);
+  const pumpWorkingRef = useRef(false);
 
   const isPump = draft.route === "pumpfun" && String(draft.chainId).startsWith("solana");
   const rpc = draft.chainId === "solana-mainnet" ? MAINNET_RPC : DEVNET_RPC;
@@ -168,6 +171,8 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
   }
 
   async function launch() {
+    if (launchingRef.current) return;
+    launchingRef.current = true;
     setNote("");
     setHood("working");
     try {
@@ -218,6 +223,8 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : "launch_failed";
       fail(message);
+    } finally {
+      launchingRef.current = false;
     }
   }
 
@@ -266,6 +273,9 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
   }
 
   async function launchPump() {
+    if (pumpWorkingRef.current) return;
+    pumpWorkingRef.current = true;
+    try {
     let meta;
     try {
       meta = buildMetadata({
@@ -388,6 +398,9 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
     } catch (e: unknown) {
       setPumpNote(mapPumpError(e));
       setPump("error");
+    }
+    } finally {
+      pumpWorkingRef.current = false;
     }
   }
 

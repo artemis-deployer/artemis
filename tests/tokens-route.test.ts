@@ -315,6 +315,22 @@ describe("tokens route", () => {
     expect(res.status).toBe(400);
     expect(mocked.saveToken).not.toHaveBeenCalled();
   });
+  it("ADVERSARIAL REPLAY: same valid showcase POST twice overwrites via upsert (both 200, no dup rows)", async () => {
+    mocked.isDbConfigured.mockReturnValue(true);
+    mocked.saveToken.mockResolvedValue(undefined);
+    const body = {
+      chainId: "4663",
+      address: EVM_ADDR,
+      txHash: EVM_HASH,
+      creator: "0x1111111111111111111111111111111111111111",
+    };
+    const req1 = new Request("http://x/api/community/tokens", { method: "POST", body: JSON.stringify(body) });
+    const req2 = new Request("http://x/api/community/tokens", { method: "POST", body: JSON.stringify(body) });
+    expect((await POST(req1)).status).toBe(200);
+    expect((await POST(req2)).status).toBe(200);
+    expect(mocked.saveToken).toHaveBeenCalledTimes(2);
+  });
+
   it("POST forwards Solana creator and rejects mismatch with invalid_tx", async () => {
     mocked.isDbConfigured.mockReturnValue(true);
     const mint = "Mint111111111111111111111111111111111111";

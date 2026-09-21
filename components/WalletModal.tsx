@@ -28,6 +28,7 @@ export default function WalletModal({
 }) {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
+  const choosingRef = useRef(false);
   const [tab, setTab] = useState<WalletKind>(kind);
   const [syncedKind, setSyncedKind] = useState<WalletKind>(kind);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -60,6 +61,8 @@ export default function WalletModal({
       window.open(installUrl, "_blank", "noopener");
       return;
     }
+    if (choosingRef.current) return;
+    choosingRef.current = true;
     setError("");
     setBusy(id);
     try {
@@ -70,6 +73,7 @@ export default function WalletModal({
     } catch (e) {
       setError(walletLabel(e));
     } finally {
+      choosingRef.current = false;
       setBusy(null);
     }
   }

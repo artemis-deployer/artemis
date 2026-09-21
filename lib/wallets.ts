@@ -257,13 +257,8 @@ export async function connectSolana(
     if (e instanceof Error && /rejected|cancel|denied|user/i.test(e.message)) throw new Error("wallet_rejected");
     throw e instanceof Error ? e : new Error("wallet_failed");
   }
-  let address = "";
-  try {
-    address = provider.publicKey.toBase58();
-  } catch {
-    throw new Error("wallet_failed");
-  }
-  if (!isSolanaAddress(address)) throw new Error("wallet_failed");
+  const address = solanaAddressOf(provider);
+  if (!address || !isSolanaAddress(address)) throw new Error("wallet_failed");
   saveWallet({ kind: "solana", id, address });
   return { provider, address };
 }
@@ -309,7 +304,8 @@ export async function getEvmChainId(provider: EvmProvider): Promise<number | nul
 export function formatWei(wei: bigint): string {
   const whole = wei / 10n ** 18n;
   const frac = ((wei % 10n ** 18n) / 10n ** 14n).toString().padStart(4, "0").replace(/0+$/, "");
-  return frac ? `${whole}.${frac}` : `${whole}`;
+  if (!frac) return whole > 0n ? `${whole}` : wei > 0n ? "<0.0001" : "0";
+  return `${whole}.${frac}`;
 }
 
 /** Native balance of an EVM account, formatted (e.g. "1.2345"). Null when unreadable. */
@@ -335,6 +331,7 @@ export async function getSolanaBalance(address: string, rpc = "https://api.mainn
     const data = (await res.json()) as { result?: { value?: number } };
     const lamports = data.result?.value;
     if (typeof lamports !== "number") return null;
+    if (lamports > 0 && lamports < 50000) return "<0.0001";
     const sol = lamports / 1e9;
     return sol >= 1000 ? sol.toLocaleString("en-US", { maximumFractionDigits: 2 }) : String(Math.round(sol * 1e4) / 1e4);
   } catch {

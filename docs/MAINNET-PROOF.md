@@ -8,7 +8,8 @@ exact match on Blockscout, MIT, solc 0.8.26, optimizer 200 runs).
 - Name: Asif Alchemy / Symbol: ASIF / Supply: 999000000 * 1e18 fixed, no mint
 - Pool: 1000 ASIF + 0.0002 ETH into Uniswap V2, one transaction (launch amounts; live reserves move — see DexScreener link)
 - Launch tx: `0x3bebcd4dd28b55c3fa5d56a2b1dde41ff91adf8ac6a996c8534e835e68585ab0`
-- Pair: `0xc682AeFee57c0fbe890238f6f09d0066d450f834`
-- Gas used: 3178008 (estimate was 3278258)
+- Pair: `0xc682AeFee57c0fbe890238f6F09d0066d450f834`
+- Gas used: 3178008 (estimate was 3278258), block 67920183, status success, 12 logs
+- Live reserves (2026-09-21): 201998778000000 wei WETH (~0.000202) + 990134391686851893666 (~990.13 ASIF); LP supply 447213595499957939; DexScreener liquidity $1.04
 - DexScreener: https://dexscreener.com/robinhood/0xc682AeFee57c0fbe890238f6F09d0066d450f834
 - Showcase: verified onchain (`invalid_tx` rejects fakes), listed at `/tokens`
