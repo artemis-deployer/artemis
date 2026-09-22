@@ -16,6 +16,7 @@ export const SYSTEM_PROMPT = [
   "Revise incrementally from Current draft: replace only what user changed, always return FULL draft JSON.",
   "Chain inference: Robinhood, Hood, or EVM keywords keep or switch EVM chain (4663 mainnet, 46630 testnet); Solana is coming soon — never switch to it, keep the current chain and say so briefly.",
   "Never ask for private keys or seed phrases. Never claim to sign transactions.",
+  "Language lock: reply in the user's language (Indonesian when they write Indonesian, otherwise English). Never use Chinese or any other language.",
   "Example exchange:",
   'User: Arts club coin, ticker ARTS, 500M pooled, 1.5 liquidity, direct route.',
   "Assistant: Great pick for the arts club! I set ARTS with 500000000 pooled and 1.5 liquidity on direct.",
@@ -26,8 +27,8 @@ const RETRY_NOTE =
   "Correction: your last reply broke the output contract (non-numeric pooled/liquidity, bad route, or missing keys). Reply again: short prose conclusion first, then ONE valid fenced json block LAST with digits-only numbers (max 18 decimals) and full keys (chainId optional).";
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
-// Raw body cap before JSON.parse: legit <22KB (20x1000 + 2KB draft + overhead).
-export const MAX_CHAT_BODY_CHARS = 32 * 1024;
+// Raw body cap before JSON.parse: legit <40KB (12 msgs x ~2.5KB + 2KB draft + overhead).
+export const MAX_CHAT_BODY_CHARS = 64 * 1024;
 
 export type ServerDraft = {
   name?: string;
@@ -193,17 +194,24 @@ export async function POST(req: Request) {
   }
   const rawItems: unknown = (body as { messages?: unknown }).messages;
   const raw = Array.isArray(rawItems) ? rawItems : [];
-  const messages = raw.filter(
-    (m): m is ChatMessage =>
-      typeof m === "object" &&
-      m !== null &&
-      ((m as ChatMessage).role === "user" || (m as ChatMessage).role === "assistant") &&
-      typeof (m as ChatMessage).content === "string",
-  );
-  if (messages.length === 0 || messages.some((m) => m.content.length === 0 || m.content.length > 1000)) {
+  // Follow-ups resend our own rich replies (lore + JSON can exceed 2KB):
+  // truncate assistant history instead of rejecting, or every long
+  // conversation dies with 400 on the second message.
+  const messages: ChatMessage[] = [];
+  for (const m of raw) {
+    if (typeof m !== "object" || m === null) continue;
+    const role = (m as ChatMessage).role;
+    const content = (m as ChatMessage).content;
+    if ((role !== "user" && role !== "assistant") || typeof content !== "string" || content.length === 0) continue;
+    if (role === "user" && content.length > 1000) {
+      return NextResponse.json({ error: "bad_request" }, { status: 400 });
+    }
+    messages.push({ role, content: role === "assistant" ? content.slice(0, 2500) : content });
+  }
+  if (messages.length === 0) {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
   }
-  const trimmed = messages.slice(-20);
+  const trimmed = messages.slice(-12);
   const rawDraft: unknown = (body as { draft?: unknown }).draft;
   const draftForContext =
     typeof rawDraft === "object" && rawDraft !== null && !Array.isArray(rawDraft)
@@ -224,20 +232,27 @@ export async function POST(req: Request) {
   let reply = await readReply(upstream);
   if (!reply) return NextResponse.json(fallbackConceptReply(trimmed));
   let parsed = extractServerDraft(reply);
-  // One self-correction round: models often emit units/words on the first try.
-  // Keep first reply/errors when retry also fails (no overwrite on invalid).
-  if (!parsed.draft) {
+  // Self-correction rounds (max one extra call): broken JSON or a Chinese
+  // slip both void the reply. Keep first reply/errors when retry also fails.
+  const firstOk = !!parsed.draft;
+  // CJK + kana + hangul ranges as escapes (literal chars are easy to mistype).
+  const needsRetry = !firstOk || /[぀-ヿ가-힯一-鿿]/.test(reply);
+  const retryNote = !parsed.draft
+    ? RETRY_NOTE
+    : "Correction: your last reply slipped into Chinese/Japanese/Korean. Reply again in the user's language only (Indonesian or English): same short teaser, then the same valid fenced json block LAST.";
+  if (needsRetry) {
     try {
       const retry = await callUpstream(url, key, model, [
         { role: "system", content: systemContent },
         ...trimmed,
-        { role: "system", content: RETRY_NOTE },
+        { role: "system", content: retryNote },
       ]);
       if (retry.ok) {
         const second = await readReply(retry);
         if (second) {
           const secondParsed = extractServerDraft(second);
-          if (secondParsed.draft) {
+          const clean = !/[぀-ヿ가-힯一-鿿]/.test(second);
+          if (secondParsed.draft && (!firstOk || clean)) {
             reply = second;
             parsed = secondParsed;
           }

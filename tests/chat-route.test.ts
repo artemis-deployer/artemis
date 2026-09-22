@@ -144,6 +144,48 @@ describe("chat route", () => {
     expect(json.draftErrors).toEqual([]);
   });
 
+  it("retries a Chinese slip and keeps the clean second reply", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          choices: [
+            {
+              message: {
+                content:
+                  'Bagus 我们继续!\n```json\n{"name":"Arts Club","ticker":"ARTS","pooled":"500000","liquidity":"1.5","route":"direct"}\n```',
+              },
+            },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          choices: [
+            {
+              message: {
+                content:
+                  'Bagus, lanjut!\n```json\n{"name":"Arts Club","ticker":"ARTS","pooled":"500000","liquidity":"1.5","route":"direct"}\n```',
+              },
+            },
+          ],
+        }),
+      });
+    vi.stubGlobal("fetch", fetchMock);
+    const req = new Request("http://x/api/chat", {
+      method: "POST",
+      body: JSON.stringify({ messages: [{ role: "user", content: "arts club" }] }),
+    });
+    const res = await chatPOST(req);
+    expect(res.status).toBe(200);
+    const json = (await res.json()) as { reply: string; draft: { ticker: string } | null };
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(json.reply).toContain("Bagus, lanjut!");
+    expect(json.draft).toMatchObject({ ticker: "ARTS" });
+  });
+
   it("calls upstream once when first reply is valid (no loop, max 2)", async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
@@ -1058,7 +1100,7 @@ describe("ADVERSARIAL AUDIT: replay/idempotency/cost", () => {
     expect(system.length).toBeLessThan(6000);
   });
 
-  it("bounds 20 stale messages to ~20KB context (slice(-20) x 1000 chars)", async () => {
+  it("bounds stale history to last 12 messages", async () => {
     let sentBody: { messages?: { role: string; content: string }[] } = {};
     vi.stubGlobal(
       "fetch",
@@ -1091,6 +1133,42 @@ describe("ADVERSARIAL AUDIT: replay/idempotency/cost", () => {
     expect(res.status).toBe(200);
     const total = (sentBody.messages ?? []).reduce((n, m) => n + m.content.length, 0);
     expect(total).toBeLessThan(30000);
+  });
+
+  it("truncates long assistant history instead of 400 (follow-ups survive rich lore)", async () => {
+    let sentBody: { messages?: { role: string; content: string }[] } = {};
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(async (_url: string, init: { body?: string }) => {
+        sentBody = JSON.parse(init.body ?? "{}") as typeof sentBody;
+        return {
+          ok: true,
+          json: async () => ({
+            choices: [
+              {
+                message: {
+                  content:
+                    'Nice!\n```json\n{"name":"Arts Club","ticker":"ARTS","pooled":"500000","liquidity":"1.5","route":"direct"}\n```',
+                },
+              },
+            ],
+          }),
+        };
+      }),
+    );
+    const req = new Request("http://x/api/chat", {
+      method: "POST",
+      body: JSON.stringify({
+        messages: [
+          { role: "assistant", content: `Lore here.\n\`\`\`json\n${JSON.stringify({ name: "X", ticker: "X", pooled: "1", liquidity: "1", route: "direct" })}\n\`\`\`\n${"L".repeat(3000)}` },
+          { role: "user", content: "make a logo more simple" },
+        ],
+      }),
+    });
+    const res = await chatPOST(req);
+    expect(res.status).toBe(200);
+    const first = sentBody.messages?.find((m) => m.role === "assistant");
+    expect(first!.content.length).toBeLessThanOrEqual(2500);
   });
 
   it("replays same message twice as 2 upstream calls bounded by 10/min throttle", async () => {
@@ -1129,7 +1207,7 @@ describe("ADVERSARIAL AUDIT: replay/idempotency/cost", () => {
     expect(Object.keys(json).sort()).toEqual(["configured", "model", "networks"]);
   });
 
-  it("rejects oversized raw body >32KB before parse (JSON bomb guard)", async () => {
+  it("rejects oversized raw body >64KB before parse (JSON bomb guard)", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
@@ -1146,7 +1224,7 @@ describe("ADVERSARIAL AUDIT: replay/idempotency/cost", () => {
         }),
       }),
     );
-    const evil = "x".repeat(40 * 1024);
+    const evil = "x".repeat(80 * 1024);
     const req = new Request("http://x/api/chat", {
       method: "POST",
       body: JSON.stringify({ messages: [{ role: "user", content: "hi" }], evil }),

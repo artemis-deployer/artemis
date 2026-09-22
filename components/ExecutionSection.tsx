@@ -62,7 +62,7 @@ export const ExecutionSection: React.FC<ExecutionSectionProps> = () => {
                   : 'text-[#18191c]/70 hover:text-[#18191c] bg-transparent'
               }`}
             >
-              Solana (pump.fun)
+              Solana (pump.fun) (soon)
             </button>
           </div>
         </div>

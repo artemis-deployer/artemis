@@ -44,6 +44,11 @@ function displayOf(reply: string, patched: boolean): string {
   return displayReplyText(reply, patched);
 }
 
+/** Module scope so the render-purity lint stays quiet; called from event flow only. */
+function freshSeed(): number {
+  return Math.floor(Math.random() * 1000000);
+}
+
 function prefersReducedMotion(): boolean {
   return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
@@ -221,9 +226,20 @@ export default function StudioChat() {
       const resolved = resolveAutoPatch(latest, patch, activeId);
       const auto = resolved !== null;
       if (resolved) {
-        // PM: no auto image — the user clicks Generate logo first. The logo
+        // PM: no auto image — the user clicks Generate first. The logo
         // prompt still lands in the draft so one click renders it.
+        // Exception: explicit logo revision ("make logo simpler", "perbaiki
+        // gambarnya") refreshes the artwork immediately with a fresh seed.
         const nextDraft = resolved.next;
+        if (
+          /logo|gambar|image|mascot|redraw|redesign|simple/i.test(content) &&
+          typeof patch.logoPrompt === "string" &&
+          patch.logoPrompt !== ""
+        ) {
+          const seed = freshSeed();
+          setLogoSeed(seed);
+          nextDraft.image = logoImageUrl(patch.logoPrompt, seed);
+        }
         const nextChainId = resolved.next.chainId;
         // Functional update: response may land after user typed in Manual
         // Parameters; updater form avoids clobbering on stale `latest`.

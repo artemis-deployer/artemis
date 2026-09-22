@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Search, Copy, Check, ExternalLink, X, Globe } from "lucide-react";
+import { Search, Copy, Check, ExternalLink, Globe } from "lucide-react";
 import { TransitionLink } from "../../components/PageTransition";
 import { dedupeLocalReceipts, listReceipts, type Receipt } from "../../lib/receipts";
 import { displayArtworkUrl } from "../../lib/showcase";
@@ -34,23 +34,7 @@ export default function TokensPage() {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "hood" | "solana" | "local">("all");
   const [copied, setCopied] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
-  const [loreModal, setLoreModal] = useState<Token | null>(null);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  function tokenKey(t: Pick<Token, "chain_id" | "address">) {
-    return `${t.chain_id}:${t.address}`;
-  }
-
-  function toggleExpanded(t: Pick<Token, "chain_id" | "address">) {
-    const k = tokenKey(t);
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(k)) next.delete(k);
-      else next.add(k);
-      return next;
-    });
-  }
 
   function storyHook(t: Token) {
     return t.marketingHook ?? t.marketing_hook ?? "";
@@ -61,15 +45,6 @@ export default function TokensPage() {
     const raw = key === "x" ? (t.xUrl ?? t.x_url ?? "") : (t.webUrl ?? t.web_url ?? "");
     return typeof raw === "string" && raw.startsWith("https://") ? raw : "";
   }
-
-  useEffect(() => {
-    if (!loreModal) return;
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setLoreModal(null);
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [loreModal]);
 
   useEffect(() => {
     let alive = true;
@@ -182,7 +157,7 @@ export default function TokensPage() {
               [
                 ["all", "All Tokens"],
                 ["hood", "Robinhood Chain"],
-                ["solana", "Solana"],
+                ["solana", "Solana (soon)"],
                 ["local", `Local Receipts (${local.length})`],
               ] as const
             ).map(([v, label]) => (
@@ -284,119 +259,50 @@ export default function TokensPage() {
                     )}
                     </div>
                   </div>
-                  <span className="shrink-0 self-start rounded border border-white/15 bg-white/5 px-2 py-0.5 font-mono text-[10px] whitespace-nowrap text-white/70 uppercase">
-                    {chainInfo?.name ?? `Chain ${t.chain_id}`}
-                  </span>
-                </div>
-
-                {(storyHook(t) !== "" ||
-                  (typeof t.description === "string" && t.description !== "") ||
-                  (typeof t.lore === "string" && t.lore !== "")) && (
-                  <div className="flex flex-col gap-1.5 border-b border-white/10 pb-3 text-left">
-                    {storyHook(t) !== "" && (
-                      <p className="m-0 border-l-2 border-[#fae8a4]/60 pl-2 text-xs leading-relaxed text-white/85">
-                        {storyHook(t)}
-                      </p>
-                    )}
-                    {typeof t.description === "string" && t.description !== "" && (
-                      <div>
-                        <p
-                          className={`m-0 text-xs leading-relaxed text-white/60 ${expanded.has(tokenKey(t)) ? "" : "line-clamp-2"}`}
-                        >
-                          {t.description}
-                        </p>
-                        {t.description.length > 140 && (
-                          <button
-                            type="button"
-                            onClick={() => toggleExpanded(t)}
-                            aria-expanded={expanded.has(tokenKey(t))}
-                            className="mt-0.5 cursor-pointer p-0 text-[11px] font-semibold text-[#cadcf0] hover:text-white"
+                  <div className="flex shrink-0 flex-col items-end gap-2 self-start">
+                    <span className="rounded border border-white/15 bg-white/5 px-2 py-0.5 font-mono text-[10px] whitespace-nowrap text-white/70 uppercase">
+                      {chainInfo?.name ?? `Chain ${t.chain_id}`}
+                    </span>
+                    {(tokenLink(t, "x") !== "" || tokenLink(t, "web") !== "") && (
+                      <div className="flex items-center gap-1.5">
+                        {tokenLink(t, "x") !== "" && (
+                          <a
+                            href={tokenLink(t, "x")}
+                            target="_blank"
+                            rel="noreferrer"
+                            title="X / Twitter"
+                            aria-label={`${t.symbol || "Token"} on X`}
+                            className="inline-flex min-h-7 min-w-7 items-center justify-center rounded-md border border-white/15 bg-white/5 p-1.5 text-white/70 transition-all hover:border-white/30 hover:text-white"
                           >
-                            {expanded.has(tokenKey(t)) ? "Show less" : "Read more"}
-                          </button>
+                            <span className="text-[11px] leading-none font-bold" aria-hidden="true">X</span>
+                          </a>
+                        )}
+                        {tokenLink(t, "web") !== "" && (
+                          <a
+                            href={tokenLink(t, "web")}
+                            target="_blank"
+                            rel="noreferrer"
+                            title="Website"
+                            aria-label={`${t.symbol || "Token"} website`}
+                            className="inline-flex min-h-7 min-w-7 items-center justify-center rounded-md border border-white/15 bg-white/5 p-1.5 text-white/70 transition-all hover:border-white/30 hover:text-white"
+                          >
+                            <Globe size={12} aria-hidden="true" />
+                          </a>
                         )}
                       </div>
                     )}
-                    {typeof t.lore === "string" && t.lore !== "" && (
-                      <div>
-                        <p className="m-0 line-clamp-2 text-xs leading-relaxed text-white/50">{t.lore}</p>
-                        <button
-                          type="button"
-                          onClick={() => setLoreModal(t)}
-                          className="mt-0.5 cursor-pointer p-0 text-[11px] font-semibold text-[#cadcf0] hover:text-white"
-                        >
-                          View lore
-                        </button>
-                      </div>
-                    )}
+                  </div>
+                </div>
+
+                {storyHook(t) !== "" && (
+                  <div className="border-b border-white/10 pb-3 text-left">
+                    <p className="m-0 border-l-2 border-[#fae8a4]/60 pl-2 text-xs leading-relaxed text-white/85">
+                      {storyHook(t)}
+                    </p>
                   </div>
                 )}
 
-                {(tokenLink(t, "x") !== "" || tokenLink(t, "web") !== "") && (
-                  <div className="flex items-center gap-2 border-b border-white/10 pb-3">
-                    {tokenLink(t, "x") !== "" && (
-                      <a
-                        href={tokenLink(t, "x")}
-                        target="_blank"
-                        rel="noreferrer"
-                        title="X / Twitter"
-                        aria-label={`${t.symbol || "Token"} on X`}
-                        className="inline-flex min-h-8 min-w-8 items-center justify-center rounded-lg border border-white/15 bg-white/5 p-2 text-white/70 transition-all hover:border-white/30 hover:text-white"
-                      >
-                        <span className="text-[13px] leading-none font-bold" aria-hidden="true">X</span>
-                      </a>
-                    )}
-                    {tokenLink(t, "web") !== "" && (
-                      <a
-                        href={tokenLink(t, "web")}
-                        target="_blank"
-                        rel="noreferrer"
-                        title="Website"
-                        aria-label={`${t.symbol || "Token"} website`}
-                        className="inline-flex min-h-8 min-w-8 items-center justify-center rounded-lg border border-white/15 bg-white/5 p-2 text-white/70 transition-all hover:border-white/30 hover:text-white"
-                      >
-                        <Globe size={13} aria-hidden="true" />
-                      </a>
-                    )}
-                  </div>
-                )}
-
-                <dl className="divide-y divide-white/5 text-left font-mono text-xs">
-                  <div className="flex items-start gap-3 py-2.5">
-                    <dt className="w-14 shrink-0 pt-0.5 text-[10px] font-semibold tracking-[0.14em] text-white/40 uppercase">
-                      Contract
-                    </dt>
-                    <dd className="flex min-w-0 flex-1 items-start gap-1.5">
-                      <a
-                        href={getExplorerUrl(t.chain_id, t.address)}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="min-w-0 flex-1 text-[11px] leading-relaxed text-[#cadcf0] hover:text-white [overflow-wrap:anywhere]"
-                      >
-                        {t.address}
-                      </a>
-                      <span className="-mt-1 flex shrink-0 items-center">
-                        <a
-                          href={getExplorerUrl(t.chain_id, t.address)}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="rounded p-1 text-white/40 hover:bg-white/10 hover:text-white"
-                          title="View on explorer"
-                        >
-                          <ExternalLink size={12} />
-                        </a>
-                        <button
-                          type="button"
-                          onClick={() => copyText(t.address)}
-                          className="rounded p-1 text-white/40 hover:bg-white/10 hover:text-white cursor-pointer"
-                          title="Copy address"
-                        >
-                          {copied === t.address ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
-                        </button>
-                      </span>
-                    </dd>
-                  </div>
-
+                <dl className="flex flex-1 flex-col text-left font-mono text-xs">
                   {t.pool && (
                     <div className="flex items-start gap-3 py-2.5">
                       <dt className="w-14 shrink-0 pt-0.5 text-[10px] font-semibold tracking-[0.14em] text-white/40 uppercase">
@@ -408,32 +314,70 @@ export default function TokensPage() {
                     </div>
                   )}
 
-                  {t.tx_hash && (
+                  <div className="mt-auto divide-y divide-white/5 border-t border-white/5">
                     <div className="flex items-start gap-3 py-2.5">
                       <dt className="w-14 shrink-0 pt-0.5 text-[10px] font-semibold tracking-[0.14em] text-white/40 uppercase">
-                        Tx
+                        Contract
                       </dt>
                       <dd className="flex min-w-0 flex-1 items-start gap-1.5">
                         <a
-                          href={getTxUrl(t.chain_id, t.tx_hash)}
+                          href={getExplorerUrl(t.chain_id, t.address)}
                           target="_blank"
                           rel="noreferrer"
                           className="min-w-0 flex-1 text-[11px] leading-relaxed text-[#cadcf0] hover:text-white [overflow-wrap:anywhere]"
                         >
-                          {t.tx_hash}
+                          {t.address}
                         </a>
-                        <a
-                          href={getTxUrl(t.chain_id, t.tx_hash)}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="-mt-1 shrink-0 rounded p-1 text-white/40 hover:bg-white/10 hover:text-white"
-                          title="View tx on explorer"
-                        >
-                          <ExternalLink size={12} />
-                        </a>
+                        <span className="-mt-1 flex shrink-0 items-center">
+                          <a
+                            href={getExplorerUrl(t.chain_id, t.address)}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="rounded p-1 text-white/40 hover:bg-white/10 hover:text-white"
+                            title="View on explorer"
+                          >
+                            <ExternalLink size={12} />
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => copyText(t.address)}
+                            className="rounded p-1 text-white/40 hover:bg-white/10 hover:text-white cursor-pointer"
+                            title="Copy address"
+                          >
+                            {copied === t.address ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+                          </button>
+                        </span>
                       </dd>
                     </div>
-                  )}
+
+                    {t.tx_hash && (
+                      <div className="flex items-start gap-3 py-2.5">
+                        <dt className="w-14 shrink-0 pt-0.5 text-[10px] font-semibold tracking-[0.14em] text-white/40 uppercase">
+                          Tx
+                        </dt>
+                        <dd className="flex min-w-0 flex-1 items-center gap-1.5">
+                          <a
+                            href={getTxUrl(t.chain_id, t.tx_hash)}
+                            target="_blank"
+                            rel="noreferrer"
+                            title={t.tx_hash}
+                            className="min-w-0 flex-1 truncate text-[11px] text-[#cadcf0] hover:text-white"
+                          >
+                            {t.tx_hash}
+                          </a>
+                          <a
+                            href={getTxUrl(t.chain_id, t.tx_hash)}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="-mt-1 shrink-0 rounded p-1 text-white/40 hover:bg-white/10 hover:text-white"
+                            title="View tx on explorer"
+                          >
+                            <ExternalLink size={12} />
+                          </a>
+                        </dd>
+                      </div>
+                    )}
+                  </div>
                 </dl>
               </article>
             );
@@ -561,49 +505,6 @@ export default function TokensPage() {
         </div>
       </main>
 
-      {loreModal && (
-        <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4"
-          onClick={() => setLoreModal(null)}
-          role="presentation"
-        >
-          <div
-            className="max-h-[80vh] w-full max-w-lg overflow-y-auto rounded-xl border border-white/15 bg-[#1a1b1f] p-6 text-left shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
-            aria-label={`${loreModal.name || loreModal.symbol || "Token"} lore`}
-          >
-            <div className="mb-3 flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <h3 className="m-0 truncate text-sm font-bold text-white">
-                  {loreModal.name || loreModal.symbol || "Untitled Coin"}
-                </h3>
-                <p className="m-0 font-mono text-xs font-bold tracking-wider text-[#fae8a4]">
-                  ${loreModal.symbol || "TOKEN"}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setLoreModal(null)}
-                autoFocus
-                className="shrink-0 cursor-pointer rounded p-1.5 text-white/60 hover:bg-white/10 hover:text-white"
-                aria-label="Close lore"
-              >
-                <X size={16} />
-              </button>
-            </div>
-            {typeof loreModal.tagline === "string" && loreModal.tagline !== "" && (
-              <p className="mt-0 mb-3 text-xs text-white/70 italic">{loreModal.tagline}</p>
-            )}
-            {(loreModal.lore ?? "").split(/\n\n+/).map((para, i) => (
-              <p key={i} className="mt-0 mb-3 text-sm leading-relaxed text-white/80 last:mb-0">
-                {para}
-              </p>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
