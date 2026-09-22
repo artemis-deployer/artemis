@@ -378,7 +378,9 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
       meta = buildMetadata({
         name: draft.name || draft.ticker,
         symbol: draft.ticker,
-        description: draft.name ? `${draft.name} (${draft.ticker}) community token` : `${draft.ticker} community token`,
+        description:
+          draft.description ||
+          (draft.name ? `${draft.name} (${draft.ticker}) community token` : `${draft.ticker} community token`),
         image: draft.image,
       });
     } catch (e: unknown) {

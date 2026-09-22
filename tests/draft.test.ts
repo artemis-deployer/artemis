@@ -3,6 +3,7 @@ import {
   applyAutoPatch,
   EMPTY_DRAFT,
   exceedsDirectSupply,
+  logoImageUrl,
   parseDraftReply,
   resolveAutoPatch,
   shouldAutoApply,
@@ -15,6 +16,32 @@ import { toTokenUnits } from "../lib/launcher-evm";
 import { explorerTokenUrl, explorerTxUrl } from "../lib/chains";
 
 describe("parseDraftReply", () => {
+  it("extracts story fields with caps", () => {
+    const out = parseDraftReply(
+      '{"ticker":"X","tagline":"' +
+        "T".repeat(100) +
+        '","description":"' +
+        "D".repeat(600) +
+        '","lore":"Lore here","logoPrompt":"A brass owl mascot, flat vector, no text"}',
+    );
+    expect(out.tagline).toBe("T".repeat(80));
+    expect(out.description).toBe("D".repeat(500));
+    expect(out.lore).toBe("Lore here");
+    expect(out.logoPrompt).toBe("A brass owl mascot, flat vector, no text");
+  });
+
+  it("drops blank story fields", () => {
+    const out = parseDraftReply('{"ticker":"X","tagline":"   ","lore":""}');
+    expect(out.tagline).toBeUndefined();
+    expect(out.lore).toBeUndefined();
+  });
+
+  it("builds a pollinations URL from prompt and seed", () => {
+    const url = logoImageUrl("A brass owl", 42);
+    expect(url).toBe("https://image.pollinations.ai/prompt/A%20brass%20owl?width=512&height=512&seed=42&nologo=true");
+    expect(logoImageUrl("x", 3.9)).toContain("seed=3");
+  });
+
   it("extracts draft JSON embedded in prose", () => {
     const out = parseDraftReply('Sure! Here it is {"ticker":"ember","pooled":"800000"} done');
     expect(out.ticker).toBe("EMBER");

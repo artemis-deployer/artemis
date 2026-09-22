@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, Check, ChevronDown, ImagePlus, X } from "lucide-react";
+import { ArrowRight, Check, ChevronDown, Copy, ImagePlus, Sparkles, X } from "lucide-react";
 import { CHAINS, DIRECT_SUPPLY } from "../lib/chains";
-import { stripNumericSeparators, validateDraft } from "../lib/draft";
+import { logoImageUrl, stripNumericSeparators, validateDraft } from "../lib/draft";
 import { isSafeImageSrc, useDraft } from "./DraftContext";
 import ChainLogo from "./ChainLogo";
 import CropModal from "./CropModal";
@@ -16,6 +16,8 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [pinning, setPinning] = useState(false);
+  const [logoSeed, setLogoSeed] = useState(() => Math.floor(Math.random() * 1000000));
+  const [logoCopied, setLogoCopied] = useState(false);
   const [cropSrc, setCropSrc] = useState<{ url: string; name: string; type: string } | null>(null);
   const [networkOpen, setNetworkOpen] = useState(false);
   const networkRef = useRef<HTMLDivElement>(null);
@@ -209,6 +211,12 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
         <div className="font-unbounded text-[24px] font-bold leading-none text-[#fae8a4] max-sm:text-xl">
           {draft.ticker ? `$${draft.ticker}` : "$TICKER"}
         </div>
+        {draft.tagline && (
+          <p className="m-0 text-sm font-medium text-white/80 italic">{draft.tagline}</p>
+        )}
+        {draft.lore && (
+          <p className="m-0 text-xs leading-relaxed text-white/50">{draft.lore}</p>
+        )}
         <div className="flex items-center justify-between gap-3 border-t border-white/10 pt-2.5 text-[13px]">
           <div>
             <span className="block font-mono text-[10px] font-bold tracking-wider text-white/40 uppercase">Supply</span>
@@ -464,6 +472,57 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
           <p role="alert" className="m-0 text-xs font-medium text-red-300">
             {imageError}
           </p>
+        )}
+        {draft.logoPrompt && (
+          <div className="flex flex-col gap-2 rounded-lg border border-white/10 bg-[#1a1b1f] p-3">
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-[11px] font-bold tracking-wider text-white/50 uppercase">
+                Logo prompt
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  const text = draft.logoPrompt ?? "";
+                  if (typeof navigator === "undefined" || !navigator.clipboard) return;
+                  void navigator.clipboard.writeText(text).then(
+                    () => setLogoCopied(true),
+                    () => setLogoCopied(false),
+                  );
+                  setTimeout(() => setLogoCopied(false), 1500);
+                }}
+                className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-white/15 px-2 py-1 text-[11px] font-semibold text-white/70 hover:bg-white/10 hover:text-white"
+              >
+                {logoCopied ? <Check size={12} aria-hidden="true" /> : <Copy size={12} aria-hidden="true" />}
+                <span>{logoCopied ? "Copied" : "Copy"}</span>
+              </button>
+            </div>
+            <p className="m-0 font-mono text-xs leading-relaxed break-words text-white/70">{draft.logoPrompt}</p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  if (!draft.logoPrompt) return;
+                  setDraft((prev) => ({ ...prev, image: logoImageUrl(draft.logoPrompt as string, logoSeed) }));
+                }}
+                className="inline-flex min-h-9 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-[#fae8a4] px-3 py-1.5 text-xs font-bold text-[#17131f] transition-all hover:bg-[#f1d2e8]"
+              >
+                <Sparkles size={12} aria-hidden="true" />
+                <span>Generate logo</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!draft.logoPrompt) return;
+                  const seed = Math.floor(Math.random() * 1000000);
+                  setLogoSeed(seed);
+                  setDraft((prev) => ({ ...prev, image: logoImageUrl(draft.logoPrompt as string, seed) }));
+                }}
+                className="inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-white/10"
+              >
+                <span>Redraw</span>
+              </button>
+            </div>
+          </div>
         )}
       </div>
 

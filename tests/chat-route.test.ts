@@ -77,6 +77,8 @@ describe("chat route", () => {
     expect(SYSTEM_PROMPT).toContain("digits");
     expect(SYSTEM_PROMPT).toContain("chainId");
     expect(SYSTEM_PROMPT).toContain("sensible defaults");
+    expect(SYSTEM_PROMPT).toContain("tagline");
+    expect(SYSTEM_PROMPT).toContain("logoPrompt");
   });
 
   it("states chainId optional without exactly-keys contradiction", () => {

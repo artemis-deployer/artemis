@@ -8,6 +8,10 @@ export type Draft = {
   route: "direct" | "pumpfun";
   chainId: number | string;
   image?: string;
+  tagline?: string;
+  description?: string;
+  lore?: string;
+  logoPrompt?: string;
 };
 
 export const EMPTY_DRAFT: Draft = {
@@ -36,7 +40,24 @@ function sanitizeDraft(raw: Record<string, unknown>): Partial<Draft> {
     // Solana rails parked (coming soon): never adopt, keep current chain.
     if (found && !found.disabled) out.chainId = found.id;
   }
+  if (typeof raw.tagline === "string" && raw.tagline.trim() !== "") {
+    out.tagline = raw.tagline.trim().slice(0, 80);
+  }
+  if (typeof raw.description === "string" && raw.description.trim() !== "") {
+    out.description = raw.description.trim().slice(0, 500);
+  }
+  if (typeof raw.lore === "string" && raw.lore.trim() !== "") {
+    out.lore = raw.lore.trim().slice(0, 500);
+  }
+  if (typeof raw.logoPrompt === "string" && raw.logoPrompt.trim() !== "") {
+    out.logoPrompt = raw.logoPrompt.trim().slice(0, 300);
+  }
   return out;
+}
+
+/** Free AI image URL (Pollinations, no key) for a logo prompt + seed. */
+export function logoImageUrl(logoPrompt: string, seed: number): string {
+  return `https://image.pollinations.ai/prompt/${encodeURIComponent(logoPrompt)}?width=512&height=512&seed=${Math.floor(seed)}&nologo=true`;
 }
 
 export function shouldAutoApply(patch: Partial<Draft>): boolean {
