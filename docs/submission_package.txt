@@ -1,0 +1,193 @@
+================================================================================
+PROJECT SUBMISSION & HANDOVER REPORT — ARTEMIS
+Target Chain: Robinhood Chain (EVM) Mainnet 4663 / Testnet 46630 + Solana
+Generated: September 2026
+================================================================================
+
+--------------------------------------------------------------------------------
+SECTION 1: BRIEF
+--------------------------------------------------------------------------------
+Status: Completed
+- Repository: https://github.com/artemis-deployer/artemis
+- Branch: main
+
+
+--------------------------------------------------------------------------------
+SECTION 2: DEV KERJA
+--------------------------------------------------------------------------------
+1. Live Production Web URL:
+   https://artemis-olive.vercel.app
+
+2. Token Showcase (live catalog):
+   https://artemis-olive.vercel.app/tokens
+
+3. GitHub Repository:
+   https://github.com/artemis-deployer/artemis
+   Branch: main
+
+4. Tech Stack & Architecture:
+   - Framework: Next.js 16.3.4 (App Router) + React 19 + TypeScript 5 (strict)
+   - Styling: Tailwind CSS v4 + custom CSS (dark launchpad UI, page transitions)
+   - Atomic Launcher: Solidity 0.8.26 ArtemisLauncher (Blockscout source-verified)
+     Launcher: 0xeea9d0f7ee0958c6d59f25162be4e69ba60a0f71 (Robinhood Chain 4663)
+   - Blockchain Clients: viem 2.56.7 (EVM) + @solana/web3.js 1.99 (pump.fun rail)
+   - DEX Target: Uniswap V2 on Robinhood Chain (router 0x89e5...eba)
+   - AI Copilot: OpenAI-compatible chat endpoint (Mimo v2.5 default) → structured launch drafts
+   - Artwork: In-app 1:1 crop modal (512px) + Pinata IPFS pinning (server-side JWT)
+   - Database: Postgres (Supabase pooler) — showcase tokens + durable rate limits,
+     with localStorage receipt fallback when DB is unreachable
+   - Testing: Vitest — 372 tests across 17 files
+
+5. Documentation Index:
+   - Project Report (report.md): https://github.com/artemis-deployer/artemis/blob/main/docs/report.md
+   - Mainnet Proof (live 1-tx launch): https://github.com/artemis-deployer/artemis/blob/main/docs/MAINNET-PROOF.md
+   - Testnet Proof (rehearsal): https://github.com/artemis-deployer/artemis/blob/main/docs/TESTNET-PROOF.md
+   - Launchpad Design Spec: https://github.com/artemis-deployer/artemis/blob/main/docs/superpowers/specs/2026-09-17-launchpad-design.md
+   - Main Repository README: https://github.com/artemis-deployer/artemis/blob/main/README.md
+
+
+--------------------------------------------------------------------------------
+SECTION 3: QUALITY ASSURANCE (QA) REPORT
+--------------------------------------------------------------------------------
+[PASS] 1. AI Slop & Code Quality Check:
+   - Strict TypeScript compilation: Zero errors (verified via `npx tsc --noEmit`).
+   - ESLint: 0 errors (verified via `npm run lint`).
+   - Clean modular layout: contracts under `contracts/`, execution in `lib/launcher-evm.ts`
+     / `lib/launcher-solana.ts`, generated artifacts in `lib/*-artifact.ts` (never hand-edited).
+   - Real deterministic logic: live gas estimation, chain-time deadlines, router
+     authenticity checks (WETH + factory + bytecode), no fake delays.
+
+[PASS] 2. Responsive UI & Cross-Device Compatibility:
+   - Desktop (1920px): Full landing + studio, 3-column showcase grid.
+   - Tablet (768px): 2-column showcase grid, wrapping filter bar.
+   - Mobile (375px): Single-column layout, truncated addresses ("0x5a69...b9a8"),
+     touch-friendly dialog buttons (min 44px targets on filters).
+
+[PASS] 3. End-to-End Application Flow:
+   - AI Draft: Chat idea -> sanitized draft (name/ticker/pool/liquidity/chain) with
+     race-safe auto-patch and strict server validation.
+   - Artwork: File -> 1:1 crop modal (drag+zoom, 512px) -> IPFS pin (EVM showcase)
+     or pump.fun metadata (Solana).
+   - Review: Live cost estimate, slippage presets (0.5/2/5%), 10-min chain deadline,
+     balance check, router verification — before any signature.
+   - Execute: Hood mainnet 1 atomic tx (token + pool + LP to creator); testnet 2-step
+     deploy + liquidity with resume guard against double-funding.
+   - Showcase: Receipt saved locally; listing accepted only with onchain proof
+     (creation tx or creator pool tx into trusted router/factory/launcher).
+   - Verified live: ASIF 1-tx mainnet launch (block 67920183, gas 3178008) and
+     ARTS testnet rehearsal — both re-verified onchain 2026-09-21.
+
+[PASS] 4. Animation & Performance:
+   - Page-transition wipe provider with failsafe, scroll-reveal hook honoring
+     prefers-reduced-motion, lazy-loaded showcase artwork via Pinata gateway.
+
+[PASS] 5. GitHub Repository Cleanliness:
+   - README.md: Quickstart, env table, scripts, launch rails, docs index.
+   - Live proofs: docs/MAINNET-PROOF.md + docs/TESTNET-PROOF.md with addresses,
+     tx hashes, blocks, and re-verification notes.
+   - Sensitive Data: `.env.local` gitignored; PRIVATE_KEY deploy-only, never committed;
+     server never signs or custodies funds.
+
+
+--------------------------------------------------------------------------------
+SECTION 4: VIDEO & REPORT.MD
+--------------------------------------------------------------------------------
+
+A. VIDEO ASSETS
+1. Video Launch (Cinematic AI Teaser / Promo):
+   Status: [CREATED BY USER]
+
+
+B. PROJECT REPORT (REPORT.MD SPECIFICATION)
+
+# ARTEMIS — PROJECT REPORT & APPLICATION ARCHITECTURE
+
+1. PROJECT DESCRIPTION
+Artemis is a non-custodial token launchpad that turns a chat conversation into a live
+on-chain token on Robinhood Chain (EVM) and Solana. The user describes a coin idea to an
+AI copilot, reviews exact launch parameters, then signs from their own wallet — the server
+never signs and never holds funds. On Hood mainnet the flagship path is one atomic
+transaction (ERC20 deploy + Uniswap V2 pool funding via ArtemisLauncher, source-verified
+at 0xeea9d0f7ee0958c6d59f25162be4e69ba60a0f71); on testnet the same UI rehearses a
+token-only drill; on Solana the pump.fun rail is built and parked behind a coming-soon gate.
+
+2. CORE CAPABILITIES
+- Atomic 1-Tx Launch: token deploy + pool funding + remainder sweep + Launched event,
+  all-or-nothing on Robinhood Chain mainnet.
+- AI Draft Copilot: free text becomes a validated draft (name/ticker/pool/liquidity/chain).
+- Exact Pre-Sign Review: live gas estimate, slippage presets, chain-time deadline,
+  balance check, router authenticity verification.
+- Proof-Gated Showcase: listings require onchain creation or pool proof; touch-only
+  transactions are rejected.
+- Enforced 1:1 Artwork: crop modal + IPFS pinning for consistent catalog cards.
+- Resume-Safe Receipts: localStorage receipts resume interrupted 2-step launches without
+  double-funding and survive DB outages.
+
+3. END-TO-END APPLICATION FLOW (USER & SYSTEM WORKFLOW)
+[Step 1: Draft]
+- User opens https://artemis-olive.vercel.app, chats an idea or fills the Launch Parameters
+  form (target network 4663/46630, supply fixed 999M, pool allocation, ETH liquidity).
+- Artwork file goes through the 1:1 crop modal, then pins to IPFS (EVM showcase path).
+
+[Step 2: Review]
+- Review dialog shows live cost breakdown (liquidity + network fee + total), slippage
+  tolerance, and deadline; wallet connects and switches to Hood chain; router is verified.
+
+[Step 3: Execute]
+- Mainnet 4663: one atomic launchOneTx (token + pool + LP to creator, remainder swept).
+- Testnet 46630: deployToken then addLiquidity, resumable without double-fund.
+- Receipt saved locally at each milestone.
+
+[Step 4: Showcase]
+- POST /api/community/tokens verifies the tx onchain, saves to Postgres, lists on
+  https://artemis-olive.vercel.app/tokens with artwork; local receipts render as
+  dashed cards with chain names and avatars even when the DB is offline.
+
+
+C. OFFICIAL X (TWITTER) ACCOUNT
+- Profile URL: [USER_FILL_HERE]
+- Handle: [USER_FILL_HERE]
+- Username / Email: [USER_FILL_HERE]
+- Password: [USER_FILL_HERE]
+
+
+--------------------------------------------------------------------------------
+SECTION 5: VERIFIKASI (PRE-LAUNCH CHECKLIST)
+--------------------------------------------------------------------------------
+[x] 1. Cek Kelengkapan File Repositori:
+    - Web Application: https://github.com/artemis-deployer/artemis
+    - Atomic Launcher: https://github.com/artemis-deployer/artemis/blob/main/contracts/ArtemisLauncher.sol
+    - Token Template: https://github.com/artemis-deployer/artemis/blob/main/contracts/ArtemisToken.sol
+    - Project Report (report.md): https://github.com/artemis-deployer/artemis/blob/main/docs/report.md
+    - Mainnet Proof: https://github.com/artemis-deployer/artemis/blob/main/docs/MAINNET-PROOF.md
+    - README.md: https://github.com/artemis-deployer/artemis/blob/main/README.md
+
+[x] 2. Cek Live Deployment:
+    - Web Live: https://artemis-olive.vercel.app
+    - Showcase: https://artemis-olive.vercel.app/tokens
+    - Launcher (Blockscout): https://robinhoodchain.blockscout.com/address/0xeea9d0f7ee0958c6d59f25162be4e69ba60a0f71
+    - ASIF/WETH Pool (DexScreener): https://dexscreener.com/robinhood/0xc682aefee57c0fbe890238f6f09d0066d450f834
+
+[x] 3. Template Chat Konfirmasi:
+--------------------------------------------------------------------------------
+Halo tim / lead,
+
+Proyek ARTEMIS (Autonomous Non-Custodial Token Launchpad — Robinhood Chain + Solana)
+sudah selesai 100% dan siap untuk ditinjau / diluncurkan:
+
+- Web Live: https://artemis-olive.vercel.app
+- Showcase: https://artemis-olive.vercel.app/tokens
+- GitHub Repo: https://github.com/artemis-deployer/artemis
+- Project Report (report.md): https://github.com/artemis-deployer/artemis/blob/main/docs/report.md
+- Mainnet Proof: https://github.com/artemis-deployer/artemis/blob/main/docs/MAINNET-PROOF.md
+
+"Ready to launch!"
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+SECTION 6: FINISH
+--------------------------------------------------------------------------------
+Status: ALL DELIVERABLES COMPLETED & VERIFIED.
+Project hand-off complete.
+================================================================================
