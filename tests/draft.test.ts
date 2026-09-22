@@ -1,14 +1,17 @@
 import { describe, expect, it } from "vitest";
 import {
   applyAutoPatch,
+  clampVibeScore,
   displayReplyText,
   EMPTY_DRAFT,
-  exceedsDirectSupply,
+  logoFallbackUrl,
   logoImageUrl,
+  exceedsDirectSupply,
   parseDraftReply,
   resolveAutoPatch,
   shouldAutoApply,
   shouldResetConsentOnChainChange,
+  smartConcept,
   stripNumericSeparators,
   validateDraft,
 } from "../lib/draft";
@@ -420,5 +423,46 @@ describe("shouldResetConsentOnChainChange", () => {
 describe("live chains telemetry", () => {
   it("counts only enabled chains", () => {
     expect(CHAINS.filter((c) => !c.disabled).length).toBe(2);
+  });
+});
+
+describe("smartConcept fallback", () => {
+  it("fills a full draft from keywords", () => {
+    const c = smartConcept("owl meme coin for night owls");
+    expect(c.ticker).toBe("OWL");
+    expect(c.name).toContain("Owl");
+    expect(c.pooled).toBe("799200000");
+    expect(c.liquidity).toBe("0.5");
+    expect(c.route).toBe("direct");
+    expect(c.tagline?.length).toBeGreaterThan(0);
+    expect(c.vibeScore).toBe(8);
+    expect(c.logoPrompt).toContain("Owl");
+  });
+
+  it("never throws on junk input", () => {
+    for (const idea of ["", "   ", "!!!", "a"]) {
+      const c = smartConcept(idea);
+      expect(c.ticker!.length).toBeGreaterThan(0);
+      expect(c.ticker!.length).toBeLessThanOrEqual(8);
+    }
+  });
+});
+
+describe("clampVibeScore", () => {
+  it("clamps to 1-10 integers", () => {
+    expect(clampVibeScore(9)).toBe(9);
+    expect(clampVibeScore("7")).toBe(7);
+    expect(clampVibeScore(85)).toBe(9);
+    expect(clampVibeScore(0)).toBe(1);
+    expect(clampVibeScore(11)).toBe(1);
+    expect(clampVibeScore(250)).toBe(10);
+    expect(clampVibeScore("hot")).toBeNull();
+  });
+});
+
+describe("logoFallbackUrl", () => {
+  it("builds a DiceBear URL from ticker and seed", () => {
+    const url = logoFallbackUrl("owl", 7);
+    expect(url).toBe("https://api.dicebear.com/9.x/bottts/png?seed=OWL-7&backgroundColor=1a1b1f&size=512");
   });
 });

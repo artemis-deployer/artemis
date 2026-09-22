@@ -342,25 +342,30 @@ describe("chat route", () => {
     expect(json.draftErrors.length).toBeGreaterThan(0);
   });
 
-  it("maps upstream failure to 502", async () => {
+  it("falls back to a local concept when upstream fails", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false }));
     const req = new Request("http://x/api/chat", {
       method: "POST",
-      body: JSON.stringify({ messages: [{ role: "user", content: "hi" }] }),
+      body: JSON.stringify({ messages: [{ role: "user", content: "owl meme" }] }),
     });
     const res = await chatPOST(req);
-    expect(res.status).toBe(502);
+    expect(res.status).toBe(200);
+    const json = (await res.json()) as { draft: { ticker: string } | null; draftErrors: string[] };
+    expect(json.draft?.ticker).toBe("OWL");
+    expect(json.draftErrors).toEqual([]);
   });
 
-  it("maps network failure to 502 chat_offline", async () => {
+  it("falls back to a local concept on network failure", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("down")));
     const req = new Request("http://x/api/chat", {
       method: "POST",
-      body: JSON.stringify({ messages: [{ role: "user", content: "hi" }] }),
+      body: JSON.stringify({ messages: [{ role: "user", content: "owl meme" }] }),
     });
     const res = await chatPOST(req);
-    expect(res.status).toBe(502);
-    expect(((await res.json()) as { error: string }).error).toBe("chat_offline");
+    expect(res.status).toBe(200);
+    const json = (await res.json()) as { reply: string; draft: { ticker: string } | null };
+    expect(json.draft?.ticker).toBe("OWL");
+    expect(json.reply).toContain("reconnects");
   });
 
   it("preserves offline behavior with no draft field", async () => {
@@ -370,10 +375,9 @@ describe("chat route", () => {
       body: JSON.stringify({ messages: [{ role: "user", content: "hi" }] }),
     });
     const res = await chatPOST(req);
-    expect(res.status).toBe(502);
-    const json = (await res.json()) as { error: string; draft?: unknown };
-    expect(json.error).toBe("chat_offline");
-    expect(json.draft).toBeUndefined();
+    expect(res.status).toBe(200);
+    const json = (await res.json()) as { reply: string; draft: { ticker: string } | null };
+    expect(json.draft?.ticker).toBe("HI");
   });
 
   it("throttles after 11 rapid posts with 429", async () => {
@@ -745,7 +749,7 @@ describe("chat route", () => {
     expect(json.reply).toBe(first);
   });
 
-  it("maps empty first reply to offline without retry", async () => {
+  it("falls back to local concept on empty first reply", async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({ choices: [{ message: { content: "" } }] }),
@@ -756,11 +760,13 @@ describe("chat route", () => {
       body: JSON.stringify({ messages: [{ role: "user", content: "hi" }] }),
     });
     const res = await chatPOST(req);
-    expect(res.status).toBe(502);
+    expect(res.status).toBe(200);
     expect(fetchMock).toHaveBeenCalledTimes(1);
+    const json = (await res.json()) as { draft: { ticker: string } | null };
+    expect(json.draft?.ticker).toBe("HI");
   });
 
-  it("survives malformed upstream JSON shapes (null/array) as 502, never 500", async () => {
+  it("survives malformed upstream JSON shapes (null/array) via fallback, never 500", async () => {
     for (const shape of [null, [], 5, "hi"] as unknown[]) {
       const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => shape });
       vi.stubGlobal("fetch", fetchMock);
@@ -769,7 +775,7 @@ describe("chat route", () => {
         body: JSON.stringify({ messages: [{ role: "user", content: "hi" }] }),
       });
       const res = await chatPOST(req);
-      expect(res.status).toBe(502);
+      expect(res.status).toBe(200);
     }
   });
 

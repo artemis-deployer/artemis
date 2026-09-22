@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Check, ChevronDown, Copy, ImagePlus, Sparkles, X } from "lucide-react";
 import { CHAINS, DIRECT_SUPPLY } from "../lib/chains";
-import { logoImageUrl, stripNumericSeparators, validateDraft } from "../lib/draft";
+import { logoFallbackUrl, logoImageUrl, stripNumericSeparators, validateDraft } from "../lib/draft";
 import { isSafeImageSrc, useDraft } from "./DraftContext";
 import ChainLogo from "./ChainLogo";
 import CropModal from "./CropModal";
@@ -175,6 +175,12 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
               src={previewUrl ?? draft.image ?? ""}
               alt={draft.name ? `${draft.name} artwork` : "Coin artwork preview"}
               className="aspect-square w-full bg-black/20 object-cover"
+              onError={(e) => {
+                const el = e.currentTarget;
+                if (el.dataset.fb === "1") return;
+                el.dataset.fb = "1";
+                el.src = logoFallbackUrl(draft.ticker || "ARTEMIS", logoSeed);
+              }}
             />
           </button>
           ) : (
@@ -201,6 +207,12 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
               src={previewUrl ?? draft.image ?? ""}
               alt={draft.name ? `${draft.name} artwork` : "Coin artwork preview"}
               className="aspect-square w-full bg-black/20 object-cover"
+              onError={(e) => {
+                const el = e.currentTarget;
+                if (el.dataset.fb === "1") return;
+                el.dataset.fb = "1";
+                el.src = logoFallbackUrl(draft.ticker || "ARTEMIS", logoSeed);
+              }}
             />
           </button>
         ) : (
@@ -213,6 +225,11 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
         </div>
         {draft.tagline && (
           <p className="m-0 text-sm font-medium text-white/80 italic">{draft.tagline}</p>
+        )}
+        {typeof draft.vibeScore === "number" && (
+          <p className="m-0 font-mono text-[11px] font-bold tracking-wider text-[#fae8a4]">
+            AI VIBE {draft.vibeScore}/10
+          </p>
         )}
         {draft.lore && (
           <p className="m-0 text-xs leading-relaxed text-white/50">{draft.lore}</p>

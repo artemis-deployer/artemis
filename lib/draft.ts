@@ -12,6 +12,7 @@ export type Draft = {
   description?: string;
   lore?: string;
   logoPrompt?: string;
+  vibeScore?: number;
 };
 
 export const EMPTY_DRAFT: Draft = {
@@ -52,12 +53,60 @@ function sanitizeDraft(raw: Record<string, unknown>): Partial<Draft> {
   if (typeof raw.logoPrompt === "string" && raw.logoPrompt.trim() !== "") {
     out.logoPrompt = raw.logoPrompt.trim().slice(0, 300);
   }
+  if (typeof raw.vibeScore === "number" || typeof raw.vibeScore === "string") {
+    const v = clampVibeScore(raw.vibeScore);
+    if (v !== null) out.vibeScore = v;
+  }
   return out;
+}
+
+/** Clamp any value to an integer vibe score 1-10, null when unusable. */
+export function clampVibeScore(value: unknown): number | null {
+  const n = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(n)) return null;
+  const scaled = n > 10 ? Math.round(n / 10) : Math.round(n);
+  return Math.min(10, Math.max(1, scaled));
 }
 
 /** Free AI image URL (Pollinations, no key) for a logo prompt + seed. */
 export function logoImageUrl(logoPrompt: string, seed: number): string {
   return `https://image.pollinations.ai/prompt/${encodeURIComponent(logoPrompt)}?width=512&height=512&seed=${Math.floor(seed)}&nologo=true`;
+}
+
+/** Instant mascot fallback when AI image generation fails (DiceBear, no key). */
+export function logoFallbackUrl(ticker: string, seed: number): string {
+  const clean = ticker.replace(/[^A-Za-z0-9]/g, "").toUpperCase().slice(0, 12) || "ARTEMIS";
+  return `https://api.dicebear.com/9.x/bottts/png?seed=${encodeURIComponent(`${clean}-${Math.floor(seed)}`)}&backgroundColor=1a1b1f&size=512`;
+}
+
+const STOPWORDS = new Set(
+  "a,an,the,that,this,these,those,it,its,i,my,we,our,you,your,me,us,on,in,at,for,to,of,with,and,or,but,is,are,was,were,be,has,have,had,not,no,just,one,more,about,into,which,who,when,while,from,coin,token,meme,community,called,named".split(
+    ",",
+  ),
+);
+
+/**
+ * Local concept generator when the LLM is unreachable: keyword templates in
+ * Artemis voice with safe numeric defaults. Never throws, always fills a draft.
+ */
+export function smartConcept(idea: string): Partial<Draft> {
+  const words = idea.replace(/[^A-Za-z0-9\s]/g, " ").split(/\s+/).filter(Boolean);
+  const keyword = (words.find((w) => !STOPWORDS.has(w.toLowerCase())) || words[0] || "moon").toUpperCase();
+  const symbol = keyword.replace(/[^A-Z0-9]/g, "").slice(0, 8) || "MOON";
+  const title = words.map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ") || "Moon";
+  const name = `${title} Coin`.slice(0, 32);
+  return {
+    name,
+    ticker: symbol,
+    pooled: "799200000",
+    liquidity: "0.5",
+    route: "direct",
+    tagline: `${symbol}: minted from one line of conviction.`,
+    description: `${name} turns "${idea.trim().slice(0, 120)}" into a community coin. Fixed supply, no mint, fair launch from your own wallet.`,
+    lore: `Born from a single idea: "${idea.trim().slice(0, 120)}". Holders write the rest of the story.`,
+    logoPrompt: `Cute crypto sticker mascot for ${name} ${symbol}, bold vector badge, dark background, no text`,
+    vibeScore: 8,
+  };
 }
 
 export function shouldAutoApply(patch: Partial<Draft>): boolean {

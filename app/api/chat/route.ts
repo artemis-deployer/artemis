@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getChain } from "../../../lib/chains";
-import { exceedsDirectSupply } from "../../../lib/draft";
+import { clampVibeScore, exceedsDirectSupply, smartConcept } from "../../../lib/draft";
 import { checkRateLimit, clientIp } from "../../../lib/rate-limit";
 
 export const SYSTEM_PROMPT = [
@@ -10,7 +10,7 @@ export const SYSTEM_PROMPT = [
   "That block must be the last thing in the reply and hold only these keys: {name, ticker, pooled, liquidity, route, chainId, tagline, description, lore, logoPrompt} (chainId optional, omit to keep current chain; tagline/description/lore/logoPrompt optional, omit when unknown).",
   "Numbers are digits with optional decimal point ONLY, max 18 decimals, never units or words: pooled example \"799200000\" (NOT \"1 SOL\"), liquidity example \"0.5\" (NOT \"locked\").",
   "Field rules: ticker must be uppercase alphanumeric, max 12 chars; pooled must be a numeric string > 0 and <= 999000000 for direct (pumpfun pooled optional); liquidity must be a numeric string > 0; route must be only direct or pumpfun (direct for EVM/Robinhood, pumpfun for Solana); chainId must be one of 4663, 46630.",
-  "Story fields: tagline is one punchy line (max 80 chars); description is 1-2 sentences about the coin; lore is 1-2 sentences of playful backstory; logoPrompt is a visual description for an image model (mascot, style, colors, no text in image).",
+  "Story fields: tagline is one punchy line (max 80 chars); description is 1-2 sentences about the coin; lore is 1-2 sentences of playful backstory; logoPrompt is a visual description for an image model (mascot, style, colors, no text in image); vibeScore is an integer 1-10 for meme energy.",
   "If the user gives no numbers, choose sensible defaults instead of words: pooled 799200000, liquidity 0.5. Never emit placeholders like locked, TBD, or N/A.",
   "Supply is fixed and never editable: 999000000 for direct, 1000000000 for pumpfun.",
   "Revise incrementally from Current draft: replace only what user changed, always return FULL draft JSON.",
@@ -26,7 +26,6 @@ const RETRY_NOTE =
   "Correction: your last reply broke the output contract (non-numeric pooled/liquidity, bad route, or missing keys). Reply again: short prose conclusion first, then ONE valid fenced json block LAST with digits-only numbers (max 18 decimals) and full keys (chainId optional).";
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
-
 // Raw body cap before JSON.parse: legit <22KB (20x1000 + 2KB draft + overhead).
 export const MAX_CHAT_BODY_CHARS = 32 * 1024;
 
@@ -41,6 +40,7 @@ export type ServerDraft = {
   description?: string;
   lore?: string;
   logoPrompt?: string;
+  vibeScore?: number;
 };
 
 function cappedString(value: unknown, max: number): string | null {
@@ -141,6 +141,8 @@ export function extractServerDraft(reply: string): { draft: ServerDraft | null; 
   if (lore) draft.lore = lore;
   const logoPrompt = cappedString(raw.logoPrompt, 300);
   if (logoPrompt) draft.logoPrompt = logoPrompt;
+  const vibe = clampVibeScore(raw.vibeScore);
+  if (vibe !== null) draft.vibeScore = vibe;
 
   if (errors.length > 0) return { draft: null, draftErrors: errors };
   return { draft, draftErrors: [] };
@@ -205,11 +207,11 @@ export async function POST(req: Request) {
   try {
     upstream = await callUpstream(url, key, model, [{ role: "system", content: systemContent }, ...trimmed]);
   } catch {
-    return NextResponse.json({ error: "chat_offline" }, { status: 502 });
+    return NextResponse.json(fallbackConceptReply(trimmed));
   }
-  if (!upstream.ok) return NextResponse.json({ error: "chat_offline" }, { status: 502 });
+  if (!upstream.ok) return NextResponse.json(fallbackConceptReply(trimmed));
   let reply = await readReply(upstream);
-  if (!reply) return NextResponse.json({ error: "chat_offline" }, { status: 502 });
+  if (!reply) return NextResponse.json(fallbackConceptReply(trimmed));
   let parsed = extractServerDraft(reply);
   // One self-correction round: models often emit units/words on the first try.
   // Keep first reply/errors when retry also fails (no overwrite on invalid).
@@ -235,6 +237,39 @@ export async function POST(req: Request) {
     }
   }
   return NextResponse.json({ reply, draft: parsed.draft, draftErrors: parsed.draftErrors });
+}
+
+/**
+ * Local concept fallback when the model is unreachable: always fills a draft
+ * from the newest user message so the studio keeps working offline-ish.
+ */
+export function fallbackConceptReply(messages: ChatMessage[]): {
+  reply: string;
+  draft: ReturnType<typeof extractServerDraft>["draft"];
+  draftErrors: string[];
+} {
+  const lastUser = [...messages].reverse().find((m) => m.role === "user")?.content ?? "moon";
+  const concept = smartConcept(lastUser.slice(0, 200));
+  const body = {
+    name: concept.name ?? "",
+    ticker: concept.ticker ?? "",
+    pooled: concept.pooled ?? "",
+    liquidity: concept.liquidity ?? "",
+    route: concept.route ?? "direct",
+    tagline: concept.tagline ?? "",
+    description: concept.description ?? "",
+    lore: concept.lore ?? "",
+    logoPrompt: concept.logoPrompt ?? "",
+    vibeScore: concept.vibeScore ?? 8,
+  };
+  const reply = [
+    `Quick take while the AI reconnects: ${concept.name} (${concept.ticker}) — ${concept.tagline} Check the numbers before launching.`,
+    "```json",
+    JSON.stringify(body),
+    "```",
+  ].join("\n");
+  const parsed = extractServerDraft(reply);
+  return { reply, draft: parsed.draft, draftErrors: parsed.draftErrors };
 }
 
 async function callUpstream(
