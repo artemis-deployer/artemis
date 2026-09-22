@@ -225,6 +225,10 @@ DATABASE_URL="postgresql://postgres:password@db.yourproject.supabase.co:6543/pos
 # Solana pump.fun IPFS Pinning (Server-only)
 PINATA_JWT="your-pinata-jwt-token"
 
+# AI Logo Generation (Server-only, Google AI Studio key; empty = Pollinations fallback)
+GOOGLE_API_KEY=""
+GOOGLE_IMAGE_MODEL="gemini-2.5-flash-image"
+
 # Contract Deployment (Local CLI only — NEVER commit or put in server environment)
 # PRIVATE_KEY="0x..."
 ```

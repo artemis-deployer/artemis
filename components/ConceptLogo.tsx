@@ -1,7 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
+
+// Pollinations anonymous tier 429s under load: wait out the window, then try
+// the flux model before giving up to the DiceBear fallback.
+const RETRY_DELAY_MS = 4000;
 
 type Props = {
   src: string;
@@ -45,13 +49,47 @@ export async function downloadLogo(url: string, filename: string): Promise<boole
 export default function ConceptLogo({ src, fallbackSrc, alt, className, onLoadingChange }: Props) {
   const [loaded, setLoaded] = useState(false);
   const [finalSrc, setFinalSrc] = useState(src);
+  // 0 = primary, 1 = delayed retry of primary, 2 = flux variant, 3 = fallback.
+  const [stage, setStage] = useState(0);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Report loading start on mount (remounts per src, so redraws re-lock).
   useEffect(() => void onLoadingChange?.(true), [onLoadingChange]);
+  useEffect(() => () => {
+    if (timer.current) clearTimeout(timer.current);
+  }, []);
+
+  function fluxVariant(url: string): string | null {
+    if (!url.includes("image.pollinations.ai") || !url.includes("model=turbo")) return null;
+    return url.replace("model=turbo", "model=flux");
+  }
 
   function done() {
+    if (timer.current) clearTimeout(timer.current);
     setLoaded(true);
     onLoadingChange?.(false);
+  }
+
+  function nextStep(img: HTMLImageElement) {
+    if (stage === 0) {
+      // Transient 429/500: wait out the rate window, reload same URL.
+      setStage(1);
+      timer.current = setTimeout(() => {
+        img.src = src;
+      }, RETRY_DELAY_MS);
+    } else if (stage === 1) {
+      const flux = fluxVariant(src);
+      setStage(2);
+      if (flux) setFinalSrc(flux);
+      else {
+        img.dataset.fb = "1";
+        setFinalSrc(fallbackSrc);
+        setStage(3);
+      }
+    } else {
+      // Fallback failed too: stop, never loop.
+      done();
+    }
   }
 
   return (
@@ -77,8 +115,7 @@ export default function ConceptLogo({ src, fallbackSrc, alt, className, onLoadin
             done();
             return;
           }
-          el.dataset.fb = "1";
-          setFinalSrc(fallbackSrc);
+          nextStep(el);
         }}
         className={`h-full w-full object-cover transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
       />

@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, Check, ChevronDown, Copy, Download, ImagePlus, Sparkles, X } from "lucide-react";
+import { ArrowRight, Check, ChevronDown, Copy, Download, ExternalLink, ImagePlus, Sparkles, X } from "lucide-react";
 import { CHAINS, DIRECT_SUPPLY } from "../lib/chains";
-import { logoFallbackUrl, logoImageUrl, normalizeWebUrl, normalizeXUrl, stripNumericSeparators, validateDraft } from "../lib/draft";
+import { logoFallbackUrl, normalizeWebUrl, normalizeXUrl, stripNumericSeparators, validateDraft } from "../lib/draft";
 import { isSafeImageSrc, useDraft } from "./DraftContext";
 import ChainLogo from "./ChainLogo";
 import ConceptLogo, { downloadLogo } from "./ConceptLogo";
 import CropModal from "./CropModal";
+import { resolveLogo } from "../lib/logo";
 
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 
@@ -78,6 +79,23 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
     // Square 1:1 crop first — preview, showcase, and uploads all use the cropped file.
     setCropSrc({ url: URL.createObjectURL(file), name: file.name, type: file.type });
     e.target.value = "";
+  }
+
+  const forgingRef = useRef(false);
+
+  /** Google → IPFS, Pollinations fallback. Locks buttons for the whole flight. */
+  async function forgeLogo(seed: number) {
+    const prompt = draft.logoPrompt;
+    if (!prompt || forgingRef.current) return;
+    forgingRef.current = true;
+    setLogoLoading(true);
+    try {
+      const done = await resolveLogo(prompt, seed);
+      setDraft((prev) => ({ ...prev, image: done.url }));
+    } finally {
+      forgingRef.current = false;
+      setLogoLoading(false);
+    }
   }
 
   function pinEvmFile(file: File) {
@@ -533,6 +551,16 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
                 Logo prompt
               </span>
               <span className="flex items-center gap-1.5">
+                <a
+                  href="https://aistudio.google.com/"
+                  target="_blank"
+                  rel="noreferrer"
+                  title="Open in Gemini (paste the prompt there)"
+                  className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-white/15 px-2 py-1 text-[11px] font-semibold text-white/70 hover:bg-white/10 hover:text-white"
+                >
+                  <ExternalLink size={12} aria-hidden="true" />
+                  <span>Gemini</span>
+                </a>
                 {draft.image && (
                   <button
                     type="button"
@@ -567,10 +595,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
               <button
                 type="button"
                 disabled={logoLoading}
-                onClick={() => {
-                  if (!draft.logoPrompt) return;
-                  setDraft((prev) => ({ ...prev, image: logoImageUrl(draft.logoPrompt as string, logoSeed) }));
-                }}
+                onClick={() => void forgeLogo(logoSeed)}
                 className="inline-flex min-h-9 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-[#fae8a4] px-3 py-1.5 text-xs font-bold text-[#17131f] transition-all hover:bg-[#f1d2e8] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Sparkles size={12} aria-hidden="true" />
@@ -584,7 +609,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
                     if (!draft.logoPrompt) return;
                     const seed = Math.floor(Math.random() * 1000000);
                     setLogoSeed(seed);
-                    setDraft((prev) => ({ ...prev, image: logoImageUrl(draft.logoPrompt as string, seed) }));
+                    void forgeLogo(seed);
                   }}
                   className="inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
                 >

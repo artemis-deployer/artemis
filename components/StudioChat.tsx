@@ -4,13 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import Markdown from "react-markdown";
 import rehypeSanitize from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
-import { Check, ChevronDown, Copy, Download, RotateCcw, SendHorizonal, Sparkles } from "lucide-react";
+import { Check, ChevronDown, Copy, Download, ExternalLink, RotateCcw, SendHorizonal, Sparkles } from "lucide-react";
 import { displayReplyText, formatConceptReply, logoFallbackUrl, logoImageUrl, parseDraftReply, resolveAutoPatch, shouldResetConsentOnChainChange } from "../lib/draft";
 import type { Draft } from "../lib/draft";
 import { CHAINS, defaultRouteFor, getChain } from "../lib/chains";
 import { useDraft } from "./DraftContext";
 import ChainLogo from "./ChainLogo";
 import ConceptLogo, { downloadLogo } from "./ConceptLogo";
+import { resolveLogo } from "../lib/logo";
 
 type Line = { role: "user" | "assistant"; content: string; kind?: "ok" | "error"; auto?: boolean; concept?: Partial<Draft> };
 
@@ -116,6 +117,23 @@ export default function StudioChat() {
   // Same-tick guard: `busy` state flips only after re-render, so rapid
   // double-clicks see stale `busy=false` + stale `log` and double-POST.
   const busyRef = useRef(false);
+  const [forging, setForging] = useState(false);
+  const forgingRef = useRef(false);
+
+  /** Card Generate button: Google → IPFS, Pollinations fallback. Locked in flight. */
+  async function forgeFromCard(logoPrompt?: string) {
+    if (!logoPrompt || forgingRef.current) return;
+    forgingRef.current = true;
+    setForging(true);
+    try {
+      const done = await resolveLogo(logoPrompt, freshSeed());
+      setLogoSeed(Date.now() % 1000000);
+      setDraft((prev) => ({ ...prev, image: done.url }));
+    } finally {
+      forgingRef.current = false;
+      setForging(false);
+    }
+  }
 
   useEffect(() => {
     draftRef.current = draft;
@@ -403,6 +421,16 @@ export default function StudioChat() {
                         Logo prompt
                       </span>
                       <span className="flex items-center gap-1">
+                      <a
+                        href="https://aistudio.google.com/"
+                        target="_blank"
+                        rel="noreferrer"
+                        title="Open in Gemini (paste the prompt there)"
+                        className="inline-flex cursor-pointer items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[10px] font-bold text-[#cadcf0] hover:bg-white/10"
+                      >
+                        <ExternalLink size={11} aria-hidden="true" />
+                        <span>Gemini</span>
+                      </a>
                       {draft.image && (
                         <button
                           type="button"
@@ -444,16 +472,12 @@ export default function StudioChat() {
                     ) : (
                       <button
                         type="button"
-                        onClick={() => {
-                          if (!l.concept?.logoPrompt) return;
-                          const seed = Math.floor(Math.random() * 1000000);
-                          setLogoSeed(seed);
-                          setDraft((prev) => ({ ...prev, image: logoImageUrl(l.concept?.logoPrompt as string, seed) }));
-                        }}
-                        className="inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-[#fae8a4] px-3 py-1.5 text-xs font-bold text-[#17131f] transition-all hover:bg-[#f1d2e8]"
+                        disabled={forging}
+                        onClick={() => void forgeFromCard(l.concept?.logoPrompt)}
+                        className="inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-[#fae8a4] px-3 py-1.5 text-xs font-bold text-[#17131f] transition-all hover:bg-[#f1d2e8] disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         <Sparkles size={12} aria-hidden="true" />
-                        <span>Generate logo</span>
+                        <span>{forging ? "Forging…" : "Generate logo"}</span>
                       </button>
                     )}
                   </div>
