@@ -219,7 +219,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
           </button>
         ) : (
           <p className="m-0 rounded-lg border border-white/10 bg-[#1a1b1f] p-3 text-xs text-white/50">
-            Coin artwork shows in the community showcase — upload a file or paste a URL below.
+            No artwork yet — upload a file, paste a URL, or hit Generate logo below.
           </p>
         )}
         <div className="font-unbounded text-[24px] font-bold leading-none text-[#fae8a4] max-sm:text-xl">
@@ -227,11 +227,6 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
         </div>
         {draft.tagline && (
           <p className="m-0 text-sm font-medium text-white/80 italic">{draft.tagline}</p>
-        )}
-        {typeof draft.vibeScore === "number" && (
-          <p className="m-0 font-mono text-[11px] font-bold tracking-wider text-[#fae8a4]">
-            AI VIBE {draft.vibeScore}/10
-          </p>
         )}
         {draft.lore && (
           <p className="m-0 text-xs leading-relaxed whitespace-pre-line text-white/50">{draft.lore}</p>
@@ -581,19 +576,21 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
                 <Sparkles size={12} aria-hidden="true" />
                 <span>{logoLoading ? "Forging…" : "Generate logo"}</span>
               </button>
-              <button
-                type="button"
-                disabled={logoLoading}
-                onClick={() => {
-                  if (!draft.logoPrompt) return;
-                  const seed = Math.floor(Math.random() * 1000000);
-                  setLogoSeed(seed);
-                  setDraft((prev) => ({ ...prev, image: logoImageUrl(draft.logoPrompt as string, seed) }));
-                }}
-                className="inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <span>{logoLoading ? "Forging…" : "Redraw"}</span>
-              </button>
+              {draft.image && (
+                <button
+                  type="button"
+                  disabled={logoLoading}
+                  onClick={() => {
+                    if (!draft.logoPrompt) return;
+                    const seed = Math.floor(Math.random() * 1000000);
+                    setLogoSeed(seed);
+                    setDraft((prev) => ({ ...prev, image: logoImageUrl(draft.logoPrompt as string, seed) }));
+                  }}
+                  className="inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <span>{logoLoading ? "Forging…" : "Redraw"}</span>
+                </button>
+              )}
             </div>
           </div>
         )}

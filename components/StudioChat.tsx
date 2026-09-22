@@ -44,11 +44,6 @@ function displayOf(reply: string, patched: boolean): string {
   return displayReplyText(reply, patched);
 }
 
-/** Module scope so the render-purity lint stays quiet; called from event flow only. */
-function randomSeed(): number {
-  return Math.floor(Math.random() * 1000000);
-}
-
 function prefersReducedMotion(): boolean {
   return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
@@ -226,14 +221,9 @@ export default function StudioChat() {
       const resolved = resolveAutoPatch(latest, patch, activeId);
       const auto = resolved !== null;
       if (resolved) {
+        // PM: no auto image — the user clicks Generate logo first. The logo
+        // prompt still lands in the draft so one click renders it.
         const nextDraft = resolved.next;
-        // Auto-generate the logo into the draft so it shows in Launch Parameters
-        // right away. Never clobbers: only when the user has no image yet.
-        if (typeof patch.logoPrompt === "string" && patch.logoPrompt !== "" && !nextDraft.image) {
-          const seed = randomSeed();
-          setLogoSeed(seed);
-          nextDraft.image = logoImageUrl(patch.logoPrompt, seed);
-        }
         const nextChainId = resolved.next.chainId;
         // Functional update: response may land after user typed in Manual
         // Parameters; updater form avoids clobbering on stale `latest`.
@@ -390,11 +380,6 @@ export default function StudioChat() {
                     <span className="font-mono font-bold text-[#fae8a4]">${l.concept.ticker}</span>
                   )}
                 </div>
-                {typeof l.concept.vibeScore === "number" && (
-                  <span className="font-mono text-[11px] font-bold tracking-wider text-[#fae8a4]">
-                    AI VIBE {l.concept.vibeScore}/10
-                  </span>
-                )}
                 {l.concept.logoPrompt && (
                   <div className="flex flex-col gap-1.5 rounded-md border border-white/10 bg-white/5 p-2">
                     <div className="flex items-center justify-between">

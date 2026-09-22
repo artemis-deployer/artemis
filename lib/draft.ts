@@ -282,8 +282,7 @@ export function formatConceptReply(prose: string, concept: Partial<Draft>): stri
   if (tagline) parts.push(`> ${tagline}`);
   const name = text(concept.name);
   const ticker = text(concept.ticker).replace(/^\$/, "");
-  const vibe = typeof concept.vibeScore === "number" ? ` · **Vibe:** ${concept.vibeScore}/10` : "";
-  if (name || ticker) parts.push(`**Name:** ${name || "-"} · **Ticker:** ${ticker ? `$${ticker}` : "-"}${vibe}`);
+  if (name || ticker) parts.push(`**Name:** ${name || "-"} · **Ticker:** ${ticker ? `$${ticker}` : "-"}`);
   const section = (label: string, value: string) => {
     if (value) parts.push(`**${label}**\n${value}`);
   };

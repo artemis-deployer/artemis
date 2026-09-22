@@ -59,7 +59,7 @@ describe("parseDraftReply", () => {
     expect(shown).toContain("> Gas terus");
     expect(shown).toContain("**Name:** Jokowi Coin");
     expect(shown).toContain("**Ticker:** $JOKOWI");
-    expect(shown).toContain("**Vibe:** 9/10");
+    expect(shown).not.toContain("Vibe");
     expect(shown).toContain("**Description**\nPower to the holders.");
     expect(shown).toContain("**Lore**\nBorn from one speech.");
     expect(shown).toContain("**Hook**\nHold the line");
