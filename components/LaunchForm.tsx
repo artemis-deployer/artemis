@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, Check, ChevronDown, Copy, ImagePlus, Sparkles, X } from "lucide-react";
+import { ArrowRight, Check, ChevronDown, Copy, Download, ImagePlus, Sparkles, X } from "lucide-react";
 import { CHAINS, DIRECT_SUPPLY } from "../lib/chains";
-import { logoFallbackUrl, logoImageUrl, stripNumericSeparators, validateDraft } from "../lib/draft";
+import { logoFallbackUrl, logoImageUrl, normalizeWebUrl, normalizeXUrl, stripNumericSeparators, validateDraft } from "../lib/draft";
 import { isSafeImageSrc, useDraft } from "./DraftContext";
 import ChainLogo from "./ChainLogo";
+import ConceptLogo, { downloadLogo } from "./ConceptLogo";
 import CropModal from "./CropModal";
 
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
@@ -18,6 +19,8 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
   const [pinning, setPinning] = useState(false);
   const [logoSeed, setLogoSeed] = useState(() => Math.floor(Math.random() * 1000000));
   const [logoCopied, setLogoCopied] = useState(false);
+  // True while the preview artwork is still loading: redraw buttons lock (anti-spam).
+  const [logoLoading, setLogoLoading] = useState(false);
   const [cropSrc, setCropSrc] = useState<{ url: string; name: string; type: string } | null>(null);
   const [networkOpen, setNetworkOpen] = useState(false);
   const networkRef = useRef<HTMLDivElement>(null);
@@ -130,9 +133,16 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
   }
   const isSolana = draft.route === "pumpfun" && String(draft.chainId).startsWith("solana");
   const imageOk = isSafeImageSrc(draft.image);
-  const errors = imageOk
-    ? validateDraft(draft)
-    : [...validateDraft(draft), "image is invalid: upload a PNG/JPEG or use an https URL"];
+  const xUrlError =
+    draft.xUrl && !normalizeXUrl(draft.xUrl) ? "X link is invalid: use @handle or an x.com URL." : null;
+  const webUrlError =
+    draft.webUrl && !normalizeWebUrl(draft.webUrl) ? "Website URL is invalid." : null;
+  const errors = [
+    ...validateDraft(draft),
+    ...(imageOk ? [] : ["image is invalid: upload a PNG/JPEG or use an https URL"]),
+    ...(xUrlError ? [xUrlError] : []),
+    ...(webUrlError ? [webUrlError] : []),
+  ];
   const chain = CHAINS.find((c) => c.id === draft.chainId) ?? CHAINS[2];
   const mainnet = !chain.testnet;
 
@@ -168,19 +178,15 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
             onClick={() => fileRef.current?.click()}
             title="Change artwork"
             aria-label="Change coin artwork"
-            className="block w-full cursor-pointer overflow-hidden rounded-lg border border-white/15 p-0"
+            className="mx-auto block h-48 w-48 cursor-pointer overflow-hidden rounded-full border border-white/15 p-0"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element -- local preview or user draft image */}
-            <img
+            <ConceptLogo
+              key={previewUrl ?? draft.image ?? ""}
               src={previewUrl ?? draft.image ?? ""}
+              fallbackSrc={logoFallbackUrl(draft.ticker || "ARTEMIS", logoSeed)}
               alt={draft.name ? `${draft.name} artwork` : "Coin artwork preview"}
-              className="aspect-square w-full bg-black/20 object-cover"
-              onError={(e) => {
-                const el = e.currentTarget;
-                if (el.dataset.fb === "1") return;
-                el.dataset.fb = "1";
-                el.src = logoFallbackUrl(draft.ticker || "ARTEMIS", logoSeed);
-              }}
+              className="h-48 w-48 rounded-full"
+              onLoadingChange={setLogoLoading}
             />
           </button>
           ) : (
@@ -200,19 +206,15 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
             onClick={() => fileRef.current?.click()}
             title="Change artwork"
             aria-label="Change coin artwork"
-            className="block w-full cursor-pointer overflow-hidden rounded-lg border border-white/15 bg-black/20 p-0"
+            className="mx-auto block h-48 w-48 cursor-pointer overflow-hidden rounded-full border border-white/15 bg-black/20 p-0"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element -- local preview or user draft image */}
-            <img
+            <ConceptLogo
+              key={previewUrl ?? draft.image ?? ""}
               src={previewUrl ?? draft.image ?? ""}
+              fallbackSrc={logoFallbackUrl(draft.ticker || "ARTEMIS", logoSeed)}
               alt={draft.name ? `${draft.name} artwork` : "Coin artwork preview"}
-              className="aspect-square w-full bg-black/20 object-cover"
-              onError={(e) => {
-                const el = e.currentTarget;
-                if (el.dataset.fb === "1") return;
-                el.dataset.fb = "1";
-                el.src = logoFallbackUrl(draft.ticker || "ARTEMIS", logoSeed);
-              }}
+              className="h-48 w-48 rounded-full"
+              onLoadingChange={setLogoLoading}
             />
           </button>
         ) : (
@@ -232,7 +234,7 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
           </p>
         )}
         {draft.lore && (
-          <p className="m-0 text-xs leading-relaxed text-white/50">{draft.lore}</p>
+          <p className="m-0 text-xs leading-relaxed whitespace-pre-line text-white/50">{draft.lore}</p>
         )}
         <div className="flex items-center justify-between gap-3 border-t border-white/10 pt-2.5 text-[13px]">
           <div>
@@ -482,6 +484,45 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
           spellCheck={false}
           onChange={(e) => setDraft((prev) => ({ ...prev, image: e.target.value || undefined }))}
         />
+        <div className="grid grid-cols-2 gap-3 max-sm:grid-cols-1">
+          <div className="flex flex-col gap-[5px]">
+            <label className="flex items-center justify-between text-xs font-bold tracking-[0.02em] text-white/90" htmlFor="x-url">
+              <span>X / Twitter</span>
+              <span className="text-[11px] font-medium text-white/40">Optional</span>
+            </label>
+            <input
+              id="x-url"
+              className="min-h-11 w-full rounded-lg border border-white/15 bg-[#1a1b1f] px-3 py-2.5 text-sm text-white placeholder-white/30 focus:border-[#fae8a4] focus:bg-[#1b1924]"
+              placeholder="@handle or x.com/handle"
+              value={draft.xUrl ?? ""}
+              maxLength={64}
+              autoComplete="off"
+              spellCheck={false}
+              onChange={(e) => setDraft((prev) => ({ ...prev, xUrl: e.target.value || undefined }))}
+            />
+          </div>
+          <div className="flex flex-col gap-[5px]">
+            <label className="flex items-center justify-between text-xs font-bold tracking-[0.02em] text-white/90" htmlFor="web-url">
+              <span>Website</span>
+              <span className="text-[11px] font-medium text-white/40">Optional</span>
+            </label>
+            <input
+              id="web-url"
+              className="min-h-11 w-full rounded-lg border border-white/15 bg-[#1a1b1f] px-3 py-2.5 text-sm text-white placeholder-white/30 focus:border-[#fae8a4] focus:bg-[#1b1924]"
+              placeholder="example.com"
+              value={draft.webUrl ?? ""}
+              maxLength={256}
+              autoComplete="off"
+              spellCheck={false}
+              onChange={(e) => setDraft((prev) => ({ ...prev, webUrl: e.target.value || undefined }))}
+            />
+          </div>
+        </div>
+        {(xUrlError ?? webUrlError) && (
+          <p role="alert" className="m-0 text-xs font-medium text-red-300">
+            {[xUrlError, webUrlError].filter(Boolean).join(" ")}
+          </p>
+        )}
         {previewUrl && !draft.image && (
           <p className="m-0 text-xs text-white/50">{pinning ? "Pinning artwork to IPFS…" : "Local preview — IPFS URL fills in after pin completes."}</p>
         )}
@@ -496,47 +537,62 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
               <span className="font-mono text-[11px] font-bold tracking-wider text-white/50 uppercase">
                 Logo prompt
               </span>
-              <button
-                type="button"
-                onClick={() => {
-                  const text = draft.logoPrompt ?? "";
-                  if (typeof navigator === "undefined" || !navigator.clipboard) return;
-                  void navigator.clipboard.writeText(text).then(
-                    () => setLogoCopied(true),
-                    () => setLogoCopied(false),
-                  );
-                  setTimeout(() => setLogoCopied(false), 1500);
-                }}
-                className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-white/15 px-2 py-1 text-[11px] font-semibold text-white/70 hover:bg-white/10 hover:text-white"
-              >
-                {logoCopied ? <Check size={12} aria-hidden="true" /> : <Copy size={12} aria-hidden="true" />}
-                <span>{logoCopied ? "Copied" : "Copy"}</span>
-              </button>
+              <span className="flex items-center gap-1.5">
+                {draft.image && (
+                  <button
+                    type="button"
+                    onClick={() => void downloadLogo(draft.image as string, `${(draft.ticker || "logo").replace(/[^A-Za-z0-9]/g, "")}-logo.png`)}
+                    title="Download logo"
+                    className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-white/15 px-2 py-1 text-[11px] font-semibold text-white/70 hover:bg-white/10 hover:text-white"
+                  >
+                    <Download size={12} aria-hidden="true" />
+                    <span>Save</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const text = draft.logoPrompt ?? "";
+                    if (typeof navigator === "undefined" || !navigator.clipboard) return;
+                    void navigator.clipboard.writeText(text).then(
+                      () => setLogoCopied(true),
+                      () => setLogoCopied(false),
+                    );
+                    setTimeout(() => setLogoCopied(false), 1500);
+                  }}
+                  className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-white/15 px-2 py-1 text-[11px] font-semibold text-white/70 hover:bg-white/10 hover:text-white"
+                >
+                  {logoCopied ? <Check size={12} aria-hidden="true" /> : <Copy size={12} aria-hidden="true" />}
+                  <span>{logoCopied ? "Copied" : "Copy"}</span>
+                </button>
+              </span>
             </div>
             <p className="m-0 font-mono text-xs leading-relaxed break-words text-white/70">{draft.logoPrompt}</p>
             <div className="flex gap-2">
               <button
                 type="button"
+                disabled={logoLoading}
                 onClick={() => {
                   if (!draft.logoPrompt) return;
                   setDraft((prev) => ({ ...prev, image: logoImageUrl(draft.logoPrompt as string, logoSeed) }));
                 }}
-                className="inline-flex min-h-9 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-[#fae8a4] px-3 py-1.5 text-xs font-bold text-[#17131f] transition-all hover:bg-[#f1d2e8]"
+                className="inline-flex min-h-9 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-[#fae8a4] px-3 py-1.5 text-xs font-bold text-[#17131f] transition-all hover:bg-[#f1d2e8] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Sparkles size={12} aria-hidden="true" />
-                <span>Generate logo</span>
+                <span>{logoLoading ? "Forging…" : "Generate logo"}</span>
               </button>
               <button
                 type="button"
+                disabled={logoLoading}
                 onClick={() => {
                   if (!draft.logoPrompt) return;
                   const seed = Math.floor(Math.random() * 1000000);
                   setLogoSeed(seed);
                   setDraft((prev) => ({ ...prev, image: logoImageUrl(draft.logoPrompt as string, seed) }));
                 }}
-                className="inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-white/10"
+                className="inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <span>Redraw</span>
+                <span>{logoLoading ? "Forging…" : "Redraw"}</span>
               </button>
             </div>
           </div>

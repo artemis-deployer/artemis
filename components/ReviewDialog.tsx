@@ -5,7 +5,7 @@ import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import { parseEther, type Address } from "viem";
 import { X, ExternalLink } from "lucide-react";
 import { DIRECT_SUPPLY, explorerTokenUrl, getChain } from "../lib/chains";
-import type { Draft } from "../lib/draft";
+import { normalizeWebUrl, normalizeXUrl, type Draft } from "../lib/draft";
 import {
   addLiquidity,
   connectWallet,
@@ -210,7 +210,16 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
     const image = draft.image?.startsWith("https://") ? draft.image : undefined;
     try {
       return toShowcaseDisplay(
-        await submitShowcase({ ...input, image, tagline: draft.tagline, description: draft.description, lore: draft.lore }),
+        await submitShowcase({
+          ...input,
+          image,
+          tagline: draft.tagline,
+          description: draft.description,
+          lore: draft.lore,
+          marketingHook: draft.marketingHook,
+          xUrl: normalizeXUrl(draft.xUrl ?? "") ?? undefined,
+          webUrl: normalizeWebUrl(draft.webUrl ?? "") ?? undefined,
+        }),
       );
     } catch {
       return "pending";
@@ -392,7 +401,7 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
     }
     const amountSol = Number(draft.liquidity);
     if (!Number.isFinite(amountSol) || amountSol <= 0) {
-      setPumpNote("liquidity must be a positive number");
+      setPumpNote("Starting Deposit must be a positive number");
       setPump("error");
       return;
     }

@@ -39,7 +39,7 @@ describe("tokens route", () => {
 
   it("GET lists newest tokens", async () => {
     mocked.isDbConfigured.mockReturnValue(true);
-    mocked.listTokens.mockResolvedValue([{ chain_id: "4663", address: "0xabc", creator: "", name: "X", symbol: "", pool: "", tx_hash: "", image: "", tagline: "", description: "", lore: "", created_at: "" }]);
+    mocked.listTokens.mockResolvedValue([{ chain_id: "4663", address: "0xabc", creator: "", name: "X", symbol: "", pool: "", tx_hash: "", image: "", tagline: "", description: "", lore: "", marketing_hook: "", x_url: "", web_url: "", created_at: "" }]);
     const res = await GET(new Request("http://x/api/community/tokens"));
     expect(res.status).toBe(200);
     expect(((await res.json()) as { tokens: unknown[] }).tokens).toHaveLength(1);
@@ -103,6 +103,30 @@ describe("tokens route", () => {
     const res = await POST(req);
     expect(res.status).toBe(200);
     expect(mocked.saveToken).toHaveBeenCalledWith(expect.objectContaining({ image: "https://example.test/art.png" }));
+  });
+
+  it("POST forwards story fields including hook to saveToken", async () => {
+    mocked.isDbConfigured.mockReturnValue(true);
+    mocked.saveToken.mockResolvedValue(undefined);
+    const req = new Request("http://x/api/community/tokens", {
+      method: "POST",
+      body: JSON.stringify({
+        chainId: "4663",
+        address: EVM_ADDR,
+        name: "Story",
+        txHash: EVM_HASH,
+        creator: "0x1111111111111111111111111111111111111111",
+        tagline: "Punchy",
+        description: "Hype",
+        lore: "Myth",
+        marketingHook: "Tweet this",
+      }),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+    expect(mocked.saveToken).toHaveBeenCalledWith(
+      expect.objectContaining({ tagline: "Punchy", description: "Hype", lore: "Myth", marketingHook: "Tweet this" }),
+    );
   });
 
   it("POST rejects invalid tx with 400", async () => {

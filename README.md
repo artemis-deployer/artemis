@@ -160,7 +160,10 @@ artemis/
 ├── migrations/                  # Sequential PostgreSQL Migrations
 │   ├── 0001_init.sql            # Base showcase tokens schema
 │   ├── 0002_rate_limits.sql     # Sliding-window rate limit state
-│   └── 0003_showcase_image.sql  # Token avatar / metadata URL support
+│   ├── 0003_showcase_image.sql  # Token avatar / metadata URL support
+│   ├── 0004_showcase_story.sql  # Tagline / description / lore catalog fields
+│   ├── 0005_showcase_hook.sql   # Marketing hook catalog field
+│   └── 0006_showcase_links.sql  # X + website link fields
 │
 ├── public/assets/               # Branded visuals, logos, and WebP assets
 │   ├── artemis-banner.png       # High-resolution cosmic hero banner
@@ -243,6 +246,9 @@ Apply database schemas in sequential order:
 psql "$DATABASE_URL" -f migrations/0001_init.sql
 psql "$DATABASE_URL" -f migrations/0002_rate_limits.sql
 psql "$DATABASE_URL" -f migrations/0003_showcase_image.sql
+psql "$DATABASE_URL" -f migrations/0004_showcase_story.sql
+psql "$DATABASE_URL" -f migrations/0005_showcase_hook.sql
+psql "$DATABASE_URL" -f migrations/0006_showcase_links.sql
 ```
 
 ### 5. Run Development Server

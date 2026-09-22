@@ -214,7 +214,8 @@ describe("chat route", () => {
     });
     await chatPOST(req);
     expect(sentBody.temperature).toBe(0.2);
-    expect(sentBody.max_tokens).toBe(500);
+    // Rich story replies (teaser + full JSON with 3-paragraph lore) need headroom.
+    expect(sentBody.max_tokens).toBe(1400);
   });
 
   it("bounds upstream calls with an abort timeout", async () => {

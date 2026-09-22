@@ -6,11 +6,11 @@ import { checkRateLimit, clientIp } from "../../../lib/rate-limit";
 export const SYSTEM_PROMPT = [
   "You are Artemis, a coin launch copilot.",
   "Help the user shape a token draft: name, ticker, pool tokens, starting liquidity, route.",
-  "Strict output contract: reply with a short prose conclusion of max 80 words (summarize the concept first), then exactly ONE fenced ```json block LAST.",
-  "That block must be the last thing in the reply and hold only these keys: {name, ticker, pooled, liquidity, route, chainId, tagline, description, lore, logoPrompt} (chainId optional, omit to keep current chain; tagline/description/lore/logoPrompt optional, omit when unknown).",
+  "Strict output contract: reply with a short opening teaser first, max 60 words (one hook paragraph only — the name, ticker, description, lore, and tagline render as labeled fields below, so NEVER repeat them in the prose), then exactly ONE fenced ```json block LAST.",
+  "That block must be the last thing in the reply and hold only these keys: {name, ticker, pooled, liquidity, route, chainId, tagline, description, lore, logoPrompt, vibeScore, marketingHook, brandColors} (chainId optional, omit to keep current chain; story keys optional, omit when unknown; brandColors is an array of exactly 2 hex codes).",
   "Numbers are digits with optional decimal point ONLY, max 18 decimals, never units or words: pooled example \"799200000\" (NOT \"1 SOL\"), liquidity example \"0.5\" (NOT \"locked\").",
   "Field rules: ticker must be uppercase alphanumeric, max 12 chars; pooled must be a numeric string > 0 and <= 999000000 for direct (pumpfun pooled optional); liquidity must be a numeric string > 0; route must be only direct or pumpfun (direct for EVM/Robinhood, pumpfun for Solana); chainId must be one of 4663, 46630.",
-  "Story fields: tagline is one punchy line (max 80 chars); description is 1-2 sentences about the coin; lore is 1-2 sentences of playful backstory; logoPrompt is a visual description for an image model (mascot, style, colors, no text in image); vibeScore is an integer 1-10 for meme energy.",
+  "Story fields (be vivid, funny, on-trend with crypto/meme culture — never generic or bland): tagline is one punchy line (max 80 chars, no ending period); description is 2-3 sentences of pump-style hype copy (no hashtags, no emojis); lore is a rich 3-paragraph backstory/mythology separated by blank lines (max 1500 chars); logoPrompt is a detailed Midjourney-style image prompt for the token mascot/emblem (subject, style, colors, dark background, no text in image); vibeScore is an integer 1-10 rating how launchable the concept is; marketingHook is a viral tweetable slogan under 120 chars; brandColors is exactly 2 theme hex codes.",
   "If the user gives no numbers, choose sensible defaults instead of words: pooled 799200000, liquidity 0.5. Never emit placeholders like locked, TBD, or N/A.",
   "Supply is fixed and never editable: 999000000 for direct, 1000000000 for pumpfun.",
   "Revise incrementally from Current draft: replace only what user changed, always return FULL draft JSON.",
@@ -41,6 +41,8 @@ export type ServerDraft = {
   lore?: string;
   logoPrompt?: string;
   vibeScore?: number;
+  marketingHook?: string;
+  brandColors?: string[];
 };
 
 function cappedString(value: unknown, max: number): string | null {
@@ -137,12 +139,21 @@ export function extractServerDraft(reply: string): { draft: ServerDraft | null; 
   if (tagline) draft.tagline = tagline;
   const description = cappedString(raw.description, 500);
   if (description) draft.description = description;
-  const lore = cappedString(raw.lore, 500);
+  const lore = cappedString(raw.lore, 2000);
   if (lore) draft.lore = lore;
   const logoPrompt = cappedString(raw.logoPrompt, 300);
   if (logoPrompt) draft.logoPrompt = logoPrompt;
   const vibe = clampVibeScore(raw.vibeScore);
   if (vibe !== null) draft.vibeScore = vibe;
+  const hook = cappedString(raw.marketingHook, 120);
+  if (hook) draft.marketingHook = hook;
+  if (Array.isArray(raw.brandColors)) {
+    const colors = (raw.brandColors as unknown[])
+      .filter((c): c is string => typeof c === "string" && /^#[0-9a-fA-F]{6}$/.test(c.trim()))
+      .map((c) => c.trim())
+      .slice(0, 2);
+    if (colors.length > 0) draft.brandColors = colors;
+  }
 
   if (errors.length > 0) return { draft: null, draftErrors: errors };
   return { draft, draftErrors: [] };
@@ -281,7 +292,9 @@ async function callUpstream(
   return fetch(url, {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
-    body: JSON.stringify({ model, messages, temperature: 0.2, max_tokens: 500 }),
+    // Rich story replies (teaser + full JSON with 3-paragraph lore) need headroom:
+    // tight caps clipped the JSON tail and voided the whole draft.
+    body: JSON.stringify({ model, messages, temperature: 0.2, max_tokens: 1400 }),
     // Upstream stalls must not hang the chat UI forever.
     signal: AbortSignal.timeout(45000),
   });

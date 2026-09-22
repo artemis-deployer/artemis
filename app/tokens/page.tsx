@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Search, Copy, Check, ExternalLink, ArrowLeft } from "lucide-react";
+import { Search, Copy, Check, ExternalLink, X, Globe } from "lucide-react";
 import { TransitionLink } from "../../components/PageTransition";
 import { dedupeLocalReceipts, listReceipts, type Receipt } from "../../lib/receipts";
 import { displayArtworkUrl } from "../../lib/showcase";
@@ -20,6 +20,12 @@ type Token = {
   tagline?: string;
   description?: string;
   lore?: string;
+  marketingHook?: string;
+  marketing_hook?: string;
+  xUrl?: string;
+  x_url?: string;
+  webUrl?: string;
+  web_url?: string;
 };
 
 export default function TokensPage() {
@@ -28,7 +34,42 @@ export default function TokensPage() {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "hood" | "solana" | "local">("all");
   const [copied, setCopied] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [loreModal, setLoreModal] = useState<Token | null>(null);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function tokenKey(t: Pick<Token, "chain_id" | "address">) {
+    return `${t.chain_id}:${t.address}`;
+  }
+
+  function toggleExpanded(t: Pick<Token, "chain_id" | "address">) {
+    const k = tokenKey(t);
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(k)) next.delete(k);
+      else next.add(k);
+      return next;
+    });
+  }
+
+  function storyHook(t: Token) {
+    return t.marketingHook ?? t.marketing_hook ?? "";
+  }
+
+  /** DB rows use snake_case; https-only, attacker links never render. */
+  function tokenLink(t: Token, key: "x" | "web"): string {
+    const raw = key === "x" ? (t.xUrl ?? t.x_url ?? "") : (t.webUrl ?? t.web_url ?? "");
+    return typeof raw === "string" && raw.startsWith("https://") ? raw : "";
+  }
+
+  useEffect(() => {
+    if (!loreModal) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setLoreModal(null);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [loreModal]);
 
   useEffect(() => {
     let alive = true;
@@ -81,7 +122,9 @@ export default function TokensPage() {
     if (filter === "solana" && !String(t.chain_id).toLowerCase().includes("solana")) return false;
     if (filter === "local") return false;
     if (!q) return true;
-    return [t.name, t.symbol, t.address, t.tx_hash].some((f) => (f ?? "").toLowerCase().includes(q));
+    return [t.name, t.symbol, t.address, t.tx_hash, t.tagline, t.description, t.lore, storyHook(t)].some((f) =>
+      (f ?? "").toLowerCase().includes(q),
+    );
   });
 
   // Filter local tokens, preferring DB row when same token exists remotely
@@ -105,20 +148,14 @@ export default function TokensPage() {
             <img src="/assets/logo.webp" className="h-7 w-auto object-contain" alt="Artemis" />
           </TransitionLink>
 
-          <nav className="flex items-center gap-1" aria-label="Main Navigation">
-            <TransitionLink
-              href="/"
-              className="inline-flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-semibold tracking-wider text-white/70 uppercase no-underline transition-colors hover:text-white hover:bg-white/5 border border-white/15"
-            >
-              <ArrowLeft size={13} />
-              <span>Back to Studio</span>
+          <div className="flex flex-wrap items-center justify-end gap-2.5">
+            <TransitionLink href="/" className="dp-button secondary min-w-0 text-xs py-1" aria-label="Back to Studio">
+              <span>BACK TO STUDIO</span>
+              <span className="arrow-box">↖</span>
             </TransitionLink>
-          </nav>
-
-          <div className="flex items-center gap-3">
             <TransitionLink
               href="/#studio"
-              className="dp-button text-xs py-1"
+              className="dp-button min-w-0 text-xs py-1"
             >
               <span>NEW LAUNCH</span>
               <span className="arrow-box">↘</span>
@@ -243,10 +280,7 @@ export default function TokensPage() {
                       ${t.symbol || "TOKEN"}
                     </span>
                     {typeof t.tagline === "string" && t.tagline !== "" && (
-                      <span className="mt-0.5 block truncate text-xs text-white/70 italic">{t.tagline}</span>
-                    )}
-                    {typeof t.lore === "string" && t.lore !== "" && (
-                      <span className="mt-0.5 line-clamp-2 block text-xs leading-relaxed text-white/50">{t.lore}</span>
+                      <span className="mt-0.5 block text-xs text-white/70 italic">{t.tagline}</span>
                     )}
                     </div>
                   </div>
@@ -255,52 +289,152 @@ export default function TokensPage() {
                   </span>
                 </div>
 
-                <div className="flex flex-col gap-2 font-mono text-xs">
-                  <div className="flex min-h-5 items-center justify-between gap-2">
-                    <span className="shrink-0 text-white/50">Contract:</span>
-                    <div className="flex min-w-0 items-center gap-1.5">
+                {(storyHook(t) !== "" ||
+                  (typeof t.description === "string" && t.description !== "") ||
+                  (typeof t.lore === "string" && t.lore !== "")) && (
+                  <div className="flex flex-col gap-1.5 border-b border-white/10 pb-3 text-left">
+                    {storyHook(t) !== "" && (
+                      <p className="m-0 border-l-2 border-[#fae8a4]/60 pl-2 text-xs leading-relaxed text-white/85">
+                        {storyHook(t)}
+                      </p>
+                    )}
+                    {typeof t.description === "string" && t.description !== "" && (
+                      <div>
+                        <p
+                          className={`m-0 text-xs leading-relaxed text-white/60 ${expanded.has(tokenKey(t)) ? "" : "line-clamp-2"}`}
+                        >
+                          {t.description}
+                        </p>
+                        {t.description.length > 140 && (
+                          <button
+                            type="button"
+                            onClick={() => toggleExpanded(t)}
+                            aria-expanded={expanded.has(tokenKey(t))}
+                            className="mt-0.5 cursor-pointer p-0 text-[11px] font-semibold text-[#cadcf0] hover:text-white"
+                          >
+                            {expanded.has(tokenKey(t)) ? "Show less" : "Read more"}
+                          </button>
+                        )}
+                      </div>
+                    )}
+                    {typeof t.lore === "string" && t.lore !== "" && (
+                      <div>
+                        <p className="m-0 line-clamp-2 text-xs leading-relaxed text-white/50">{t.lore}</p>
+                        <button
+                          type="button"
+                          onClick={() => setLoreModal(t)}
+                          className="mt-0.5 cursor-pointer p-0 text-[11px] font-semibold text-[#cadcf0] hover:text-white"
+                        >
+                          View lore
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {(tokenLink(t, "x") !== "" || tokenLink(t, "web") !== "") && (
+                  <div className="flex items-center gap-2 border-b border-white/10 pb-3">
+                    {tokenLink(t, "x") !== "" && (
+                      <a
+                        href={tokenLink(t, "x")}
+                        target="_blank"
+                        rel="noreferrer"
+                        title="X / Twitter"
+                        aria-label={`${t.symbol || "Token"} on X`}
+                        className="inline-flex min-h-8 min-w-8 items-center justify-center rounded-lg border border-white/15 bg-white/5 p-2 text-white/70 transition-all hover:border-white/30 hover:text-white"
+                      >
+                        <span className="text-[13px] leading-none font-bold" aria-hidden="true">X</span>
+                      </a>
+                    )}
+                    {tokenLink(t, "web") !== "" && (
+                      <a
+                        href={tokenLink(t, "web")}
+                        target="_blank"
+                        rel="noreferrer"
+                        title="Website"
+                        aria-label={`${t.symbol || "Token"} website`}
+                        className="inline-flex min-h-8 min-w-8 items-center justify-center rounded-lg border border-white/15 bg-white/5 p-2 text-white/70 transition-all hover:border-white/30 hover:text-white"
+                      >
+                        <Globe size={13} aria-hidden="true" />
+                      </a>
+                    )}
+                  </div>
+                )}
+
+                <dl className="divide-y divide-white/5 text-left font-mono text-xs">
+                  <div className="flex items-start gap-3 py-2.5">
+                    <dt className="w-14 shrink-0 pt-0.5 text-[10px] font-semibold tracking-[0.14em] text-white/40 uppercase">
+                      Contract
+                    </dt>
+                    <dd className="flex min-w-0 flex-1 items-start gap-1.5">
                       <a
                         href={getExplorerUrl(t.chain_id, t.address)}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex min-w-0 items-center gap-1 text-[#cadcf0] underline hover:text-white"
+                        className="min-w-0 flex-1 text-[11px] leading-relaxed text-[#cadcf0] hover:text-white [overflow-wrap:anywhere]"
                       >
-                        <span className="truncate">{t.address.slice(0, 6)}…{t.address.slice(-4)}</span>
-                        <ExternalLink size={11} className="shrink-0" />
+                        {t.address}
                       </a>
-                      <button
-                        type="button"
-                        onClick={() => copyText(t.address)}
-                        className="shrink-0 rounded p-1 text-white/50 hover:bg-white/10 hover:text-white cursor-pointer"
-                        title="Copy address"
-                      >
-                        {copied === t.address ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
-                      </button>
-                    </div>
+                      <span className="-mt-1 flex shrink-0 items-center">
+                        <a
+                          href={getExplorerUrl(t.chain_id, t.address)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="rounded p-1 text-white/40 hover:bg-white/10 hover:text-white"
+                          title="View on explorer"
+                        >
+                          <ExternalLink size={12} />
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => copyText(t.address)}
+                          className="rounded p-1 text-white/40 hover:bg-white/10 hover:text-white cursor-pointer"
+                          title="Copy address"
+                        >
+                          {copied === t.address ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+                        </button>
+                      </span>
+                    </dd>
                   </div>
 
                   {t.pool && (
-                    <div className="flex min-h-5 items-center justify-between gap-2">
-                      <span className="shrink-0 text-white/50">Pool:</span>
-                      <span className="max-w-[180px] truncate text-white/80">{t.pool}</span>
+                    <div className="flex items-start gap-3 py-2.5">
+                      <dt className="w-14 shrink-0 pt-0.5 text-[10px] font-semibold tracking-[0.14em] text-white/40 uppercase">
+                        Pool
+                      </dt>
+                      <dd className="min-w-0 flex-1 text-[11px] leading-relaxed text-white/75 [overflow-wrap:anywhere]">
+                        {t.pool}
+                      </dd>
                     </div>
                   )}
 
                   {t.tx_hash && (
-                    <div className="flex min-h-5 items-center justify-between gap-2">
-                      <span className="shrink-0 text-white/50">Tx:</span>
-                      <a
-                        href={getTxUrl(t.chain_id, t.tx_hash)}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex min-w-0 items-center gap-1 text-[#cadcf0] underline hover:text-white"
-                      >
-                        <span className="truncate">{t.tx_hash.slice(0, 8)}…</span>
-                        <ExternalLink size={11} className="shrink-0" />
-                      </a>
+                    <div className="flex items-start gap-3 py-2.5">
+                      <dt className="w-14 shrink-0 pt-0.5 text-[10px] font-semibold tracking-[0.14em] text-white/40 uppercase">
+                        Tx
+                      </dt>
+                      <dd className="flex min-w-0 flex-1 items-start gap-1.5">
+                        <a
+                          href={getTxUrl(t.chain_id, t.tx_hash)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="min-w-0 flex-1 text-[11px] leading-relaxed text-[#cadcf0] hover:text-white [overflow-wrap:anywhere]"
+                        >
+                          {t.tx_hash}
+                        </a>
+                        <a
+                          href={getTxUrl(t.chain_id, t.tx_hash)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="-mt-1 shrink-0 rounded p-1 text-white/40 hover:bg-white/10 hover:text-white"
+                          title="View tx on explorer"
+                        >
+                          <ExternalLink size={12} />
+                        </a>
+                      </dd>
                     </div>
                   )}
-                </div>
+                </dl>
               </article>
             );
           })}
@@ -352,54 +486,124 @@ export default function TokensPage() {
                   </span>
                 </div>
 
-                <div className="flex flex-col gap-2 font-mono text-xs">
-                  <div className="flex min-h-5 items-center justify-between gap-2">
-                    <span className="shrink-0 text-white/50">Chain:</span>
-                    <span className="truncate text-white/80">{getChain(r.chainId)?.name ?? String(r.chainId)}</span>
+                <dl className="divide-y divide-white/5 text-left font-mono text-xs">
+                  <div className="flex items-center justify-between gap-2 py-2">
+                    <dt className="shrink-0 text-[10px] font-semibold tracking-[0.14em] text-white/40 uppercase">
+                      Chain
+                    </dt>
+                    <dd className="truncate text-white/80">{getChain(r.chainId)?.name ?? String(r.chainId)}</dd>
                   </div>
 
                   {r.token && (
-                    <div className="flex min-h-5 items-center justify-between gap-2">
-                      <span className="shrink-0 text-white/50">Token:</span>
-                      <div className="flex min-w-0 items-center gap-1.5">
+                    <div className="flex items-start gap-3 py-2.5">
+                      <dt className="w-14 shrink-0 pt-0.5 text-[10px] font-semibold tracking-[0.14em] text-white/40 uppercase">
+                        Token
+                      </dt>
+                      <dd className="flex min-w-0 flex-1 items-start gap-1.5">
                         <a
                           href={getExplorerUrl(r.chainId, r.token)}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex min-w-0 items-center gap-1 text-[#cadcf0] underline hover:text-white"
+                          className="min-w-0 flex-1 text-[11px] leading-relaxed text-[#cadcf0] hover:text-white [overflow-wrap:anywhere]"
                         >
-                          <span className="truncate">{r.token.slice(0, 6)}…{r.token.slice(-4)}</span>
-                          <ExternalLink size={11} className="shrink-0" />
+                          {r.token}
                         </a>
-                        <button
-                          type="button"
-                          onClick={() => copyText(r.token!)}
-                          className="shrink-0 rounded p-1 text-white/50 hover:bg-white/10 hover:text-white cursor-pointer"
-                          title="Copy address"
-                        >
-                          {copied === r.token ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
-                        </button>
-                      </div>
+                        <span className="-mt-1 flex shrink-0 items-center">
+                          <a
+                            href={getExplorerUrl(r.chainId, r.token)}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="rounded p-1 text-white/40 hover:bg-white/10 hover:text-white"
+                            title="View on explorer"
+                          >
+                            <ExternalLink size={12} />
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => copyText(r.token!)}
+                            className="rounded p-1 text-white/40 hover:bg-white/10 hover:text-white cursor-pointer"
+                            title="Copy address"
+                          >
+                            {copied === r.token ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+                          </button>
+                        </span>
+                      </dd>
                     </div>
                   )}
 
-                  <div className="flex min-h-5 items-center justify-between gap-2">
-                    <span className="shrink-0 text-white/50">Tx:</span>
-                    <a
-                      href={getTxUrl(r.chainId, r.hash)}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex min-w-0 items-center gap-1 text-[#cadcf0] underline hover:text-white"
-                    >
-                      <span className="truncate">{r.hash.slice(0, 8)}…</span>
-                      <ExternalLink size={11} className="shrink-0" />
-                    </a>
+                  <div className="flex items-start gap-3 py-2.5">
+                    <dt className="w-14 shrink-0 pt-0.5 text-[10px] font-semibold tracking-[0.14em] text-white/40 uppercase">
+                      Tx
+                    </dt>
+                    <dd className="flex min-w-0 flex-1 items-start gap-1.5">
+                      <a
+                        href={getTxUrl(r.chainId, r.hash)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="min-w-0 flex-1 text-[11px] leading-relaxed text-[#cadcf0] hover:text-white [overflow-wrap:anywhere]"
+                      >
+                        {r.hash}
+                      </a>
+                      <a
+                        href={getTxUrl(r.chainId, r.hash)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="-mt-1 shrink-0 rounded p-1 text-white/40 hover:bg-white/10 hover:text-white"
+                        title="View tx on explorer"
+                      >
+                        <ExternalLink size={12} />
+                      </a>
+                    </dd>
                   </div>
-                </div>
+                </dl>
               </article>
             ))}
         </div>
       </main>
+
+      {loreModal && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4"
+          onClick={() => setLoreModal(null)}
+          role="presentation"
+        >
+          <div
+            className="max-h-[80vh] w-full max-w-lg overflow-y-auto rounded-xl border border-white/15 bg-[#1a1b1f] p-6 text-left shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${loreModal.name || loreModal.symbol || "Token"} lore`}
+          >
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h3 className="m-0 truncate text-sm font-bold text-white">
+                  {loreModal.name || loreModal.symbol || "Untitled Coin"}
+                </h3>
+                <p className="m-0 font-mono text-xs font-bold tracking-wider text-[#fae8a4]">
+                  ${loreModal.symbol || "TOKEN"}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setLoreModal(null)}
+                autoFocus
+                className="shrink-0 cursor-pointer rounded p-1.5 text-white/60 hover:bg-white/10 hover:text-white"
+                aria-label="Close lore"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            {typeof loreModal.tagline === "string" && loreModal.tagline !== "" && (
+              <p className="mt-0 mb-3 text-xs text-white/70 italic">{loreModal.tagline}</p>
+            )}
+            {(loreModal.lore ?? "").split(/\n\n+/).map((para, i) => (
+              <p key={i} className="mt-0 mb-3 text-sm leading-relaxed text-white/80 last:mb-0">
+                {para}
+              </p>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

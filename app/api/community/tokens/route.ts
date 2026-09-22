@@ -95,6 +95,9 @@ export async function POST(req: Request) {
       tagline: typeof b.tagline === "string" ? b.tagline : "",
       description: typeof b.description === "string" ? b.description : "",
       lore: typeof b.lore === "string" ? b.lore : "",
+      marketingHook: typeof b.marketingHook === "string" ? b.marketingHook : "",
+      xUrl: typeof b.xUrl === "string" ? b.xUrl : "",
+      webUrl: typeof b.webUrl === "string" ? b.webUrl : "",
     });
   } catch {
     return NextResponse.json({ error: "db_offline" }, { status: 502 });

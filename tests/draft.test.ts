@@ -3,6 +3,9 @@ import {
   applyAutoPatch,
   clampVibeScore,
   displayReplyText,
+  formatConceptReply,
+  normalizeWebUrl,
+  normalizeXUrl,
   EMPTY_DRAFT,
   logoFallbackUrl,
   logoImageUrl,
@@ -41,6 +44,53 @@ describe("parseDraftReply", () => {
     expect(displayReplyText(reply, false)).toBe(reply);
   });
 
+  it("formats a MorphX-style labeled concept reply", () => {
+    const shown = formatConceptReply("A tribute coin with attitude.", {
+      name: "Jokowi Coin",
+      ticker: "JOKOWI",
+      description: "Power to the holders.",
+      lore: "Born from one speech.",
+      tagline: "Gas terus",
+      vibeScore: 9,
+      marketingHook: "Hold the line",
+      brandColors: ["#E63946", "#F1FAEE"],
+    });
+    expect(shown).toContain("A tribute coin with attitude.");
+    expect(shown).toContain("> Gas terus");
+    expect(shown).toContain("**Name:** Jokowi Coin");
+    expect(shown).toContain("**Ticker:** $JOKOWI");
+    expect(shown).toContain("**Vibe:** 9/10");
+    expect(shown).toContain("**Description**\nPower to the holders.");
+    expect(shown).toContain("**Lore**\nBorn from one speech.");
+    expect(shown).toContain("**Hook**\nHold the line");
+    expect(shown).toContain("**Colors:** `#E63946` `#F1FAEE`");
+  });
+
+  it("skips empty concept fields", () => {
+    const shown = formatConceptReply("Hi.", { name: "X", ticker: "$X" });
+    expect(shown).toContain("**Ticker:** $X");
+    expect(shown).not.toContain("**Description**");
+    expect(shown).not.toContain("**Lore**");
+    expect(shown).not.toContain("**Hook**");
+  });
+
+  it("normalizes X handles and URLs", () => {
+    expect(normalizeXUrl("@vitalik")).toBe("https://x.com/vitalik");
+    expect(normalizeXUrl("vitalik")).toBe("https://x.com/vitalik");
+    expect(normalizeXUrl("https://x.com/vitalik")).toBe("https://x.com/vitalik");
+    expect(normalizeXUrl("https://twitter.com/vitalik/status/1")).toBe("https://x.com/vitalik");
+    expect(normalizeXUrl("not a handle!!")).toBeNull();
+    expect(normalizeXUrl("")).toBeNull();
+  });
+
+  it("normalizes website URLs", () => {
+    expect(normalizeWebUrl("example.com")).toBe("https://example.com");
+    expect(normalizeWebUrl("https://example.com/a?b=1")).toBe("https://example.com/a?b=1");
+    expect(normalizeWebUrl("not a url")).toBeNull();
+    expect(normalizeWebUrl("javascript:alert(1)")).toBeNull();
+    expect(normalizeWebUrl("")).toBeNull();
+  });
+
   it("extracts story fields with caps", () => {
     const out = parseDraftReply(
       '{"ticker":"X","tagline":"' +
@@ -63,7 +113,7 @@ describe("parseDraftReply", () => {
 
   it("builds a pollinations URL from prompt and seed", () => {
     const url = logoImageUrl("A brass owl", 42);
-    expect(url).toBe("https://image.pollinations.ai/prompt/A%20brass%20owl?width=512&height=512&seed=42&nologo=true");
+    expect(url).toBe("https://image.pollinations.ai/prompt/A%20brass%20owl?width=512&height=512&seed=42&nologo=true&model=turbo");
     expect(logoImageUrl("x", 3.9)).toContain("seed=3");
   });
 
@@ -173,12 +223,12 @@ describe("applyAutoPatch", () => {
 
 describe("validateDraft", () => {
   it("requires ticker", () => {
-    expect(validateDraft({})).toContain("ticker is required");
+    expect(validateDraft({})).toContain("Ticker Symbol is required");
   });
 
   it("rejects non-positive numbers", () => {
-    expect(validateDraft({ ticker: "X", pooled: "-5" })).toContain("pooled must be a positive number");
-    expect(validateDraft({ ticker: "X", liquidity: "abc" })).toContain("liquidity must be a positive number");
+    expect(validateDraft({ ticker: "X", pooled: "-5" })).toContain("Tokens for Liquidity Pool must be a positive number");
+    expect(validateDraft({ ticker: "X", liquidity: "abc" })).toContain("Starting Deposit must be a positive number");
   });
 
   it("accepts a good draft", () => {
@@ -186,20 +236,20 @@ describe("validateDraft", () => {
   });
 
   it("requires pooled and liquidity for direct launches", () => {
-    expect(validateDraft({ ticker: "X", route: "direct" })).toContain("pooled is required");
-    expect(validateDraft({ ticker: "X", route: "direct" })).toContain("liquidity is required");
+    expect(validateDraft({ ticker: "X", route: "direct" })).toContain("Tokens for Liquidity Pool is required");
+    expect(validateDraft({ ticker: "X", route: "direct" })).toContain("Starting Deposit is required");
   });
 
   it("requires only liquidity for pumpfun launches", () => {
     expect(validateDraft({ ticker: "X", route: "pumpfun", liquidity: "1" })).toEqual([]);
     expect(validateDraft({ ticker: "X", route: "pumpfun", pooled: "", liquidity: "" })).toContain(
-      "liquidity is required",
+      "Starting Deposit is required",
     );
   });
 
   it("rejects pooled above fixed direct supply", () => {
     expect(validateDraft({ ticker: "X", route: "direct", pooled: "999000001", liquidity: "1" })).toContain(
-      "pooled exceeds fixed supply",
+      "Tokens for Liquidity Pool exceeds fixed supply",
     );
     expect(validateDraft({ ticker: "X", route: "direct", pooled: "999000000", liquidity: "1" })).toEqual([]);
   });
@@ -207,7 +257,7 @@ describe("validateDraft", () => {
   it("rejects dust over supply that Number rounds away (toTokenUnits parity)", () => {
     expect(
       validateDraft({ ticker: "X", route: "direct", pooled: "999000000.0000000001", liquidity: "1" }),
-    ).toContain("pooled exceeds fixed supply");
+    ).toContain("Tokens for Liquidity Pool exceeds fixed supply");
     expect(
       validateDraft({ ticker: "X", route: "direct", pooled: "999000000.0", liquidity: "1" }),
     ).toEqual([]);
@@ -223,37 +273,37 @@ describe("validateDraft", () => {
 
   it("rejects whitespace-only ticker", () => {
     expect(validateDraft({ ticker: "   ", pooled: "1", liquidity: "1", route: "direct" })).toContain(
-      "ticker is required",
+      "Ticker Symbol is required",
     );
   });
 
   it("rejects non-decimal numeric strings that token units refuse", () => {
     for (const bad of ["Infinity", "0x10", "1e3"]) {
       expect(validateDraft({ ticker: "X", pooled: bad, liquidity: "1", route: "direct" })).toContain(
-        "pooled must be a positive number",
+        "Tokens for Liquidity Pool must be a positive number",
       );
       expect(validateDraft({ ticker: "X", pooled: "1", liquidity: bad, route: "direct" })).toContain(
-        "liquidity must be a positive number",
+        "Starting Deposit must be a positive number",
       );
     }
   });
 
   it("rejects zero pooled and zero liquidity", () => {
     expect(validateDraft({ ticker: "X", pooled: "0", liquidity: "1", route: "direct" })).toContain(
-      "pooled must be a positive number",
+      "Tokens for Liquidity Pool must be a positive number",
     );
     expect(validateDraft({ ticker: "X", pooled: "1", liquidity: "0", route: "direct" })).toContain(
-      "liquidity must be a positive number",
+      "Starting Deposit must be a positive number",
     );
   });
 
   it("rejects dust with more than 18 decimals that parseEther truncates to zero", () => {
     expect(
       validateDraft({ ticker: "X", pooled: "0.0000000000000000001", liquidity: "1", route: "direct" }),
-    ).toContain("pooled must be a positive number");
+    ).toContain("Tokens for Liquidity Pool must be a positive number");
     expect(
       validateDraft({ ticker: "X", pooled: "1", liquidity: "0.0000000000000000001", route: "direct" }),
-    ).toContain("liquidity must be a positive number");
+    ).toContain("Starting Deposit must be a positive number");
   });
 
   it("accepts 18-decimal wei dust", () => {
@@ -264,7 +314,7 @@ describe("validateDraft", () => {
 
   it("requires pooled when pumpfun route sits on an EVM chain (dialog runs EVM rail)", () => {
     expect(validateDraft({ ticker: "X", route: "pumpfun", chainId: 4663, liquidity: "1" })).toContain(
-      "pooled is required",
+      "Tokens for Liquidity Pool is required",
     );
   });
 
@@ -360,14 +410,14 @@ describe("numeric-precision warfare: supply boundary", () => {
     expect(exceedsDirectSupply("999000000")).toBe(false);
   });
   it("rejects 12-decimal dust over supply", () => {
-    expect(good("999000000.000000000001")).toContain("pooled exceeds fixed supply");
+    expect(good("999000000.000000000001")).toContain("Tokens for Liquidity Pool exceeds fixed supply");
     expect(exceedsDirectSupply("999000000.000000000001")).toBe(true);
   });
   it("rejects .5 over supply", () => {
-    expect(good("999000000.5")).toContain("pooled exceeds fixed supply");
+    expect(good("999000000.5")).toContain("Tokens for Liquidity Pool exceeds fixed supply");
   });
   it("rejects 19-decimal dust, accepts 18-decimal 1-wei dust", () => {
-    expect(good("0.0000000000000000001")).toContain("pooled must be a positive number");
+    expect(good("0.0000000000000000001")).toContain("Tokens for Liquidity Pool must be a positive number");
     expect(good("0.000000000000000001")).toEqual([]);
     expect(toTokenUnits("0.000000000000000001")).toBe(1n);
   });

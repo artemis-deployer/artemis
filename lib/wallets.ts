@@ -365,6 +365,13 @@ export function walletLabel(e: unknown): string {
     if (e.message === "wallet_missing") return "Wallet not detected. Install it first, or pick another.";
     if (e.message === "wallet_rejected") return "Connection cancelled in the wallet.";
     if (e.message === "wallet_timeout") return "Wallet did not respond. Unlock it and retry.";
+    // Raw provider/viem switch errors leak into the 80px navbar: map to short friendly copy.
+    if (/not connected to the requested chain/i.test(e.message))
+      return "Wallet is on the wrong network. Approve the switch in your wallet, then retry.";
+    if (/already pending|already processing|request already/i.test(e.message))
+      return "Switch already pending. Check your wallet popup.";
+    if (/user rejected|user denied|rejected the request/i.test(e.message))
+      return "Switch cancelled in the wallet.";
     return e.message;
   }
   return "Wallet connection failed.";

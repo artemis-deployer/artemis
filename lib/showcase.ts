@@ -10,6 +10,9 @@ export type ShowcaseInput = {
   tagline?: string;
   description?: string;
   lore?: string;
+  marketingHook?: string;
+  xUrl?: string;
+  webUrl?: string;
 };
 
 // ponytail: fire-and-forget, local receipt stays source of truth when DB offline

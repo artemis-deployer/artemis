@@ -4,17 +4,18 @@ import { useEffect, useRef, useState } from "react";
 import Markdown from "react-markdown";
 import rehypeSanitize from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
-import { Check, ChevronDown, Copy, RotateCcw, SendHorizonal, Sparkles } from "lucide-react";
-import { displayReplyText, logoFallbackUrl, logoImageUrl, parseDraftReply, resolveAutoPatch, shouldResetConsentOnChainChange } from "../lib/draft";
+import { Check, ChevronDown, Copy, Download, RotateCcw, SendHorizonal, Sparkles } from "lucide-react";
+import { displayReplyText, formatConceptReply, logoFallbackUrl, logoImageUrl, parseDraftReply, resolveAutoPatch, shouldResetConsentOnChainChange } from "../lib/draft";
 import type { Draft } from "../lib/draft";
 import { CHAINS, defaultRouteFor, getChain } from "../lib/chains";
 import { useDraft } from "./DraftContext";
 import ChainLogo from "./ChainLogo";
+import ConceptLogo, { downloadLogo } from "./ConceptLogo";
 
 type Line = { role: "user" | "assistant"; content: string; kind?: "ok" | "error"; auto?: boolean; concept?: Partial<Draft> };
 
 function pickConcept(patch: Partial<Draft>): Partial<Draft> | undefined {
-  const { name, ticker, tagline, description, lore, vibeScore, logoPrompt } = patch;
+  const { name, ticker, tagline, description, lore, vibeScore, logoPrompt, marketingHook, brandColors } = patch;
   const concept: Partial<Draft> = {};
   if (typeof name === "string" && name !== "") concept.name = name;
   if (typeof ticker === "string" && ticker !== "") concept.ticker = ticker;
@@ -23,6 +24,8 @@ function pickConcept(patch: Partial<Draft>): Partial<Draft> | undefined {
   if (typeof lore === "string" && lore !== "") concept.lore = lore;
   if (typeof vibeScore === "number") concept.vibeScore = vibeScore;
   if (typeof logoPrompt === "string" && logoPrompt !== "") concept.logoPrompt = logoPrompt;
+  if (typeof marketingHook === "string" && marketingHook !== "") concept.marketingHook = marketingHook;
+  if (Array.isArray(brandColors) && brandColors.length > 0) concept.brandColors = brandColors;
   return Object.keys(concept).length > 0 ? concept : undefined;
 }
 
@@ -41,12 +44,28 @@ function displayOf(reply: string, patched: boolean): string {
   return displayReplyText(reply, patched);
 }
 
+/** Module scope so the render-purity lint stays quiet; called from event flow only. */
+function randomSeed(): number {
+  return Math.floor(Math.random() * 1000000);
+}
+
 function prefersReducedMotion(): boolean {
   return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
 const TYPE_STEP = 14;
 const TYPE_MS = 12;
+
+// Claude-style working status: rotates while the model thinks (~45s upstream).
+const THINK_STEPS = [
+  "Analyzing idea…",
+  "Forging identity…",
+  "Writing lore…",
+  "Painting logo…",
+  "Polishing tagline…",
+  "Sealing the draft…",
+];
+const THINK_MS = 2600;
 // ponytail: cap DOM nodes, state keeps full history
 const RENDER_LIMIT = 120;
 
@@ -58,6 +77,7 @@ export default function StudioChat() {
   const [reveal, setReveal] = useState<{ i: number; n: number } | null>(null);
   const [undo, setUndo] = useState<{ snapshot: Draft } | null>(null);
   const [logoSeed, setLogoSeed] = useState(() => Math.floor(Math.random() * 1000000));
+  const [thinkIdx, setThinkIdx] = useState(0);
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
   const [chainOpen, setChainOpen] = useState(false);
   const chainRef = useRef<HTMLDivElement>(null);
@@ -105,6 +125,15 @@ export default function StudioChat() {
     logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: "smooth" });
   }, [log, busy, reveal]);
 
+  // Rotate the working status while waiting (reset happens in send()).
+  useEffect(() => {
+    if (!busy) return;
+    const id = setTimeout(() => {
+      setThinkIdx((i) => (i + 1) % THINK_STEPS.length);
+    }, THINK_MS);
+    return () => clearTimeout(id);
+  }, [busy, thinkIdx]);
+
   useEffect(() => {
     if (!reveal) return;
     const id = setTimeout(() => {
@@ -147,6 +176,7 @@ export default function StudioChat() {
     if (!content || busy || busyRef.current) return;
     busyRef.current = true;
     setBusy(true);
+    setThinkIdx(0);
     const snapshot = draftRef.current;
     const next: Line[] = [...log, { role: "user" as const, content }];
     setLog(next);
@@ -197,6 +227,13 @@ export default function StudioChat() {
       const auto = resolved !== null;
       if (resolved) {
         const nextDraft = resolved.next;
+        // Auto-generate the logo into the draft so it shows in Launch Parameters
+        // right away. Never clobbers: only when the user has no image yet.
+        if (typeof patch.logoPrompt === "string" && patch.logoPrompt !== "" && !nextDraft.image) {
+          const seed = randomSeed();
+          setLogoSeed(seed);
+          nextDraft.image = logoImageUrl(patch.logoPrompt, seed);
+        }
         const nextChainId = resolved.next.chainId;
         // Functional update: response may land after user typed in Manual
         // Parameters; updater form avoids clobbering on stale `latest`.
@@ -208,9 +245,9 @@ export default function StudioChat() {
         if (shouldResetConsentOnChainChange(latest.chainId, nextChainId)) setConsent(false);
         setUndo({ snapshot: resolved.prevSnapshot });
       }
-      const shown = displayOf(reply, auto);
       const at = next.length;
       const concept = auto ? pickConcept(patch) : undefined;
+      const shown = concept ? formatConceptReply(displayOf(reply, auto), concept) : displayOf(reply, auto);
       setLog([...next, { role: "assistant" as const, content: shown, kind: reply === OFFLINE_LINE ? "error" : "ok", auto, concept }]);
       if (!prefersReducedMotion()) setReveal({ i: at, n: 0 });
     } catch {
@@ -353,15 +390,6 @@ export default function StudioChat() {
                     <span className="font-mono font-bold text-[#fae8a4]">${l.concept.ticker}</span>
                   )}
                 </div>
-                {l.concept.tagline && (
-                  <p className="m-0 text-white/80 italic">{l.concept.tagline}</p>
-                )}
-                {l.concept.description && (
-                  <p className="m-0 leading-relaxed text-white/70">{l.concept.description}</p>
-                )}
-                {l.concept.lore && (
-                  <p className="m-0 leading-relaxed text-white/50">{l.concept.lore}</p>
-                )}
                 {typeof l.concept.vibeScore === "number" && (
                   <span className="font-mono text-[11px] font-bold tracking-wider text-[#fae8a4]">
                     AI VIBE {l.concept.vibeScore}/10
@@ -373,6 +401,18 @@ export default function StudioChat() {
                       <span className="font-mono text-[10px] font-bold tracking-wider text-white/40 uppercase">
                         Logo prompt
                       </span>
+                      <span className="flex items-center gap-1">
+                      {draft.image && (
+                        <button
+                          type="button"
+                          onClick={() => void downloadLogo(draft.image as string, `${(l.concept?.ticker || "logo").replace(/[^A-Za-z0-9]/g, "")}-logo.png`)}
+                          title="Download logo"
+                          className="inline-flex cursor-pointer items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[10px] font-bold text-[#cadcf0] hover:bg-white/10"
+                        >
+                          <Download size={11} aria-hidden="true" />
+                          <span>Save</span>
+                        </button>
+                      )}
                       <button
                         type="button"
                         onClick={() => {
@@ -389,20 +429,16 @@ export default function StudioChat() {
                         {copiedIdx === i ? <Check size={11} aria-hidden="true" /> : <Copy size={11} aria-hidden="true" />}
                         <span>{copiedIdx === i ? "Copied" : "Copy"}</span>
                       </button>
+                      </span>
                     </div>
                     <p className="m-0 font-mono text-[11px] leading-relaxed break-words text-white/60">{l.concept.logoPrompt}</p>
                     {draft.image ? (
-                      /* eslint-disable-next-line @next/next/no-img-element -- generated or user artwork */
-                      <img
+                      <ConceptLogo
+                        key={draft.image}
                         src={draft.image}
+                        fallbackSrc={logoFallbackUrl(l.concept?.ticker || "ARTEMIS", logoSeed)}
                         alt="Generated coin logo"
-                        className="aspect-square w-full rounded-md border border-white/10 object-cover"
-                        onError={(e) => {
-                          const el = e.currentTarget;
-                          if (el.dataset.fb === "1") return;
-                          el.dataset.fb = "1";
-                          el.src = logoFallbackUrl(l.concept?.ticker || "ARTEMIS", logoSeed);
-                        }}
+                        className="mx-auto h-28 w-28 rounded-full border border-white/10"
                       />
                     ) : (
                       <button
@@ -441,14 +477,23 @@ export default function StudioChat() {
         })}
 
         {busy && (
-          <div className="flex items-center gap-1.5 self-start rounded-lg border border-white/10 bg-[#1a1b1f] px-4 py-3" aria-label="Artemis is thinking">
-            {[0, 1, 2].map((d) => (
-              <span
-                key={d}
-                className="h-1.5 w-1.5 animate-bounce rounded-full bg-white/60"
-                style={{ animationDelay: `${d * 0.15}s` }}
-              />
-            ))}
+          <div
+            className="flex items-center gap-2.5 self-start rounded-lg border border-white/10 bg-[#1a1b1f] px-4 py-3"
+            role="status"
+            aria-label={`Artemis is thinking: ${THINK_STEPS[thinkIdx]}`}
+          >
+            <span className="flex items-center gap-1" aria-hidden="true">
+              {[0, 1, 2].map((d) => (
+                <span
+                  key={d}
+                  className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#fae8a4]"
+                  style={{ animationDelay: `${d * 0.15}s` }}
+                />
+              ))}
+            </span>
+            <span key={thinkIdx} className="drop-in font-mono text-xs font-semibold tracking-wider text-white/70">
+              {THINK_STEPS[thinkIdx]}
+            </span>
           </div>
         )}
       </div>

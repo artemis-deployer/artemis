@@ -13,6 +13,10 @@ export type Draft = {
   lore?: string;
   logoPrompt?: string;
   vibeScore?: number;
+  marketingHook?: string;
+  brandColors?: string[];
+  xUrl?: string;
+  webUrl?: string;
 };
 
 export const EMPTY_DRAFT: Draft = {
@@ -48,10 +52,28 @@ function sanitizeDraft(raw: Record<string, unknown>): Partial<Draft> {
     out.description = raw.description.trim().slice(0, 500);
   }
   if (typeof raw.lore === "string" && raw.lore.trim() !== "") {
-    out.lore = raw.lore.trim().slice(0, 500);
+    out.lore = raw.lore.trim().slice(0, 2000);
   }
   if (typeof raw.logoPrompt === "string" && raw.logoPrompt.trim() !== "") {
     out.logoPrompt = raw.logoPrompt.trim().slice(0, 300);
+  }
+  if (typeof raw.marketingHook === "string" && raw.marketingHook.trim() !== "") {
+    out.marketingHook = raw.marketingHook.trim().slice(0, 120);
+  }
+  if (typeof raw.xUrl === "string" && raw.xUrl.trim() !== "") {
+    const x = normalizeXUrl(raw.xUrl);
+    if (x) out.xUrl = x;
+  }
+  if (typeof raw.webUrl === "string" && raw.webUrl.trim() !== "") {
+    const w = normalizeWebUrl(raw.webUrl);
+    if (w) out.webUrl = w;
+  }
+  if (Array.isArray(raw.brandColors)) {
+    const colors = raw.brandColors
+      .filter((c): c is string => typeof c === "string" && /^#[0-9a-fA-F]{6}$/.test(c.trim()))
+      .map((c) => c.trim())
+      .slice(0, 2);
+    if (colors.length > 0) out.brandColors = colors;
   }
   if (typeof raw.vibeScore === "number" || typeof raw.vibeScore === "string") {
     const v = clampVibeScore(raw.vibeScore);
@@ -68,9 +90,33 @@ export function clampVibeScore(value: unknown): number | null {
   return Math.min(10, Math.max(1, scaled));
 }
 
+/**
+ * Accept @handle, bare handle, or x.com/twitter.com URL → canonical https URL.
+ * Null when unusable (caller shows the hint, nothing stored).
+ */
+export function normalizeXUrl(value: string): string | null {
+  const t = value.trim();
+  if (!t) return null;
+  const fromUrl = t.match(/^(?:https?:\/\/)?(?:www\.)?(?:x\.com|twitter\.com)\/([A-Za-z0-9_]{1,15})(?:\/.*)?$/);
+  if (fromUrl) return `https://x.com/${fromUrl[1]}`;
+  const handle = t.match(/^@?([A-Za-z0-9_]{1,15})$/);
+  if (handle) return `https://x.com/${handle[1]}`;
+  return null;
+}
+
+/** Accept bare domain or full URL → https URL. Null when unusable. */
+export function normalizeWebUrl(value: string): string | null {
+  const t = value.trim();
+  if (!t || /\s/.test(t) || t.length > 256) return null;
+  const withProto = /^https?:\/\//i.test(t) ? t : `https://${t}`;
+  if (!/^https:\/\/[^/$.?#].[^/]*\.[a-z]{2,}([/?#].*)?$/i.test(withProto)) return null;
+  return withProto.slice(0, 256);
+}
+
 /** Free AI image URL (Pollinations, no key) for a logo prompt + seed. */
 export function logoImageUrl(logoPrompt: string, seed: number): string {
-  return `https://image.pollinations.ai/prompt/${encodeURIComponent(logoPrompt)}?width=512&height=512&seed=${Math.floor(seed)}&nologo=true`;
+  // Pin model=turbo: the default model 429s on community rate limits (verified 2026-09-22).
+  return `https://image.pollinations.ai/prompt/${encodeURIComponent(logoPrompt)}?width=512&height=512&seed=${Math.floor(seed)}&nologo=true&model=turbo`;
 }
 
 /** Instant mascot fallback when AI image generation fails (DiceBear, no key). */
@@ -129,6 +175,8 @@ const FOCUSED_FIELD: Record<string, keyof Draft> = {
   "pool-tokens": "pooled",
   "initial-liquidity": "liquidity",
   "artwork-url": "image",
+  "x-url": "xUrl",
+  "web-url": "webUrl",
 };
 
 /**
@@ -191,17 +239,18 @@ export function exceedsDirectSupply(value: string): boolean {
 
 export function validateDraft(d: Partial<Draft>): string[] {
   const errors: string[] = [];
-  if (!d.ticker || d.ticker.trim().length === 0) errors.push("ticker is required");
-  if (d.ticker && d.ticker.length > 12) errors.push("ticker is too long");
+  if (!d.ticker || d.ticker.trim().length === 0) errors.push("Ticker Symbol is required");
+  if (d.ticker && d.ticker.length > 12) errors.push("Ticker Symbol is too long (max 12)");
   // Dialog runs EVM rail unless route is pumpfun AND chain is solana: require pooled otherwise.
+  // Labels mirror LaunchForm: "Tokens for Liquidity Pool" (pooled) and "Starting Deposit" (liquidity).
   const pump = d.route === "pumpfun" && (d.chainId === undefined || String(d.chainId).startsWith("solana"));
-  if (!pump && (d.pooled === undefined || d.pooled === "")) errors.push("pooled is required");
+  if (!pump && (d.pooled === undefined || d.pooled === "")) errors.push("Tokens for Liquidity Pool is required");
   else if (d.pooled !== undefined && d.pooled !== "" && !isPositiveNumberString(d.pooled))
-    errors.push("pooled must be a positive number");
+    errors.push("Tokens for Liquidity Pool must be a positive number");
   else if (!pump && d.pooled !== undefined && d.pooled !== "" && exceedsDirectSupply(d.pooled))
-    errors.push("pooled exceeds fixed supply");
-  if (d.liquidity === undefined || d.liquidity === "") errors.push("liquidity is required");
-  else if (!isPositiveNumberString(d.liquidity)) errors.push("liquidity must be a positive number");
+    errors.push("Tokens for Liquidity Pool exceeds fixed supply");
+  if (d.liquidity === undefined || d.liquidity === "") errors.push("Starting Deposit is required");
+  else if (!isPositiveNumberString(d.liquidity)) errors.push("Starting Deposit must be a positive number");
   return errors;
 }
 
@@ -220,6 +269,31 @@ function isPositiveNumberString(value: string): boolean {
 /** Shared thousand-separator strip for numeric inputs (commas + whitespace). */
 export function stripNumericSeparators(value: string): string {
   return value.replace(/[,\s]/g, "");
+}
+
+/**
+ * MorphX-style structured reply: opening teaser, quoted tagline, then labeled
+ * identity fields. Rendered as markdown in the chat bubble.
+ */
+export function formatConceptReply(prose: string, concept: Partial<Draft>): string {
+  const parts = [prose.trim()].filter(Boolean);
+  const text = (v: string | undefined) => (typeof v === "string" ? v.trim() : "");
+  const tagline = text(concept.tagline);
+  if (tagline) parts.push(`> ${tagline}`);
+  const name = text(concept.name);
+  const ticker = text(concept.ticker).replace(/^\$/, "");
+  const vibe = typeof concept.vibeScore === "number" ? ` · **Vibe:** ${concept.vibeScore}/10` : "";
+  if (name || ticker) parts.push(`**Name:** ${name || "-"} · **Ticker:** ${ticker ? `$${ticker}` : "-"}${vibe}`);
+  const section = (label: string, value: string) => {
+    if (value) parts.push(`**${label}**\n${value}`);
+  };
+  section("Description", text(concept.description));
+  section("Lore", text(concept.lore));
+  section("Hook", text(concept.marketingHook));
+  if (Array.isArray(concept.brandColors) && concept.brandColors.length > 0) {
+    parts.push(`**Colors:** ${concept.brandColors.map((c) => `\`${c}\``).join(" ")}`);
+  }
+  return parts.join("\n\n");
 }
 
 /** Human-readable reply: hide the machine-readable JSON draft block. */

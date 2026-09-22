@@ -108,6 +108,9 @@ describe("normalizeTokenInput", () => {
       tagline: "",
       description: "",
       lore: "",
+      marketingHook: "",
+      xUrl: "",
+      webUrl: "",
     });
   });
 
@@ -159,10 +162,32 @@ describe("normalizeTokenInput", () => {
       tagline: `  ${"T".repeat(100)}  `,
       description: `${"D".repeat(600)}`,
       lore: 123 as unknown as string,
+      marketingHook: `  ${"H".repeat(200)}  `,
     });
     expect(out.tagline).toBe("T".repeat(80));
     expect(out.description).toBe("D".repeat(500));
     expect(out.lore).toBe("");
+    expect(out.marketingHook).toBe("H".repeat(120));
+  });
+
+  it("keeps https links, drops the rest", () => {
+    const out = normalizeTokenInput({
+      chainId: "4663",
+      address: "0xabc",
+      xUrl: "https://x.com/artemis",
+      webUrl: "https://artemis.example.test",
+    });
+    expect(out.xUrl).toBe("https://x.com/artemis");
+    expect(out.webUrl).toBe("https://artemis.example.test");
+    const bad = normalizeTokenInput({
+      chainId: "4663",
+      address: "0xabc",
+      xUrl: "javascript:alert(1)",
+      webUrl: "http://plain.test/x",
+    });
+    expect(bad.xUrl).toBe("");
+    expect(bad.webUrl).toBe("");
+    expect(normalizeTokenInput({ chainId: "4663", address: "0xabc" }).xUrl).toBe("");
   });
 });
 

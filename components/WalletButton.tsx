@@ -146,7 +146,7 @@ export default function WalletButton({
 
   if (!account) {
     return (
-      <div className="flex flex-col gap-2">
+      <div className="relative flex items-center gap-2">
         <button
           type="button"
           onClick={() => {
@@ -158,9 +158,15 @@ export default function WalletButton({
           <span>Connect Wallet</span> <span>↗</span>
         </button>
         {error && (
-          <p role="alert" className="m-0 text-xs font-medium text-red-400">
+          <button
+            type="button"
+            role="alert"
+            title="Dismiss"
+            onClick={() => setError("")}
+            className="absolute right-0 top-[calc(100%+8px)] z-50 w-64 max-w-[calc(100vw-40px)] rounded-lg border border-red-500/30 bg-[#1a1b1f] p-2.5 text-left text-[11px] font-medium leading-relaxed text-red-300 shadow-2xl"
+          >
             {error}
-          </p>
+          </button>
         )}
         <WalletModal kind="evm" open={modal} onClose={() => setModal(false)} onConnected={() => void refresh()} />
       </div>
@@ -168,12 +174,13 @@ export default function WalletButton({
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="relative flex min-w-0 items-center gap-2">
       {wrongNetwork && (
         <button
           type="button"
           onClick={() => void switchChain()}
-          className="inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-amber-300/40 bg-amber-300/10 px-3 py-1.5 text-xs font-bold text-amber-200 transition-all hover:bg-amber-300/20"
+          title={`Switch wallet to ${chainName}`}
+          className="inline-flex min-h-9 max-w-[38vw] shrink-0 cursor-pointer items-center justify-center gap-1.5 truncate rounded-lg border border-amber-300/40 bg-amber-300/10 px-2.5 py-1.5 text-[11px] font-bold whitespace-nowrap text-amber-200 transition-all hover:bg-amber-300/20"
         >
           Switch to {chainName}
         </button>
@@ -188,9 +195,15 @@ export default function WalletButton({
         onDisconnect={disconnect}
       />
       {error && (
-        <p role="alert" className="m-0 text-xs font-medium text-red-400">
+        <button
+          type="button"
+          role="alert"
+          title="Dismiss"
+          onClick={() => setError("")}
+          className="absolute right-0 top-[calc(100%+8px)] z-50 w-64 max-w-[calc(100vw-40px)] rounded-lg border border-red-500/30 bg-[#1a1b1f] p-2.5 text-left text-[11px] font-medium leading-relaxed text-red-300 shadow-2xl"
+        >
           {error}
-        </p>
+        </button>
       )}
     </div>
   );
