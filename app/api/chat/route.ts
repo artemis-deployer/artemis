@@ -247,6 +247,8 @@ async function callUpstream(
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
     body: JSON.stringify({ model, messages, temperature: 0.2, max_tokens: 500 }),
+    // Upstream stalls must not hang the chat UI forever.
+    signal: AbortSignal.timeout(45000),
   });
 }
 

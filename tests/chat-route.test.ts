@@ -217,6 +217,26 @@ describe("chat route", () => {
     expect(sentBody.max_tokens).toBe(500);
   });
 
+  it("bounds upstream calls with an abort timeout", async () => {
+    let sentInit: { signal?: unknown } = {};
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(async (_url: string, init: { signal?: unknown; body?: string }) => {
+        sentInit = init;
+        return {
+          ok: true,
+          json: async () => ({ choices: [{ message: { content: "hi" } }] }),
+        };
+      }),
+    );
+    const req = new Request("http://x/api/chat", {
+      method: "POST",
+      body: JSON.stringify({ messages: [{ role: "user", content: "make a coin" }] }),
+    });
+    await chatPOST(req);
+    expect(sentInit.signal).toBeInstanceOf(AbortSignal);
+  });
+
   it("proxies to upstream and returns reply", async () => {
     vi.stubGlobal(
       "fetch",
