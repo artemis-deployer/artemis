@@ -172,3 +172,30 @@ function isPositiveNumberString(value: string): boolean {
 export function stripNumericSeparators(value: string): string {
   return value.replace(/[,\s]/g, "");
 }
+
+/** Human-readable reply: hide the machine-readable JSON draft block. */
+export function displayReplyText(reply: string, patched: boolean): string {
+  const stripped = stripDraftBlocks(reply)
+    .replace(/\{[^{}]*"ticker"[^{}]*\}\s*$/, "")
+    .trim();
+  if (stripped) return stripped;
+  return patched ? "Draft updated from your idea — review it in Manual Parameters." : reply;
+}
+
+function stripDraftBlocks(reply: string): string {
+  const stripped = reply.replace(/```json\s*[\s\S]*?```/g, "");
+  // Some models emit bare (unfenced) JSON: drop the last parseable block holding a ticker.
+  const blocks = [...stripped.matchAll(/\n\{[\s\S]*?\n\}/g)].map((m) => m[0]);
+  for (let i = blocks.length - 1; i >= 0; i--) {
+    try {
+      // Detection only: tolerate trailing commas models love to add.
+      const parsed = JSON.parse(blocks[i].replace(/,\s*([}\]])/g, "$1")) as Record<string, unknown>;
+      if (parsed && typeof parsed === "object" && typeof parsed.ticker === "string") {
+        return stripped.replace(blocks[i], "");
+      }
+    } catch {
+      // Not JSON prose — keep it.
+    }
+  }
+  return stripped;
+}

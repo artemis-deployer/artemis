@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   applyAutoPatch,
+  displayReplyText,
   EMPTY_DRAFT,
   exceedsDirectSupply,
   logoImageUrl,
@@ -16,6 +17,27 @@ import { toTokenUnits } from "../lib/launcher-evm";
 import { explorerTokenUrl, explorerTxUrl } from "../lib/chains";
 
 describe("parseDraftReply", () => {
+  it("strips bare unfenced draft JSON from display", () => {
+    const reply = [
+      "A fun tribute coin!",
+      "{",
+      '"name": "JokowiCoin",',
+      '"ticker": "JOKOWI",',
+      '"pooled": "799200000",',
+      "}",
+      "Tell me more.",
+    ].join("\n");
+    const shown = displayReplyText(reply, true);
+    expect(shown).not.toContain("JokowiCoin");
+    expect(shown).toContain("A fun tribute coin!");
+    expect(shown).toContain("Tell me more.");
+  });
+
+  it("keeps prose braces that are not draft JSON", () => {
+    const reply = "Use {braces} carefully.\nSome prose here.";
+    expect(displayReplyText(reply, false)).toBe(reply);
+  });
+
   it("extracts story fields with caps", () => {
     const out = parseDraftReply(
       '{"ticker":"X","tagline":"' +

@@ -5,7 +5,7 @@ import Markdown from "react-markdown";
 import rehypeSanitize from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
 import { Check, ChevronDown, RotateCcw, SendHorizonal, Sparkles } from "lucide-react";
-import { parseDraftReply, resolveAutoPatch, shouldResetConsentOnChainChange } from "../lib/draft";
+import { displayReplyText, parseDraftReply, resolveAutoPatch, shouldResetConsentOnChainChange } from "../lib/draft";
 import type { Draft } from "../lib/draft";
 import { CHAINS, defaultRouteFor, getChain } from "../lib/chains";
 import { useDraft } from "./DraftContext";
@@ -25,12 +25,7 @@ const GREETING = "Tell me about your coin idea or community, and I'll draft the 
 
 /** Hide the machine-readable JSON draft block; humans read the prose. */
 function displayOf(reply: string, patched: boolean): string {
-  const stripped = reply
-    .replace(/```json\s*[\s\S]*?```/g, "")
-    .replace(/\{[^{}]*"ticker"[^{}]*\}\s*$/, "")
-    .trim();
-  if (stripped) return stripped;
-  return patched ? "Draft updated from your idea — review it in Manual Parameters." : reply;
+  return displayReplyText(reply, patched);
 }
 
 function prefersReducedMotion(): boolean {
