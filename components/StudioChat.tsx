@@ -4,14 +4,27 @@ import { useEffect, useRef, useState } from "react";
 import Markdown from "react-markdown";
 import rehypeSanitize from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
-import { Check, ChevronDown, RotateCcw, SendHorizonal, Sparkles } from "lucide-react";
-import { displayReplyText, parseDraftReply, resolveAutoPatch, shouldResetConsentOnChainChange } from "../lib/draft";
+import { Check, ChevronDown, Copy, RotateCcw, SendHorizonal, Sparkles } from "lucide-react";
+import { displayReplyText, logoFallbackUrl, logoImageUrl, parseDraftReply, resolveAutoPatch, shouldResetConsentOnChainChange } from "../lib/draft";
 import type { Draft } from "../lib/draft";
 import { CHAINS, defaultRouteFor, getChain } from "../lib/chains";
 import { useDraft } from "./DraftContext";
 import ChainLogo from "./ChainLogo";
 
-type Line = { role: "user" | "assistant"; content: string; kind?: "ok" | "error"; auto?: boolean };
+type Line = { role: "user" | "assistant"; content: string; kind?: "ok" | "error"; auto?: boolean; concept?: Partial<Draft> };
+
+function pickConcept(patch: Partial<Draft>): Partial<Draft> | undefined {
+  const { name, ticker, tagline, description, lore, vibeScore, logoPrompt } = patch;
+  const concept: Partial<Draft> = {};
+  if (typeof name === "string" && name !== "") concept.name = name;
+  if (typeof ticker === "string" && ticker !== "") concept.ticker = ticker;
+  if (typeof tagline === "string" && tagline !== "") concept.tagline = tagline;
+  if (typeof description === "string" && description !== "") concept.description = description;
+  if (typeof lore === "string" && lore !== "") concept.lore = lore;
+  if (typeof vibeScore === "number") concept.vibeScore = vibeScore;
+  if (typeof logoPrompt === "string" && logoPrompt !== "") concept.logoPrompt = logoPrompt;
+  return Object.keys(concept).length > 0 ? concept : undefined;
+}
 
 const SUGGESTIONS = [
   "Community coin for a local arts club",
@@ -44,6 +57,8 @@ export default function StudioChat() {
   const [busy, setBusy] = useState(false);
   const [reveal, setReveal] = useState<{ i: number; n: number } | null>(null);
   const [undo, setUndo] = useState<{ snapshot: Draft } | null>(null);
+  const [logoSeed, setLogoSeed] = useState(() => Math.floor(Math.random() * 1000000));
+  const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
   const [chainOpen, setChainOpen] = useState(false);
   const chainRef = useRef<HTMLDivElement>(null);
   const activeChain = getChain(draft.chainId);
@@ -195,7 +210,8 @@ export default function StudioChat() {
       }
       const shown = displayOf(reply, auto);
       const at = next.length;
-      setLog([...next, { role: "assistant" as const, content: shown, kind: reply === OFFLINE_LINE ? "error" : "ok", auto }]);
+      const concept = auto ? pickConcept(patch) : undefined;
+      setLog([...next, { role: "assistant" as const, content: shown, kind: reply === OFFLINE_LINE ? "error" : "ok", auto, concept }]);
       if (!prefersReducedMotion()) setReveal({ i: at, n: 0 });
     } catch {
       setLog([...next, { role: "assistant" as const, content: OFFLINE_LINE, kind: "error" }]);
@@ -328,6 +344,84 @@ export default function StudioChat() {
               </div>
             ) : (
               <p className="m-0 leading-relaxed whitespace-pre-wrap">{l.content}</p>
+            )}
+            {l.role === "assistant" && l.concept && (
+              <div className="mt-2.5 flex flex-col gap-1.5 rounded-lg border border-white/10 bg-black/20 p-3 text-[13px]">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="font-bold text-white">{l.concept.name ?? "Untitled"}</span>
+                  {l.concept.ticker && (
+                    <span className="font-mono font-bold text-[#fae8a4]">${l.concept.ticker}</span>
+                  )}
+                </div>
+                {l.concept.tagline && (
+                  <p className="m-0 text-white/80 italic">{l.concept.tagline}</p>
+                )}
+                {l.concept.description && (
+                  <p className="m-0 leading-relaxed text-white/70">{l.concept.description}</p>
+                )}
+                {l.concept.lore && (
+                  <p className="m-0 leading-relaxed text-white/50">{l.concept.lore}</p>
+                )}
+                {typeof l.concept.vibeScore === "number" && (
+                  <span className="font-mono text-[11px] font-bold tracking-wider text-[#fae8a4]">
+                    AI VIBE {l.concept.vibeScore}/10
+                  </span>
+                )}
+                {l.concept.logoPrompt && (
+                  <div className="flex flex-col gap-1.5 rounded-md border border-white/10 bg-white/5 p-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-[10px] font-bold tracking-wider text-white/40 uppercase">
+                        Logo prompt
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (typeof navigator === "undefined" || !navigator.clipboard || !l.concept?.logoPrompt) return;
+                          const idx = i;
+                          void navigator.clipboard.writeText(l.concept.logoPrompt).then(
+                            () => setCopiedIdx(idx),
+                            () => setCopiedIdx(null),
+                          );
+                          setTimeout(() => setCopiedIdx((c) => (c === idx ? null : c)), 1500);
+                        }}
+                        className="inline-flex cursor-pointer items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[10px] font-bold text-[#cadcf0] hover:bg-white/10"
+                      >
+                        {copiedIdx === i ? <Check size={11} aria-hidden="true" /> : <Copy size={11} aria-hidden="true" />}
+                        <span>{copiedIdx === i ? "Copied" : "Copy"}</span>
+                      </button>
+                    </div>
+                    <p className="m-0 font-mono text-[11px] leading-relaxed break-words text-white/60">{l.concept.logoPrompt}</p>
+                    {draft.image ? (
+                      /* eslint-disable-next-line @next/next/no-img-element -- generated or user artwork */
+                      <img
+                        src={draft.image}
+                        alt="Generated coin logo"
+                        className="aspect-square w-full rounded-md border border-white/10 object-cover"
+                        onError={(e) => {
+                          const el = e.currentTarget;
+                          if (el.dataset.fb === "1") return;
+                          el.dataset.fb = "1";
+                          el.src = logoFallbackUrl(l.concept?.ticker || "ARTEMIS", logoSeed);
+                        }}
+                      />
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!l.concept?.logoPrompt) return;
+                          const seed = Math.floor(Math.random() * 1000000);
+                          setLogoSeed(seed);
+                          setDraft((prev) => ({ ...prev, image: logoImageUrl(l.concept?.logoPrompt as string, seed) }));
+                        }}
+                        className="inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-[#fae8a4] px-3 py-1.5 text-xs font-bold text-[#17131f] transition-all hover:bg-[#f1d2e8]"
+                      >
+                        <Sparkles size={12} aria-hidden="true" />
+                        <span>Generate logo</span>
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             )}
             {l.auto && (!reveal || reveal.i !== i) && (
               <span className="mt-2 inline-flex items-center gap-1 rounded-full border border-emerald-300/30 bg-emerald-300/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-200">
