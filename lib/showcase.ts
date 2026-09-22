@@ -7,6 +7,9 @@ export type ShowcaseInput = {
   pool?: string;
   txHash?: string;
   image?: string;
+  tagline?: string;
+  description?: string;
+  lore?: string;
 };
 
 // ponytail: fire-and-forget, local receipt stays source of truth when DB offline

@@ -39,7 +39,7 @@ describe("tokens route", () => {
 
   it("GET lists newest tokens", async () => {
     mocked.isDbConfigured.mockReturnValue(true);
-    mocked.listTokens.mockResolvedValue([{ chain_id: "4663", address: "0xabc", creator: "", name: "X", symbol: "", pool: "", tx_hash: "", image: "", created_at: "" }]);
+    mocked.listTokens.mockResolvedValue([{ chain_id: "4663", address: "0xabc", creator: "", name: "X", symbol: "", pool: "", tx_hash: "", image: "", tagline: "", description: "", lore: "", created_at: "" }]);
     const res = await GET(new Request("http://x/api/community/tokens"));
     expect(res.status).toBe(200);
     expect(((await res.json()) as { tokens: unknown[] }).tokens).toHaveLength(1);

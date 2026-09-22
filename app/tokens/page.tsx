@@ -17,6 +17,9 @@ type Token = {
   pool: string;
   tx_hash: string;
   image?: string;
+  tagline?: string;
+  description?: string;
+  lore?: string;
 };
 
 export default function TokensPage() {
@@ -230,15 +233,21 @@ export default function TokensPage() {
                       );
                     })()}
                     <div className="min-w-0 flex-1">
-                      <h3
-                        title={t.name || t.symbol || "Untitled Coin"}
-                        className="m-0 truncate text-sm leading-snug font-bold text-white"
-                      >
-                        {t.name || t.symbol || "Untitled Coin"}
-                      </h3>
-                      <span className="font-mono text-xs font-bold tracking-wider text-[#fae8a4]">
-                        ${t.symbol || "TOKEN"}
-                      </span>
+                    <h3
+                      title={t.name || t.symbol || "Untitled Coin"}
+                      className="m-0 truncate text-sm leading-snug font-bold text-white"
+                    >
+                      {t.name || t.symbol || "Untitled Coin"}
+                    </h3>
+                    <span className="font-mono text-xs font-bold tracking-wider text-[#fae8a4]">
+                      ${t.symbol || "TOKEN"}
+                    </span>
+                    {typeof t.tagline === "string" && t.tagline !== "" && (
+                      <span className="mt-0.5 block truncate text-xs text-white/70 italic">{t.tagline}</span>
+                    )}
+                    {typeof t.lore === "string" && t.lore !== "" && (
+                      <span className="mt-0.5 line-clamp-2 block text-xs leading-relaxed text-white/50">{t.lore}</span>
+                    )}
                     </div>
                   </div>
                   <span className="shrink-0 self-start rounded border border-white/15 bg-white/5 px-2 py-0.5 font-mono text-[10px] whitespace-nowrap text-white/70 uppercase">

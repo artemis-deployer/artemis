@@ -209,7 +209,9 @@ const ReviewDialog = forwardRef<HTMLDialogElement, { draft: Draft; mainnet: bool
     // Artwork comes from the user, never from chain: https only, URL length capped server-side.
     const image = draft.image?.startsWith("https://") ? draft.image : undefined;
     try {
-      return toShowcaseDisplay(await submitShowcase({ ...input, image }));
+      return toShowcaseDisplay(
+        await submitShowcase({ ...input, image, tagline: draft.tagline, description: draft.description, lore: draft.lore }),
+      );
     } catch {
       return "pending";
     }

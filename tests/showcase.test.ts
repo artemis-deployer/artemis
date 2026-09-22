@@ -105,6 +105,9 @@ describe("normalizeTokenInput", () => {
       pool: "p",
       txHash: "h",
       image: "",
+      tagline: "",
+      description: "",
+      lore: "",
     });
   });
 
@@ -139,14 +142,27 @@ describe("normalizeTokenInput", () => {
   });
 
   it("keeps https artwork, drops the rest", () => {
-    expect(
-      normalizeTokenInput({ chainId: "4663", address: "0xabc", image: "https://example.test/a.png" }).image,
-    ).toBe("https://example.test/a.png");
+    expect(normalizeTokenInput({ chainId: "4663", address: "0xabc", image: "https://example.test/a.png" }).image).toBe(
+      "https://example.test/a.png",
+    );
     expect(normalizeTokenInput({ chainId: "4663", address: "0xabc", image: "http://x/y.png" }).image).toBe("");
     expect(normalizeTokenInput({ chainId: "4663", address: "0xabc", image: "data:image/png;base64,aGk=" }).image).toBe(
       "",
     );
     expect(normalizeTokenInput({ chainId: "4663", address: "0xabc" }).image).toBe("");
+  });
+
+  it("caps story fields by code points", () => {
+    const out = normalizeTokenInput({
+      chainId: "4663",
+      address: "0xabc",
+      tagline: `  ${"T".repeat(100)}  `,
+      description: `${"D".repeat(600)}`,
+      lore: 123 as unknown as string,
+    });
+    expect(out.tagline).toBe("T".repeat(80));
+    expect(out.description).toBe("D".repeat(500));
+    expect(out.lore).toBe("");
   });
 });
 

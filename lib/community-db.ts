@@ -9,6 +9,9 @@ export type TokenRow = {
   pool: string;
   tx_hash: string;
   image: string;
+  tagline: string;
+  description: string;
+  lore: string;
   created_at: string;
 };
 
@@ -38,13 +41,17 @@ export async function saveToken(input: {
   pool?: string;
   txHash?: string;
   image?: string;
+  tagline?: string;
+  description?: string;
+  lore?: string;
 }): Promise<void> {
   const t = normalizeTokenInput(input);
-  await sql()`INSERT INTO tokens (chain_id, address, creator, name, symbol, pool, tx_hash, image)
-    VALUES (${t.chainId}, ${t.address}, ${t.creator}, ${t.name}, ${t.symbol}, ${t.pool}, ${t.txHash}, ${t.image})
+  await sql()`INSERT INTO tokens (chain_id, address, creator, name, symbol, pool, tx_hash, image, tagline, description, lore)
+    VALUES (${t.chainId}, ${t.address}, ${t.creator}, ${t.name}, ${t.symbol}, ${t.pool}, ${t.txHash}, ${t.image}, ${t.tagline}, ${t.description}, ${t.lore})
     ON CONFLICT (chain_id, address) DO UPDATE SET
       creator = EXCLUDED.creator, name = EXCLUDED.name, symbol = EXCLUDED.symbol,
-      pool = EXCLUDED.pool, tx_hash = EXCLUDED.tx_hash, image = EXCLUDED.image`;
+      pool = EXCLUDED.pool, tx_hash = EXCLUDED.tx_hash, image = EXCLUDED.image,
+      tagline = EXCLUDED.tagline, description = EXCLUDED.description, lore = EXCLUDED.lore`;
 }
 
 // ponytail: route slices raw then verifies; trim-then-slice here keeps stored rows clean
@@ -57,6 +64,9 @@ export function normalizeTokenInput(input: {
   pool?: string;
   txHash?: string;
   image?: string;
+  tagline?: string;
+  description?: string;
+  lore?: string;
 }): {
   chainId: string;
   address: string;
@@ -66,9 +76,14 @@ export function normalizeTokenInput(input: {
   pool: string;
   txHash: string;
   image: string;
+  tagline: string;
+  description: string;
+  lore: string;
 } {
   // ponytail: Array.from slices by code point, never splits surrogate pairs (lone surrogates break Postgres UTF-8)
   const clean = (v: unknown) => (typeof v === "string" ? Array.from(v.trim()).slice(0, 200).join("") : "");
+  const cleanLong = (v: unknown, max: number) =>
+    typeof v === "string" ? Array.from(v.trim()).slice(0, max).join("") : "";
   const rawImage = typeof input.image === "string" ? input.image.trim() : "";
   return {
     chainId: String(input.chainId ?? "").trim(),
@@ -79,5 +94,8 @@ export function normalizeTokenInput(input: {
     pool: clean(input.pool),
     txHash: clean(input.txHash),
     image: rawImage.startsWith("https://") ? rawImage.slice(0, 2048) : "",
+    tagline: cleanLong(input.tagline, 80),
+    description: cleanLong(input.description, 500),
+    lore: cleanLong(input.lore, 500),
   };
 }
