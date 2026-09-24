@@ -22,7 +22,11 @@ const disclosures = [
   },
   {
     title: 'Client-side custody only.',
-    desc: 'Artemis runs as a client-side interface and stateless API proxy. Private keys are never requested, stored, or transmitted. Every onchain interaction requires your explicit wallet signature.'
+    desc: 'Artemis runs as a client-side interface and API proxy. Private keys and account credentials are never requested, stored, or transmitted. For optional ZK verification, Artemis stores only public handles, wallet addresses, and proofs. Every onchain interaction requires your explicit wallet signature.'
+  },
+  {
+    title: 'ZK verification proves an account, not a promise.',
+    desc: 'A ZK VERIFIED badge means the deployer wallet proved control of the listed X account at the time shown. It says nothing about the token\u2019s value or the creator\u2019s intentions. Proofs rely on Reclaim Protocol attestors and TEE attestation. Artemis stores the public handle, bound wallet, and proof so anyone can inspect them.'
   },
   {
     title: 'No buyers guaranteed at launch.',

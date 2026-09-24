@@ -8,6 +8,7 @@ import { isSafeImageSrc, useDraft } from "./DraftContext";
 import ChainLogo from "./ChainLogo";
 import ConceptLogo, { downloadLogo } from "./ConceptLogo";
 import CropModal from "./CropModal";
+import ZkVerifyPanel from "./ZkVerifyPanel";
 import { resolveLogo } from "../lib/logo";
 
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
@@ -536,6 +537,11 @@ export default function LaunchForm({ onReview }: { onReview: () => void }) {
             {[xUrlError, webUrlError].filter(Boolean).join(" ")}
           </p>
         )}
+        <ZkVerifyPanel
+          onVerified={(handle) =>
+            setDraft((prev) => ({ ...prev, xUrl: `https://x.com/${handle}` }))
+          }
+        />
         {previewUrl && !draft.image && (
           <p className="m-0 text-xs text-white/50">{pinning ? "Pinning artwork to IPFS…" : "Local preview — IPFS URL fills in after pin completes."}</p>
         )}

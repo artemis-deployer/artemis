@@ -60,6 +60,7 @@ export const Footer: React.FC<FooterProps> = () => {
             <p className="label">&#123;PROTOCOL&#125;</p>
             <a href="#about">About</a>
             <a href="#transparency">Transparency</a>
+            {process.env.NEXT_PUBLIC_ZK_LIVE === "1" && <a href="#zk">ZK Verify</a>}
             <a href="https://robinhoodchain.blockscout.com" target="_blank" rel="noreferrer">
               Robinhood Chain ↗
             </a>

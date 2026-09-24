@@ -18,6 +18,11 @@ import { AudiencesSection } from '../components/AudiencesSection';
 import { ComparisonSection } from '../components/ComparisonSection';
 import { ExecutionSection } from '../components/ExecutionSection';
 import { TransparencySection } from '../components/TransparencySection';
+import ZkSection from '../components/ZkSection';
+
+// Gate: the ZK section makes live claims, so it renders ONLY when the
+// feature is enabled AND verified in production (brief: no cosmetic ZK).
+const ZK_LIVE = process.env.NEXT_PUBLIC_ZK_LIVE === "1";
 import { Footer } from '../components/Footer';
 import { useMotion } from '../hooks/useMotion';
 
@@ -93,6 +98,9 @@ function MainApp() {
 
         {/* 10. Execution Rails Toggle & Cards */}
         <ExecutionSection onOpenSoon={handleOpenSoon} />
+
+        {/* 10b. Zero-Knowledge Verification (gated: live only) */}
+        {ZK_LIVE && <ZkSection />}
 
         {/* 11. Transparency & Disclosures Accordion */}
         <TransparencySection onOpenSoon={handleOpenSoon} />

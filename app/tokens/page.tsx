@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Search, Copy, Check, ExternalLink, Globe } from "lucide-react";
 import { TransitionLink } from "../../components/PageTransition";
+import ProofDrawer from "../../components/ProofDrawer";
+import ZkBadge from "../../components/ZkBadge";
 import { dedupeLocalReceipts, listReceipts, type Receipt } from "../../lib/receipts";
 import { displayArtworkUrl } from "../../lib/showcase";
 import { explorerTokenUrl, explorerTxUrl, getChain } from "../../lib/chains";
@@ -32,12 +34,19 @@ export default function TokensPage() {
   const [tokens, setTokens] = useState<Token[] | null>(null);
   const [local, setLocal] = useState<Receipt[]>([]);
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<"all" | "hood" | "solana" | "local">("all");
+  const [filter, setFilter] = useState<"all" | "hood" | "solana" | "local" | "zk">("all");
+  const [badges, setBadges] = useState<Record<string, { id: string; handle: string; testnet: boolean } | null>>({});
+  const [proofId, setProofId] = useState<string | null>(null);
+  const badgeCache = useRef<Record<string, { id: string; handle: string; testnet: boolean } | null>>({});
   const [copied, setCopied] = useState<string | null>(null);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function storyHook(t: Token) {
     return t.marketingHook ?? t.marketing_hook ?? "";
+  }
+
+  function tokenKey(t: Pick<Token, "chain_id" | "address">): string {
+    return `${t.chain_id}:${t.address}`;
   }
 
   /** DB rows use snake_case; https-only, attacker links never render. */
@@ -81,6 +90,46 @@ export default function TokensPage() {
     return explorerTxUrl(chainId, txHash);
   }
 
+  // ZK badges load async per token (server truth only, never client state).
+  // Above the tokens-null early return: hooks must run unconditionally.
+  useEffect(() => {
+    if (!tokens) return;
+    const targets = [
+      ...tokens.map((t) => ({ key: tokenKey(t), chain: String(t.chain_id), address: t.address })),
+      ...local
+        .filter((r) => typeof r.token === "string" && r.token.length > 0)
+        .map((r) => ({ key: `${r.chainId}:${r.token as string}`, chain: String(r.chainId), address: r.token as string })),
+    ];
+    const missing = targets.filter((t) => badgeCache.current[t.key] === undefined);
+    if (missing.length === 0) return;
+    let alive = true;
+    void (async () => {
+      const entries = await Promise.all(
+        missing.map(async (t) => {
+          try {
+            const res = await fetch(`/api/zk/token/${encodeURIComponent(t.chain)}/${encodeURIComponent(t.address)}`);
+            const json = (await res.json().catch(() => null)) as {
+              badge?: { id: string; handle: string; testnet: boolean } | null;
+            } | null;
+            return [t.key, json?.badge ?? null] as const;
+          } catch {
+            return [t.key, null] as const;
+          }
+        }),
+      );
+      if (!alive) return;
+      const next: typeof badges = {};
+      for (const [k, v] of entries) {
+        badgeCache.current[k] = v;
+        next[k] = v;
+      }
+      setBadges((prev) => ({ ...prev, ...next }));
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [tokens, local]);
+
   if (tokens === null) {
     return (
       <div className="min-h-screen bg-[#131416] text-[#f8f6f0] flex items-center justify-center">
@@ -96,6 +145,7 @@ export default function TokensPage() {
     if (filter === "hood" && !["4663", "46630"].includes(String(t.chain_id))) return false;
     if (filter === "solana" && !String(t.chain_id).toLowerCase().includes("solana")) return false;
     if (filter === "local") return false;
+    if (filter === "zk" && !badges[tokenKey(t)]?.handle) return false;
     if (!q) return true;
     return [t.name, t.symbol, t.address, t.tx_hash, t.tagline, t.description, t.lore, storyHook(t)].some((f) =>
       (f ?? "").toLowerCase().includes(q),
@@ -159,6 +209,7 @@ export default function TokensPage() {
                 ["hood", "Robinhood Chain"],
                 ["solana", "Solana (soon)"],
                 ["local", `Local Receipts (${local.length})`],
+                ["zk", "ZK Verified"],
               ] as const
             ).map(([v, label]) => (
               <button
@@ -198,7 +249,11 @@ export default function TokensPage() {
           <div className="my-12 rounded-xl border border-dashed border-white/15 bg-[#1a1b1f] p-12 text-center">
             <h3 className="mb-2 font-unbounded text-xl font-bold text-white">No tokens found</h3>
             <p className="mb-6 text-sm text-white/60">
-              {query ? "No tokens match your search query." : "No launches have been registered yet."}
+              {filter === "zk"
+                ? "No ZK-verified launches yet. Be the first."
+                : query
+                  ? "No tokens match your search query."
+                  : "No launches have been registered yet."}
             </p>
             <Link
               href="/#studio"
@@ -263,6 +318,18 @@ export default function TokensPage() {
                     <span className="rounded border border-white/15 bg-white/5 px-2 py-0.5 font-mono text-[10px] whitespace-nowrap text-white/70 uppercase">
                       {chainInfo?.name ?? `Chain ${t.chain_id}`}
                     </span>
+                    {badges[tokenKey(t)]?.handle && (
+                      <ZkBadge
+                        state={badges[tokenKey(t)]?.testnet ? "verified-testnet" : "verified"}
+                        handle={badges[tokenKey(t)]?.handle}
+                        size="sm"
+                        title="Creator proved control of this X account with zkTLS. Click to inspect the proof."
+                        onInspect={() => {
+                          const id = badges[tokenKey(t)]?.id;
+                          if (id) setProofId(id);
+                        }}
+                      />
+                    )}
                     {(tokenLink(t, "x") !== "" || tokenLink(t, "web") !== "") && (
                       <div className="flex items-center gap-1.5">
                         {tokenLink(t, "x") !== "" && (
@@ -425,9 +492,23 @@ export default function TokensPage() {
                       <span className="text-xs text-white/50">Saved in this browser</span>
                     </div>
                   </div>
-                  <span className="shrink-0 self-start rounded border border-[#cadcf0]/30 bg-[#cadcf0]/10 px-2 py-0.5 font-mono text-[10px] whitespace-nowrap text-[#cadcf0] uppercase">
-                    Local
-                  </span>
+                  <div className="flex shrink-0 flex-col items-end gap-2 self-start">
+                    <span className="rounded border border-[#cadcf0]/30 bg-[#cadcf0]/10 px-2 py-0.5 font-mono text-[10px] whitespace-nowrap text-[#cadcf0] uppercase">
+                      Local
+                    </span>
+                    {r.token && badges[`${r.chainId}:${r.token}`]?.handle && (
+                      <ZkBadge
+                        state={badges[`${r.chainId}:${r.token}`]?.testnet ? "verified-testnet" : "verified"}
+                        handle={badges[`${r.chainId}:${r.token}`]?.handle}
+                        size="sm"
+                        title="Creator proved control of this X account with zkTLS. Click to inspect the proof."
+                        onInspect={() => {
+                          const id = badges[`${r.chainId}:${r.token}`]?.id;
+                          if (id) setProofId(id);
+                        }}
+                      />
+                    )}
+                  </div>
                 </div>
 
                 <dl className="divide-y divide-white/5 text-left font-mono text-xs">
@@ -505,6 +586,7 @@ export default function TokensPage() {
         </div>
       </main>
 
+      <ProofDrawer key={proofId ?? "closed"} proofId={proofId} onClose={() => setProofId(null)} />
     </div>
   );
 }
