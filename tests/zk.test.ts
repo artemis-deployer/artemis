@@ -97,7 +97,17 @@ describe("isTestnetChain", () => {
 });
 
 describe("zk routes without creds or db", () => {
+  it("routes report zk_disabled when the feature flag is off", async () => {
+    vi.stubEnv("ZK_VERIFY_ENABLED", "");
+    const { POST } = await import("../app/api/zk/nonce/route");
+    const res = await POST(new Request("http://x/api/zk/nonce", { method: "POST", body: JSON.stringify({ wallet: "nope" }) }));
+    expect(res.status).toBe(503);
+    expect(((await res.json()) as { error: string }).error).toBe("zk_disabled");
+    vi.unstubAllEnvs();
+  });
+
   it("nonce rejects bad wallet before touching db", async () => {
+    vi.stubEnv("ZK_VERIFY_ENABLED", "1");
     vi.stubEnv("DATABASE_URL", "");
     const { POST } = await import("../app/api/zk/nonce/route");
     const res = await POST(new Request("http://x/api/zk/nonce", { method: "POST", body: JSON.stringify({ wallet: "nope" }) }));
@@ -105,7 +115,9 @@ describe("zk routes without creds or db", () => {
     vi.unstubAllEnvs();
   });
 
+  // Heavy Reclaim SDK import: generous timeout under full-suite load.
   it("init reports zk_offline without Reclaim creds", async () => {
+    vi.stubEnv("ZK_VERIFY_ENABLED", "1");
     vi.stubEnv("DATABASE_URL", "");
     vi.stubEnv("RECLAIM_APP_ID", "");
     vi.stubEnv("RECLAIM_APP_SECRET", "");
@@ -120,5 +132,5 @@ describe("zk routes without creds or db", () => {
     expect(res.status).toBe(502);
     expect(((await res.json()) as { error: string }).error).toBe("zk_offline");
     vi.unstubAllEnvs();
-  });
+  }, 30000);
 });

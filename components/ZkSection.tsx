@@ -54,6 +54,7 @@ export default function ZkSection() {
     const el = ref.current;
     if (!el) return;
     if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- mount-only reduced-motion sync
       setLit(PIPELINE.length);
       return;
     }

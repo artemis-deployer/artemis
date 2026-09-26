@@ -7,6 +7,7 @@ import { verifyEvmTx, verifySolanaTx } from "../../../../lib/verify-tx";
 import { consumeNonce, saveSession } from "../../../../lib/zk-db";
 import { verifyEvmSigner, verifySolanaSigner } from "../../../../lib/zk";
 import { baseUrl, isEvmWallet, isSolanaWallet, readJsonBody } from "../../../../lib/zk-http";
+import { isWalletAllowed, zkFlags } from "../../../../lib/zk-flags";
 
 function zkCreds(): { appId: string; secret: string; providerId: string } | null {
   const appId = (process.env.RECLAIM_APP_ID ?? "").trim();
@@ -38,6 +39,8 @@ async function assertDeployer(wallet: string, token: string, chainId: string, tx
 }
 
 export async function POST(req: Request) {
+  const flags = zkFlags();
+  if (!flags.enabled) return NextResponse.json({ error: "zk_disabled" }, { status: 503 });
   const parsed = await readJsonBody(req, 8 * 1024);
   if ("error" in parsed) return parsed.error;
   const b = parsed.body;
@@ -51,6 +54,9 @@ export async function POST(req: Request) {
   const sol = !evm && isSolanaWallet(wallet);
   if ((!evm && !sol) || !signature || !nonce) {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
+  }
+  if (!isWalletAllowed(flags, wallet)) {
+    return NextResponse.json({ error: "allowlist_only" }, { status: 403 });
   }
   if (!(await checkRateLimit(`zk-init:${clientIp(req)}:${wallet.toLowerCase()}`, 5, 3600000)).ok) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });

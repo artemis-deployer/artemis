@@ -4,8 +4,10 @@ import { checkRateLimit, clientIp } from "../../../../lib/rate-limit";
 import { saveNonce } from "../../../../lib/zk-db";
 import { zkSignMessage } from "../../../../lib/zk";
 import { isEvmWallet, isSolanaWallet, readJsonBody } from "../../../../lib/zk-http";
+import { zkFlags } from "../../../../lib/zk-flags";
 
 export async function POST(req: Request) {
+  if (!zkFlags().enabled) return NextResponse.json({ error: "zk_disabled" }, { status: 503 });
   if (!(await checkRateLimit(`zk-nonce:${clientIp(req)}`, 10, 60000)).ok) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }

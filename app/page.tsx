@@ -19,10 +19,13 @@ import { ComparisonSection } from '../components/ComparisonSection';
 import { ExecutionSection } from '../components/ExecutionSection';
 import { TransparencySection } from '../components/TransparencySection';
 import ZkSection from '../components/ZkSection';
+import { ShieldPanel } from '../components/ShieldPanel';
 
 // Gate: the ZK section makes live claims, so it renders ONLY when the
 // feature is enabled AND verified in production (brief: no cosmetic ZK).
 const ZK_LIVE = process.env.NEXT_PUBLIC_ZK_LIVE === "1";
+// Gate: shielded pool rehearsal UI (brief §B5, default off).
+const SHIELD_LIVE = process.env.NEXT_PUBLIC_SHIELD_ENABLED === "1";
 import { Footer } from '../components/Footer';
 import { useMotion } from '../hooks/useMotion';
 
@@ -101,6 +104,9 @@ function MainApp() {
 
         {/* 10b. Zero-Knowledge Verification (gated: live only) */}
         {ZK_LIVE && <ZkSection />}
+
+        {/* 10c. Shielded Pools rehearsal (gated: off by default) */}
+        {SHIELD_LIVE && <ShieldPanel />}
 
         {/* 11. Transparency & Disclosures Accordion */}
         <TransparencySection onOpenSoon={handleOpenSoon} />

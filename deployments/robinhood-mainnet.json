@@ -1,0 +1,35 @@
+{
+  "project": "ArtemisZK",
+  "network": "robinhood-mainnet",
+  "chainId": 4663,
+  "explorer": "https://robinhoodchain.blockscout.com",
+  "deployBlock": 0,
+  "deployedAt": "2026-09-21T00:00:00Z",
+  "deployer": "0x272568D25b9634Ad8A4e8E8CBB10b729f41C781d",
+  "gitCommit": "pre-manifest",
+  "contracts": [
+    {
+      "group": "CORE",
+      "name": "ArtemisLauncher",
+      "address": "0xeea9d0f7ee0958c6d59f25162be4e69ba60a0f71",
+      "txHash": "0x4fa871c14627052b968198e3598a1e27832e5aaa17d1997a093c5d47a8cbf235",
+      "verified": true,
+      "owner": "none",
+      "notes": "Deploys fixed 999M ERC20 and pairs with ETH atomically. Deploy block not archived in repo; confirm via the explorer tx link. Live proof: ASIF launch tx 0x3bebcd4dd28b55c3fa5d56a2b1dde41ff91adf8ac6a996c8534e835e68585ab0 block 67920183."
+    }
+  ],
+  "external": [
+    {
+      "name": "Uniswap V2 Router",
+      "address": "0x89e5db8b5aa49aa85ac63f691524311aeb649eba"
+    },
+    {
+      "name": "Uniswap V2 Factory",
+      "address": "0x8bceaa40b9acdfaedf85adf4ff01f5ad6517937f"
+    },
+    {
+      "name": "WETH",
+      "address": "0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73"
+    }
+  ]
+}

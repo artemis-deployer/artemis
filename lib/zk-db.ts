@@ -119,3 +119,30 @@ export async function countHandleTokens(handle: string, excludeSession: string):
     WHERE handle = ${handle} AND session_id <> ${excludeSession} AND revoked_at IS NULL`) as unknown as { n: number }[];
   return rows[0]?.n ?? 0;
 }
+
+export type ZkMetrics = {
+  sessions: Record<string, number>;
+  failures: Record<string, number>;
+  verifications24h: number;
+};
+
+/** Counts only (brief A7). No wallets, handles, or personal data leave this query. */
+export async function getZkMetrics(): Promise<ZkMetrics> {
+  needDb();
+  const byStatus = (await sql()`SELECT status, count(*)::int AS n FROM zk_sessions GROUP BY status`) as unknown as {
+    status: string;
+    n: number;
+  }[];
+  const byReason = (await sql()`SELECT fail_reason, count(*)::int AS n FROM zk_sessions
+    WHERE status = 'failed' AND fail_reason <> '' GROUP BY fail_reason`) as unknown as {
+    fail_reason: string;
+    n: number;
+  }[];
+  const recent = (await sql()`SELECT count(*)::int AS n FROM zk_verifications
+    WHERE verified_at > now() - interval '24 hours'`) as unknown as { n: number }[];
+  const sessions: Record<string, number> = {};
+  for (const r of byStatus) sessions[r.status] = r.n;
+  const failures: Record<string, number> = {};
+  for (const r of byReason) failures[r.fail_reason] = r.n;
+  return { sessions, failures, verifications24h: recent[0]?.n ?? 0 };
+}

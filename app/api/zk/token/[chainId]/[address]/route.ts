@@ -2,8 +2,10 @@ import { NextResponse } from "next/server";
 import { checkRateLimit, clientIp } from "../../../../../../lib/rate-limit";
 import { countHandleTokens, getTokenBadge } from "../../../../../../lib/zk-db";
 import { isTestnetChain } from "../../../../../../lib/zk";
+import { zkFlags } from "../../../../../../lib/zk-flags";
 
 export async function GET(req: Request, ctx: { params: Promise<{ chainId: string; address: string }> }) {
+  if (!zkFlags().enabled) return NextResponse.json({ error: "zk_disabled" }, { status: 503 });
   if (!(await checkRateLimit(`zk-token:${clientIp(req)}`, 60, 60000)).ok) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }

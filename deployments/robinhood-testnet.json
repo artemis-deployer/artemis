@@ -1,0 +1,13 @@
+{
+  "project": "ArtemisZK",
+  "network": "robinhood-testnet",
+  "chainId": 46630,
+  "explorer": "https://explorer.testnet.chain.robinhood.com",
+  "deployBlock": 0,
+  "deployedAt": "2026-09-21T00:00:00Z",
+  "deployer": "0x0000000000000000000000000000000000000000",
+  "gitCommit": "pre-manifest",
+  "contracts": [],
+  "notes": "No Artemis contracts on testnet: no Uniswap V2 router exists there, so rehearsal uses the token-only drill (ARTS 0x3c36c1e53bb363714533e36fa9c47122bd90589d, deploy tx 0x1bf4e9fd92c29e931c8a832c22ac2b43dd15ed3f1251b0ee2f0dcb756b459181 block 122244206). ShieldedPool testnet deploy pending (brief B-1).",
+  "external": []
+}
