@@ -124,6 +124,18 @@ export default function TokensPage() {
           </TransitionLink>
 
           <div className="flex flex-wrap items-center justify-end gap-2.5">
+            <a
+              href="https://x.com/artemislauncher"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Artemis on X"
+              title="Artemis on X"
+              className="inline-flex min-h-8 min-w-8 items-center justify-center rounded border border-white/15 bg-white/5 p-2 text-white/70 transition-all hover:border-white/30 hover:text-white"
+            >
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden="true">
+                <path d="M18.9 2H22l-6.8 7.8L23.2 22h-6.3L12 14.6 5.5 22H2.3l8.2-9.4L1 2h6.5l5.8 7.7L18.9 2ZM17.8 20h1.7L6.5 4H4.7z" />
+              </svg>
+            </a>
             <TransitionLink href="/" className="dp-button secondary min-w-0 text-xs py-1" aria-label="Back to Studio">
               <span>BACK TO STUDIO</span>
               <span className="arrow-box">↖</span>

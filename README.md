@@ -6,7 +6,7 @@
 
 **Autonomous Non-Custodial Token Launchpad & AI Copilot for Robinhood Chain & Solana**
 
-🌐 **Web Application:** [https://artemis-olive.vercel.app](https://artemis-olive.vercel.app) · 📜 **Documentation:** [docs/MAINNET-PROOF.md](docs/MAINNET-PROOF.md) · ⚡ **Testnet Proof:** [docs/TESTNET-PROOF.md](docs/TESTNET-PROOF.md)
+🌐 **Web Application:** [https://artemis-olive.vercel.app](https://artemis-olive.vercel.app) · 🐦 **X (Twitter):** [https://x.com/artemislauncher](https://x.com/artemislauncher) · 📜 **Documentation:** [docs/MAINNET-PROOF.md](docs/MAINNET-PROOF.md) · ⚡ **Testnet Proof:** [docs/TESTNET-PROOF.md](docs/TESTNET-PROOF.md)
 
 *Chat an idea into a token draft. Deploy fixed-supply ERC20 & SPL coins into onchain AMM pools directly from your own wallet. 100% non-custodial, zero platform fees.*
 

@@ -43,12 +43,27 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenMenu }) => {
       <div className="nav-actions">
         <TopbarWallet />
 
-        <TransitionLink
-          href="/tokens"
-          className="nav-cta"
-        >
-          <span>SHOWCASE</span> <span>↗</span>
-        </TransitionLink>
+        <div className="nav-cta-group">
+          <TransitionLink
+            href="/tokens"
+            className="nav-cta"
+          >
+            <span>SHOWCASE</span> <span>↗</span>
+          </TransitionLink>
+
+          <a
+            href="https://x.com/artemislauncher"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Artemis on X"
+            title="Artemis on X"
+            className="nav-social"
+          >
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true">
+              <path d="M18.9 2H22l-6.8 7.8L23.2 22h-6.3L12 14.6 5.5 22H2.3l8.2-9.4L1 2h6.5l5.8 7.7L18.9 2ZM17.8 20h1.7L6.5 4H4.7z" />
+            </svg>
+          </a>
+        </div>
 
         <button
           type="button"

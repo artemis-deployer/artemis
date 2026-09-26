@@ -92,7 +92,7 @@ export const Footer: React.FC<FooterProps> = () => {
               </a>
               <a
                 className="social"
-                href="https://github.com"
+                href="https://github.com/artemis-deployer/artemis"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Artemis on GitHub"

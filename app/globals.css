@@ -1045,6 +1045,12 @@ textarea:focus:not(:focus-visible) {
   align-items: center;
 }
 
+.nav-cta-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .nav-cta {
   font-size: 13px;
   display: flex;
@@ -1066,6 +1072,29 @@ textarea:focus:not(:focus-visible) {
 }
 
 .nav.light-nav .nav-cta:hover {
+  background: rgba(24, 25, 28, 0.06);
+}
+
+.nav-social {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  color: inherit;
+  text-decoration: none;
+  transition: background 0.2s ease, opacity 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
+  flex-shrink: 0;
+}
+
+.nav-social:hover {
+  background: rgba(255, 255, 255, 0.08);
+  opacity: 0.9;
+}
+
+.nav.light-nav .nav-social:hover {
   background: rgba(24, 25, 28, 0.06);
 }
 
@@ -1538,6 +1567,10 @@ textarea:focus:not(:focus-visible) {
   }
   .nav-cta span:last-child {
     display: none;
+  }
+  .nav-social {
+    width: 29px;
+    height: 29px;
   }
   .menu-label {
     display: none;
