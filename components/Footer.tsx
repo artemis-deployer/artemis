@@ -83,7 +83,7 @@ export const Footer: React.FC<FooterProps> = () => {
             <div className="footer-social">
               <a
                 className="social"
-                href="https://x.com"
+                href="https://x.com/artemislauncher"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Artemis on X"
@@ -94,7 +94,7 @@ export const Footer: React.FC<FooterProps> = () => {
               </a>
               <a
                 className="social"
-                href="https://github.com"
+                href="https://github.com/artemis-deployer/artemis"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Artemis on GitHub"

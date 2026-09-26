@@ -145,8 +145,8 @@ token-only drill; on Solana the pump.fun rail is built and parked behind a comin
 
 
 C. OFFICIAL X (TWITTER) ACCOUNT
-- Profile URL: [USER_FILL_HERE]
-- Handle: [USER_FILL_HERE]
+- Profile URL: https://x.com/artemislauncher
+- Handle: @artemislauncher
 - Username / Email: [USER_FILL_HERE]
 - Password: [USER_FILL_HERE]
 
