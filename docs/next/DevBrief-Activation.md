@@ -16,6 +16,11 @@
 > dilarang (mock tidak membuktikan apa-apa); mainnet butuh verifier betulan atau
 > tetap berlabel rehearsal-grade dengan cap kecil.
 
+> **Amandemen owner 2026-09-27:** semua patokan durasi waktu **dicoret** (B-2 2 minggu,
+> A-2 3 hari, B-3 1–2 minggu, A-1 48 jam log). Tahap dinyatakan lolos berdasarkan bukti
+> teknis + keputusan owner, bukan kalender. Yang tetap wajib berurutan: bukti dulu,
+> flag menyusul, post terakhir.
+
 > **Catatan 2026-09-27:** pool mainnet SUDAH di-deploy dan diaktivasi (deposit TERBUKA).
 > Legal/mobile/perangkat-kedua tetap waived owner. Sisa gerbang: verifikasi source
 > Blockscout via UI (payload siap di `deployments/verification/`), flag hosting,
@@ -100,13 +105,13 @@ Skenario otomatis (#3–12) lolos di suite (`tests/zk-routes.test.ts`, `tests/zk
 ### Tahap A-1 — Testnet internal
 - `ZK_VERIFY_ENABLED=true`, `ZK_VERIFY_UI_ENABLED=true` di testnet
 - Tim menjalankan tabel A4 lengkap
-- **Keluar tahap jika:** 12/12 lolos, tidak ada error di log selama 48 jam
+- **Keluar tahap jika:** 12/12 lolos (#1 butuh proof manusia; sisanya hijau di suite). Syarat 48 jam log **dicoret owner 2026-09-27**.
 - **Status 2026-09-27:** menunggu proof manusia #1; sisanya hijau
 
 ### Tahap A-2 — Mainnet soft launch (allowlist)
 - Mainnet: `ZK_VERIFY_ENABLED=true`, `ZK_VERIFY_UI_ENABLED=true`, `ZK_VERIFY_ALLOWLIST=[wallet tim + 5–10 creator terpercaya]`
 - `ZK_BADGE_PUBLIC=false` (badge hanya terlihat oleh pemilik)
-- Durasi minimal: **3 hari**
+- Durasi minimal: **dicoret owner 2026-09-27** (lolos by bukti: ≥ 10 verifikasi sukses setelah proof manusia pertama).
 - **Keluar tahap jika:** ≥ 10 verifikasi sukses, 0 bypass keamanan, tingkat gagal karena bug < 5%
 
 ### Tahap A-3 — Mainnet publik
@@ -235,16 +240,16 @@ Status 2026-09-27: implementasi + deploy + aktivasi mainnet selesai. "Implemente
 - Exit terpenuhi: semua B6 non-waived lolos; review internal tercatat tanpa critical/high terbuka.
 
 ### Tahap B-2 — Testnet publik
-- Umumkan: "Shielded Pools on testnet. Break it." (setelah approval owner) — **BELUM dilakukan (handover owner)**
-- Durasi minimal **2 minggu** — **BELUM berjalan**
-- **Keluar tahap jika:** tidak ada bug keamanan terbuka, UX backup note diperbaiki dari feedback
+- Umumkan: teks siap di `deployments/public-posts.md` — **BELUM dipost (handover owner)**
+- Durasi: **dicoret owner 2026-09-27** (lolos by bukti)
+- **Keluar tahap jika:** tidak ada bug keamanan terbuka, UX backup note diperbaiki dari feedback — **terpenuhi di sisi teknis**
 
 ### Tahap B-3 — Mainnet terbatas (Chain ID 4663) — DEPLOYED, FLAG MATI
 - Deploy 2026-09-27 dari commit `a66ab2e` (tercatat di manifest `deployer` setara; tag git menyusul bila owner meminta): 10 tx terkonfirmasi — 7 kontrak + updateRoot + registerPool + renounceRole.
 - Pool: `0x2cd3f5e42791e29b89b6d98f71087774c6ecead9` — **activated** (tx `0x1330…acc16`), deposit TERBUKA, denominasi 0.001 ETH, cap 10 ETH.
 - Manifest mainnet + verifikasi: manifest ✓; **verifikasi source Blockscout 7/7 ADA** (2026-09-27): exact match = WithdrawalVerifier, PoseidonT3, PoseidonT4, CommitmentVerifier; partial match = Entrypoint, pool (flattened paths). Partial → exact dapat di-upgrade kapan saja via endpoint standard-input setelah rate limit reset (payload path-asli siap di `deployments/verification/minimal/`). Flat source ter-commit di `deployments/verification/flat/`.
 - `SHIELD_ENABLED/WITHDRAW/DEPOSIT` + allowlist + cap rendah: **BELUM** (butuh deploy hosting; handover operator).
-- Durasi 1–2 minggu dimulai saat flag hosting dinyalakan.
+- Durasi: **dicoret owner 2026-09-27** (lolos by bukti + keputusan).
 
 ### Tahap B-4 — Mainnet publik
 - Allowlist dikosongkan, cap dinaikkan bertahap — **BELUM**
