@@ -242,7 +242,7 @@ Status 2026-09-27: implementasi + deploy + aktivasi mainnet selesai. "Implemente
 ### Tahap B-3 — Mainnet terbatas (Chain ID 4663) — DEPLOYED, FLAG MATI
 - Deploy 2026-09-27 dari commit `a66ab2e` (tercatat di manifest `deployer` setara; tag git menyusul bila owner meminta): 10 tx terkonfirmasi — 7 kontrak + updateRoot + registerPool + renounceRole.
 - Pool: `0x2cd3f5e42791e29b89b6d98f71087774c6ecead9` — **activated** (tx `0x1330…acc16`), deposit TERBUKA, denominasi 0.001 ETH, cap 10 ETH.
-- Manifest mainnet + verifikasi: manifest ✓; **verifikasi source Blockscout 2/7 OTOMATIS** (WithdrawalVerifier + PoseidonT3 full match via bytecode DB, 2026-09-27). **Sisa 5 (pool, Entrypoint, proxy, CommitmentVerifier, PoseidonT4): API diblokir bot-protection (403) — verifikasi manual via UI** dengan payload siap di `deployments/verification/*.json` (compiler v0.8.28+commit.7893614a, optimizer 200 runs, libraries hanya untuk pool).
+- Manifest mainnet + verifikasi: manifest ✓; **verifikasi source Blockscout 7/7 ADA** (2026-09-27): exact match = WithdrawalVerifier, PoseidonT3, PoseidonT4, CommitmentVerifier; partial match = Entrypoint, pool (flattened paths). Partial → exact dapat di-upgrade kapan saja via endpoint standard-input setelah rate limit reset (payload path-asli siap di `deployments/verification/minimal/`). Flat source ter-commit di `deployments/verification/flat/`.
 - `SHIELD_ENABLED/WITHDRAW/DEPOSIT` + allowlist + cap rendah: **BELUM** (butuh deploy hosting; handover operator).
 - Durasi 1–2 minggu dimulai saat flag hosting dinyalakan.
 
