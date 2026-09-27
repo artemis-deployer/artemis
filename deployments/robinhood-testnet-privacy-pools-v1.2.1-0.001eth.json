@@ -13,10 +13,10 @@
   "aspPostman": "0xCdbdc82A021071eE445d9f897433a7E4B4EAfD8d",
   "guardian": "0xCdbdc82A021071eE445d9f897433a7E4B4EAfD8d",
   "associationSet": {
-    "root": "7815592324345681839639713708752100677569477695550845728528927569263182581436",
-    "cid": "QmPVzXKgUMaH1U8fqSJY9ntGo4XjupPBcfVvt6k8juCB7h",
-    "snapshotBlock": "124547969",
-    "snapshotBlockHash": "0xcc439c6327df273b6d3527d6c0e513b5969de0d91d395d6c402088f1c8e1f96b"
+    "root": "8905542598292305276809109078716690086832812329659406256060296912370271520456",
+    "cid": "QmdTf78psMWQiucZr33oREVko43CmNYHsDJnvbWmkA1vrD",
+    "snapshotBlock": "125166620",
+    "snapshotBlockHash": "0x261f1faf4e7701df42227202990ca668ca315548aa23fd3d2b974e38d43ab4fe"
   },
   "supersedes": "robinhood-testnet-privacy-pools-v1.2.1.json",
   "contracts": {
@@ -128,6 +128,22 @@
       "snapshotBlockHash": "0xcc439c6327df273b6d3527d6c0e513b5969de0d91d395d6c402088f1c8e1f96b",
       "transactionHash": "0xec5451070fa44dfb7f65fd11992ec7461a33158057bb5850ac751af816afd25c",
       "publishedAt": "2026-09-26T10:51:27.430Z"
+    },
+    {
+      "root": "19878243117014574649326670981482093676728475094568162532905501982190516554407",
+      "cid": "QmTpPHVP7Df4yeSvFCRrXqumEw4ctRP5i8SuDxiWq9iZdy",
+      "snapshotBlock": "125125119",
+      "snapshotBlockHash": "0x5527bd09e12a5d79b28c20778b32f62c91a929f12dcab6cf6ac175600f1e53de",
+      "transactionHash": "0x7dac9c8cbd06f97514e7ea724648162a5d6b36edec0716361dd4ab47c24b5e9b",
+      "publishedAt": "2026-09-27T11:06:58.116Z"
+    },
+    {
+      "root": "8905542598292305276809109078716690086832812329659406256060296912370271520456",
+      "cid": "QmdTf78psMWQiucZr33oREVko43CmNYHsDJnvbWmkA1vrD",
+      "snapshotBlock": "125166620",
+      "snapshotBlockHash": "0x261f1faf4e7701df42227202990ca668ca315548aa23fd3d2b974e38d43ab4fe",
+      "transactionHash": "0xd40437d2b95ef5c7ac5bc2130d019975440d7ccdea99fddf66190a25f9cab7b3",
+      "publishedAt": "2026-09-27T12:42:54.234Z"
     }
   ],
   "rehearsal": {
@@ -184,8 +200,7 @@
       "persistentStateUnchanged": true
     },
     "completedAt": "2026-09-26T11:14:53.629Z",
-    "pendingScenarios": [
-    ],
+    "pendingScenarios": [],
     "waivedScenarios": [
       9
     ],

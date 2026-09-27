@@ -44,8 +44,9 @@ export async function buildConfirmedShieldState(
   const before = await client.getBlock({ blockNumber });
   const leaves: { kind: "deposit" | "withdrawal"; commitment: bigint; blockNumber: bigint; logIndex: number }[] = [];
 
-  for (let fromBlock = deploymentBlock; fromBlock <= blockNumber; fromBlock += 1800n) {
-    const toBlock = fromBlock + 1799n < blockNumber ? fromBlock + 1799n : blockNumber;
+  const CHUNK_SIZE = 40000n;
+  for (let fromBlock = deploymentBlock; fromBlock <= blockNumber; fromBlock += CHUNK_SIZE) {
+    const toBlock = fromBlock + (CHUNK_SIZE - 1n) < blockNumber ? fromBlock + (CHUNK_SIZE - 1n) : blockNumber;
     const [deposits, withdrawals] = await Promise.all([
       client.getContractEvents({ address: pool, abi: SHIELDED_POOL_READ_ABI, eventName: "Deposited", fromBlock, toBlock, strict: true }),
       client.getContractEvents({ address: pool, abi: SHIELDED_POOL_READ_ABI, eventName: "Withdrawn", fromBlock, toBlock, strict: true }),

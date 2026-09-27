@@ -1,7 +1,11 @@
 import { useEffect } from 'react';
 
-export function useMotion() {
+export function useMotion(rescanKey?: unknown) {
   useEffect(() => {
+    // Re-scans when rescanKey changes so late-mounted sections (flag-gated
+    // ZK/Shield blocks) get the same heading split + reveal treatment.
+    // Guards below make re-scans idempotent.
+    void rescanKey;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduced) return;
 
@@ -44,7 +48,7 @@ export function useMotion() {
     // 2. Setup IntersectionObserver for motion targets
     const targets = Array.from(
       document.querySelectorAll<HTMLElement>(
-        '.bar-heading, .work-card, .stair-cards article, .tech-grid > div, .audience, .policy-card, .transparency-art, .disclosures details, .footer-cta'
+        '.bar-heading, .work-card, .stair-cards article, .tech-grid > div, .audience, .policy-card, .transparency-art, .disclosures details, .footer-cta, .shield-card'
       )
     );
 
@@ -131,5 +135,5 @@ export function useMotion() {
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', render);
     };
-  }, []);
+  }, [rescanKey]);
 }

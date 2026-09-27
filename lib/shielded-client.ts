@@ -63,8 +63,9 @@ export class ArtemisShieldDataService extends DataService {
     const client = this.client(pool.chainId);
     const end = await this.finalizedBlock(pool.chainId);
     const logs: unknown[] = [];
-    for (let fromBlock = pool.deploymentBlock; fromBlock <= end; fromBlock += 1800n) {
-      const toBlock = fromBlock + 1799n < end ? fromBlock + 1799n : end;
+    const CHUNK_SIZE = 40000n;
+    for (let fromBlock = pool.deploymentBlock; fromBlock <= end; fromBlock += CHUNK_SIZE) {
+      const toBlock = fromBlock + (CHUNK_SIZE - 1n) < end ? fromBlock + (CHUNK_SIZE - 1n) : end;
       logs.push(...await client.getContractEvents({
         address: pool.address,
         abi: SHIELDED_POOL_READ_ABI,

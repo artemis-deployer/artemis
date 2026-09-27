@@ -63,7 +63,7 @@ const snapshotBlock = head - BigInt(confirmations);
 const before = await publicClient.getBlock({ blockNumber: snapshotBlock });
 const firstBlock = BigInt(manifest.poolDeploymentBlock);
 if (firstBlock > snapshotBlock) throw new Error("No finalized blocks exist after the pool deployment block yet.");
-const chunkSize = 1800n;
+const chunkSize = 40000n;
 const depositLogs = [];
 for (let fromBlock = firstBlock; fromBlock <= snapshotBlock; fromBlock += chunkSize) {
   const toBlock = fromBlock + chunkSize - 1n < snapshotBlock ? fromBlock + chunkSize - 1n : snapshotBlock;

@@ -37,6 +37,14 @@ const navItems = [
   },
   {
     num: '04',
+    label: 'Shielded Pools',
+    href: '#shield',
+    sectionHref: '#shield',
+    art: '/assets/feat_execution.png',
+    caption: 'Private 0.001 ETH notes with recoverable backups on testnet.'
+  },
+  {
+    num: '05',
     label: 'Transparency',
     href: '#transparency',
     sectionHref: '#transparency',
@@ -44,7 +52,7 @@ const navItems = [
     caption: 'Fixed 999M supply, zero taxes, and radical risk disclosures.'
   },
   {
-    num: '05',
+    num: '06',
     label: 'Showcase',
     href: '/tokens',
     sectionHref: '/tokens',

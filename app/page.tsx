@@ -25,10 +25,11 @@ import { Footer } from '../components/Footer';
 import { useMotion } from '../hooks/useMotion';
 
 function MainApp() {
-  useMotion();
   const [features, setFeatures] = useState({ zkLanding: false, shield: false });
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [soonFeature, setSoonFeature] = useState<string | null>(null);
+  // Re-scans motion targets when flag-gated sections mount late.
+  useMotion(features);
 
   useEffect(() => {
     let alive = true;

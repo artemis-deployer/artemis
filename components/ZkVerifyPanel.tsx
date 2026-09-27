@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ShieldCheck } from "lucide-react";
+import { Check, CheckCircle2, RefreshCw, ShieldCheck, Sparkles } from "lucide-react";
 import bs58 from "bs58";
 import { getActiveEvmProvider, getActiveSolanaProvider, solanaAddressOf } from "../lib/wallets";
 import ZkBadge from "./ZkBadge";
@@ -31,12 +31,12 @@ const ERRORS: Record<string, string> = {
   db_offline: "Verification service is unavailable right now.",
 };
 
-const PHASE_LABEL: Record<Exclude<Phase, "idle" | "verified" | "error">, string> = {
-  signing: "State: awaiting wallet signature",
-  requesting: "State: issuing zkTLS proof request",
-  proving: "State: generating zkTLS proof",
-  polling: "State: verifying attestation",
-};
+const STEPS = [
+  { id: "signing", label: "Sign Nonce" },
+  { id: "requesting", label: "Init Request" },
+  { id: "proving", label: "zkTLS Attest" },
+  { id: "polling", label: "Bind Badge" },
+];
 
 function short(addr: string): string {
   return addr.length > 12 ? `${addr.slice(0, 6)}…${addr.slice(-4)}` : addr;
@@ -65,7 +65,7 @@ export default function ZkVerifyPanel({ token, chainId, txHash, expectedHandle, 
     let s: { status?: string; failReason?: string; revokeReason?: string; handle?: string; wallet?: string };
     try {
       const res = await fetch(`/api/zk/status?session=${encodeURIComponent(sessionId)}`);
-      s = (await res.json().catch(() => null)) as typeof s;
+      s = ((await res.json().catch(() => null)) as typeof s) ?? {};
     } catch {
       s = {};
     }
@@ -104,7 +104,7 @@ export default function ZkVerifyPanel({ token, chainId, txHash, expectedHandle, 
       const sol = solanaTarget || (!token && !evm) ? getActiveSolanaProvider() : null;
       if (!evm && !sol) {
         setPhase("error");
-        setNote("Connect a wallet first (top bar).");
+        setNote("Connect your deployer wallet first in the top bar.");
         return;
       }
       setPhase("signing");
@@ -195,41 +195,101 @@ export default function ZkVerifyPanel({ token, chainId, txHash, expectedHandle, 
     }
   }
 
+  const isWorking = phase === "signing" || phase === "requesting" || phase === "proving" || phase === "polling";
+  const stepIdx = phase === "signing" ? 0 : phase === "requesting" ? 1 : phase === "proving" ? 2 : phase === "polling" ? 3 : -1;
+
   if (phase === "verified" && handle && wallet) {
     return (
-      <div className="flex flex-col gap-2 rounded-lg border border-[#fae8a4]/30 bg-[#fae8a4]/5 p-3" aria-live="polite">
-        <ZkBadge state="verified" handle={handle} size="md" />
-        <p className="m-0 text-xs text-white/70">
-          Verified. @{handle} is now bound to {short(wallet)}.
-        </p>
+      <div className="flex flex-col gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-emerald-200" aria-live="polite">
+        <div className="flex items-center gap-2">
+          <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+          <strong className="font-mono text-xs font-bold uppercase tracking-wider text-white">
+            Creator Identity Verified
+          </strong>
+        </div>
+        <div className="flex items-center gap-3">
+          <ZkBadge state="verified" handle={handle} size="md" />
+          <span className="font-mono text-xs text-white/70">
+            Bound to {short(wallet)}
+          </span>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-2 rounded-lg border border-white/10 bg-[#1a1b1f] p-3">
+    <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-[#16171b] p-4 text-white">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <ShieldCheck className="h-4 w-4 text-[#fae8a4]" />
+          <span className="font-mono text-xs font-bold tracking-wider text-white/70 uppercase">
+            zkTLS Creator Verification
+          </span>
+        </div>
+        <span className="font-mono text-[10px] text-[#fae8a4] uppercase">Non-Custodial</span>
+      </div>
+
+      <p className="m-0 text-xs text-white/60">
+        Prove ownership of your X profile with zero credentials shared. Bound directly to your launch transaction.
+      </p>
+
+      {/* Working Stepper Bar */}
+      {isWorking && (
+        <div className="flex items-center justify-between rounded-lg border border-white/10 bg-[#121316] p-2">
+          {STEPS.map((s, idx) => (
+            <div key={s.id} className="flex items-center gap-1.5 font-mono text-[10px]">
+              <span
+                className={`flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-bold ${
+                  idx < stepIdx
+                    ? "bg-emerald-500 text-black"
+                    : idx === stepIdx
+                      ? "bg-[#fae8a4] text-black animate-pulse"
+                      : "bg-white/10 text-white/40"
+                }`}
+              >
+                {idx < stepIdx ? <Check className="h-2.5 w-2.5 text-black" /> : idx + 1}
+              </span>
+              <span className={idx === stepIdx ? "text-[#fae8a4] font-bold" : idx < stepIdx ? "text-white/80" : "text-white/30"}>
+                {s.label}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Main Trigger Button */}
       <button
         type="button"
-        disabled={phase !== "idle" && phase !== "error"}
+        disabled={isWorking}
         onClick={() => void start()}
-        className="inline-flex min-h-10 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-[#fae8a4]/40 bg-transparent px-4 py-2 text-xs font-bold tracking-wide text-[#fae8a4] transition-all hover:bg-[#fae8a4]/10 disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-[#fae8a4] bg-[#fae8a4] px-5 py-2.5 font-mono text-xs font-bold tracking-wider text-[#18191c] transition-all hover:bg-[#fff0b8] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
       >
-        <ShieldCheck size={14} aria-hidden="true" />
-        {phase === "idle" || phase === "error" ? "VERIFY WITH ZK ↘" : "VERIFYING…"}
+        {isWorking ? (
+          <>
+            <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+            <span>VERIFYING SESSION ENCLAVE…</span>
+          </>
+        ) : (
+          <>
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>VERIFY CREATOR IDENTITY WITH ZK ↘</span>
+          </>
+        )}
       </button>
-      <p className="m-0 text-[11px] text-white/50">Optional · your X login is never shared with Artemis.</p>
-      {phase !== "idle" && phase !== "error" && phase !== "verified" && (
-        <p role="status" className="m-0 font-mono text-[11px] text-white/60">
-          {PHASE_LABEL[phase]}
-        </p>
-      )}
+
       {phase === "error" && note && (
-        <p role="alert" className="m-0 text-xs font-medium text-red-300">
-          {note}{" "}
-          <button type="button" onClick={() => void start()} className="cursor-pointer underline">
-            Try again
-          </button>
-        </p>
+        <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 font-mono text-xs text-red-200">
+          <p className="m-0 leading-relaxed">
+            {note}{" "}
+            <button
+              type="button"
+              onClick={() => void start()}
+              className="cursor-pointer font-bold text-white underline hover:text-[#fae8a4]"
+            >
+              Retry
+            </button>
+          </p>
+        </div>
       )}
     </div>
   );
