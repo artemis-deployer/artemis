@@ -61,9 +61,10 @@
     "renounceOwnerRoleTx": "0xdc65e3c7ac67fde4b576d0d9ee7859f1b4cbaf2cf6b85aecf8d99e5261a53e23"
   },
   "poolActivation": {
-    "depositsPaused": true,
-    "activationPending": true,
-    "activationTx": null
+    "depositsPaused": false,
+    "activationPending": false,
+    "activationTx": "0x133040745734b55ce200829cecd2b571475a2929f2d346320dfe5740099acc16",
+    "activatedAt": "2026-09-27"
   },
   "poolScope": "18940515208423825908726700896864841499294475305107003905329520922946877161453",
   "publishedAt": "2026-09-27T07:29:47.206Z",
