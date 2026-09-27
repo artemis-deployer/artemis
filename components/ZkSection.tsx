@@ -22,7 +22,7 @@ const CARDS = [
     n: "03 // PRIVATE",
     tag: "ZERO CREDENTIALS",
     title: "Nothing else leaves your session.",
-    body: "Artemis never sees your login, cookies, or messages. Only your public handle and the proof are stored.",
+    body: "Artemis never sees your login, cookies, or messages. The public handle, bound wallet, token reference, and proof are stored.",
     foot: "SHARED: HANDLE_ONLY",
   },
 ] as const;
@@ -44,7 +44,7 @@ const NOT_PROVEN = [
 
 /**
  * Zero-knowledge verification section. Rendered ONLY when
- * NEXT_PUBLIC_ZK_LIVE=1 (no cosmetic ZK claims before production works).
+ * Runtime server flag ZK_LANDING_SECTION=1 (no cosmetic claims before production works).
  */
 export default function ZkSection() {
   const [lit, setLit] = useState(0);

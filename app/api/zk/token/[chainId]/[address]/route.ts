@@ -5,7 +5,9 @@ import { isTestnetChain } from "../../../../../../lib/zk";
 import { zkFlags } from "../../../../../../lib/zk-flags";
 
 export async function GET(req: Request, ctx: { params: Promise<{ chainId: string; address: string }> }) {
-  if (!zkFlags().enabled) return NextResponse.json({ error: "zk_disabled" }, { status: 503 });
+  const flags = zkFlags();
+  if (!flags.enabled) return NextResponse.json({ error: "zk_disabled" }, { status: 503 });
+  if (!flags.badgePublic) return NextResponse.json({ badge: null });
   if (!(await checkRateLimit(`zk-token:${clientIp(req)}`, 60, 60000)).ok) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
@@ -14,11 +16,14 @@ export async function GET(req: Request, ctx: { params: Promise<{ chainId: string
   try {
     const badge = await getTokenBadge(chainId, address);
     if (!badge) return NextResponse.json({ badge: null });
+    const revoked = badge.revoked_at !== null;
     let alsoOn = 0;
-    try {
-      alsoOn = await countHandleTokens(badge.handle, badge.session_id);
-    } catch {
-      alsoOn = 0;
+    if (!revoked) {
+      try {
+        alsoOn = await countHandleTokens(badge.handle, badge.session_id);
+      } catch {
+        alsoOn = 0;
+      }
     }
     return NextResponse.json({
       badge: {
@@ -27,7 +32,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ chainId: string
         wallet: badge.wallet,
         verifiedAt: badge.verified_at,
         testnet: isTestnetChain(badge.chain_id),
-        revoked: false,
+        revoked,
+        revokeReason: revoked ? badge.revoke_reason : undefined,
         alsoVerifiedOn: alsoOn,
       },
     });

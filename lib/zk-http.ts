@@ -29,6 +29,31 @@ export async function readJsonBody(
   }
 }
 
+/** Read JSON that may be a top-level array (Reclaim submits proof arrays). */
+export async function readJsonPayload(
+  req: Request,
+  maxChars: number,
+): Promise<{ value: unknown } | { error: NextResponse }> {
+  const clen = Number(req.headers.get("content-length"));
+  if (Number.isFinite(clen) && clen > maxChars) {
+    return { error: NextResponse.json({ error: "bad_request" }, { status: 400 }) };
+  }
+  let raw: string;
+  try {
+    raw = await req.text();
+  } catch {
+    return { error: NextResponse.json({ error: "bad_request" }, { status: 400 }) };
+  }
+  if (raw.length === 0 || raw.length > maxChars) {
+    return { error: NextResponse.json({ error: "bad_request" }, { status: 400 }) };
+  }
+  try {
+    return { value: JSON.parse(raw) as unknown };
+  } catch {
+    return { error: NextResponse.json({ error: "bad_request" }, { status: 400 }) };
+  }
+}
+
 export function isEvmWallet(wallet: string): boolean {
   return /^0x[0-9a-fA-F]{40}$/.test(wallet);
 }

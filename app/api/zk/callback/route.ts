@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { verifyProof, type Proof } from "@reclaimprotocol/js-sdk";
 import { checkRateLimit, clientIp } from "../../../../lib/rate-limit";
 import { countHandleTokens, getSession, markSession, saveVerification } from "../../../../lib/zk-db";
-import { extractHandle, normalizeHandle, proofContext, proofSessionId, proofTimestampMs, ZK_PROOF_TTL_MS } from "../../../../lib/zk";
-import { readJsonBody } from "../../../../lib/zk-http";
+import { extractVerifiedHandle, isProofTimestampFresh, normalizeProofContext, proofSessionId, proofTimestampMs } from "../../../../lib/zk";
+import { readJsonPayload } from "../../../../lib/zk-http";
 import { zkFlags } from "../../../../lib/zk-flags";
 
 export async function POST(req: Request) {
@@ -11,11 +11,18 @@ export async function POST(req: Request) {
   if (!(await checkRateLimit(`zk-cb:${clientIp(req)}`, 30, 60000)).ok) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
-  const parsed = await readJsonBody(req, 256 * 1024);
+  const parsed = await readJsonPayload(req, 256 * 1024);
   if ("error" in parsed) return parsed.error;
-  const b = parsed.body;
-  // Reclaim posts either the raw proof or { proof }.
-  const proof = (b.proof ?? b) as unknown;
+  const body = parsed.value;
+  // Reclaim posts either a proof or a one-element proof array (possibly wrapped).
+  const received = typeof body === "object" && body !== null && !Array.isArray(body)
+    ? ((body as Record<string, unknown>).proof ?? (body as Record<string, unknown>).proofs ?? body)
+    : body;
+  const proofs = Array.isArray(received) ? received : [received];
+  if (proofs.length !== 1 || typeof proofs[0] !== "object" || proofs[0] === null) {
+    return NextResponse.json({ error: "invalid_proof" }, { status: 400 });
+  }
+  const proof = proofs[0] as Proof;
 
   async function fail(sessionId: string | null, reason: string): Promise<NextResponse> {
     if (sessionId) {
@@ -29,7 +36,7 @@ export async function POST(req: Request) {
   }
 
   // 1. Session must be ours and still pending (anti-replay).
-  const sessionId = proofSessionId(proof);
+  const sessionId = proofSessionId(proofs);
   if (!sessionId) return NextResponse.json({ error: "unknown_or_used_session" }, { status: 400 });
   let session = null;
   try {
@@ -37,21 +44,35 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json({ error: "db_offline" }, { status: 502 });
   }
-  if (!session || session.status !== "pending") return fail(sessionId, "unknown_or_used_session");
+  if (!session || session.status !== "pending") {
+    return NextResponse.json({ error: "unknown_or_used_session" }, { status: 400 });
+  }
 
   // 2. Cryptographic verification: attestor signatures + mandatory TEE
   // attestation (app secret binds it to us). Brief §7: TEE check is required.
   const appSecret = (process.env.RECLAIM_APP_SECRET ?? "").trim();
-  const providerId = (process.env.RECLAIM_PROVIDER_ID_X ?? "").trim();
-  if (!appSecret || !providerId) return fail(sessionId, "invalid_proof");
+  const providerConfig = session.provider_config;
+  if (
+    !appSecret || !providerConfig || typeof providerConfig.providerId !== "string" ||
+    typeof providerConfig.providerVersion !== "string" || !providerConfig.providerVersion ||
+    !Array.isArray(providerConfig.allowedTags)
+  ) return fail(sessionId, "invalid_proof");
   let ok = false;
+  let trustedContext: ReturnType<typeof normalizeProofContext> = null;
+  let verifiedParameters: Record<string, string> | null = null;
   try {
-    const result = await verifyProof(proof as Proof, {
-      providerId,
+    const result = await verifyProof(proofs as Proof[], {
+      ...providerConfig,
       teeAttestation: { appSecret },
       attestorTeeAttestation: {},
     });
-    ok = result.isVerified === true && result.isTeeAttestationVerified === true;
+    ok = result.isVerified === true && result.isTeeAttestationVerified === true && result.isAttestorTeeAttestationVerified === true;
+    if (ok && result.data.length === 1) {
+      trustedContext = normalizeProofContext(result.data[0].context);
+      verifiedParameters = result.data[0].extractedParameters;
+    } else {
+      ok = false;
+    }
   } catch {
     ok = false;
   }
@@ -59,32 +80,28 @@ export async function POST(req: Request) {
 
   // 3. Freshness (10 minutes).
   const ts = proofTimestampMs(proof);
-  if (ts === null || Date.now() - ts > ZK_PROOF_TTL_MS) return fail(sessionId, "stale_proof");
+  if (!isProofTimestampFresh(ts)) return fail(sessionId, "stale_proof");
 
   // 4. Context binding: proof must name our wallet + nonce.
-  const ctx = proofContext(proof);
-  let ctxMsg: Record<string, unknown> = {};
-  try {
-    const rawMsg = (ctx as { message?: unknown } | null)?.message;
-    ctxMsg = typeof rawMsg === "string" ? (JSON.parse(rawMsg) as Record<string, unknown>) : ((rawMsg ?? {}) as Record<string, unknown>);
-  } catch {
+  const ctx = trustedContext;
+  const ctxMsg = ctx?.message ?? {};
+  if (!ctx || ctx.address.toLowerCase() !== session.wallet.toLowerCase()) {
     return fail(sessionId, "wallet_mismatch");
   }
-  const ctxAddr = typeof (ctx as { address?: unknown } | null)?.address === "string"
-    ? String((ctx as { address?: unknown }).address)
-    : typeof (ctx as { contextAddress?: unknown } | null)?.contextAddress === "string"
-      ? String((ctx as { contextAddress?: unknown }).contextAddress)
-      : "";
-  if (!ctxAddr || ctxAddr.toLowerCase() !== session.wallet.toLowerCase()) {
-    return fail(sessionId, "wallet_mismatch");
-  }
+  if (ctx.sessionId !== sessionId || sessionId !== session.session_id) return fail(sessionId, "unknown_or_used_session");
   if (typeof ctxMsg.nonce !== "string" || ctxMsg.nonce !== session.nonce) {
     return fail(sessionId, "nonce_mismatch");
   }
+  if (session.token) {
+    if (!session.expected_handle || ctxMsg.token !== session.token || String(ctxMsg.chainId ?? "") !== session.chain_id || ctxMsg.expectedHandle !== session.expected_handle) {
+      return fail(sessionId, "invalid_proof");
+    }
+  }
 
   // 5. Proven handle.
-  const handle = normalizeHandle(extractHandle(proof));
+  const handle = extractVerifiedHandle(verifiedParameters);
   if (!handle) return fail(sessionId, "invalid_proof");
+  if (session.token && handle !== session.expected_handle) return fail(sessionId, "handle_mismatch");
 
   // 6. Atomic persist (unique session index rejects double-submit).
   try {

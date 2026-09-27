@@ -8,9 +8,10 @@ import { FloatingPixels } from './FloatingPixels';
 
 interface FooterProps {
   onOpenSoon?: (feature: string) => void;
+  zkEnabled?: boolean;
 }
 
-export const Footer: React.FC<FooterProps> = () => {
+export const Footer: React.FC<FooterProps> = ({ zkEnabled = false }) => {
   const handleHomeClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (typeof window !== 'undefined' && window.location.pathname === '/') {
       e.preventDefault();
@@ -61,7 +62,7 @@ export const Footer: React.FC<FooterProps> = () => {
             <a href="#about">About</a>
             <a href="#transparency">Transparency</a>
             <TransitionLink href="/contracts">Contracts</TransitionLink>
-            {process.env.NEXT_PUBLIC_ZK_LIVE === "1" && <a href="#zk">ZK Verify</a>}
+            {zkEnabled && <a href="#zk">ZK Verify</a>}
             <a href="https://robinhoodchain.blockscout.com" target="_blank" rel="noreferrer">
               Robinhood Chain ↗
             </a>

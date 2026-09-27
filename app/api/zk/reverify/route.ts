@@ -7,7 +7,9 @@ import { zkFlags } from "../../../../lib/zk-flags";
 
 /** Re-run cryptographic verification over a stored proof. Never mutates. */
 export async function POST(req: Request) {
-  if (!zkFlags().enabled) return NextResponse.json({ error: "zk_disabled" }, { status: 503 });
+  const flags = zkFlags();
+  if (!flags.enabled) return NextResponse.json({ error: "zk_disabled" }, { status: 503 });
+  if (!flags.badgePublic) return NextResponse.json({ error: "not_found" }, { status: 404 });
   if (!(await checkRateLimit(`zk-reverify:${clientIp(req)}`, 10, 60000)).ok) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
@@ -16,19 +18,24 @@ export async function POST(req: Request) {
   const id = typeof parsed.body.id === "string" ? parsed.body.id : "";
   if (!id) return NextResponse.json({ error: "bad_request" }, { status: 400 });
   const appSecret = (process.env.RECLAIM_APP_SECRET ?? "").trim();
-  const providerId = (process.env.RECLAIM_PROVIDER_ID_X ?? "").trim();
-  if (!appSecret || !providerId) return NextResponse.json({ error: "zk_offline" }, { status: 502 });
+  if (!appSecret) return NextResponse.json({ error: "zk_offline" }, { status: 502 });
   try {
     const p = await getProof(id);
     if (!p) return NextResponse.json({ error: "not_found" }, { status: 404 });
+    const providerConfig = p.provider_config;
+    if (
+      !providerConfig || typeof providerConfig.providerId !== "string" ||
+      typeof providerConfig.providerVersion !== "string" || !providerConfig.providerVersion ||
+      !Array.isArray(providerConfig.allowedTags)
+    ) return NextResponse.json({ valid: false, revoked: p.revoked_at !== null });
     let ok = false;
     try {
       const result = await verifyProof(p.proof_json as Proof, {
-        providerId,
+        ...providerConfig,
         teeAttestation: { appSecret },
         attestorTeeAttestation: {},
       });
-      ok = result.isVerified === true && result.isTeeAttestationVerified === true;
+      ok = result.isVerified === true && result.isTeeAttestationVerified === true && result.isAttestorTeeAttestationVerified === true;
     } catch {
       ok = false;
     }

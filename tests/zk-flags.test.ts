@@ -30,9 +30,12 @@ describe("zk-flags", () => {
     expect(f.uiEnabled).toBe(false);
   });
 
-  it("parses the allowlist comma-separated and lowercase", () => {
-    vi.stubEnv("ZK_VERIFY_ALLOWLIST", "0xABC, 0xdef ,,");
-    expect(zkFlags().allowlist).toEqual(["0xabc", "0xdef"]);
+  it("parses the allowlist comma-separated and normalizes EVM wallets", () => {
+    vi.stubEnv("ZK_VERIFY_ALLOWLIST", "0x00000000000000000000000000000000000000AB, 0x00000000000000000000000000000000000000CD ,, ");
+    expect(zkFlags().allowlist).toEqual([
+      "0x00000000000000000000000000000000000000ab",
+      "0x00000000000000000000000000000000000000cd",
+    ]);
   });
 
   it("allows everyone when the allowlist is empty", () => {
@@ -40,9 +43,16 @@ describe("zk-flags", () => {
   });
 
   it("restricts to listed wallets when the allowlist is set", () => {
-    vi.stubEnv("ZK_VERIFY_ALLOWLIST", "0xabc");
+    vi.stubEnv("ZK_VERIFY_ALLOWLIST", "0x00000000000000000000000000000000000000AB");
     const f = zkFlags();
-    expect(isWalletAllowed(f, "0xABC")).toBe(true);
-    expect(isWalletAllowed(f, "0xdef")).toBe(false);
+    expect(isWalletAllowed(f, "0x00000000000000000000000000000000000000ab")).toBe(true);
+    expect(isWalletAllowed(f, "0x00000000000000000000000000000000000000cd")).toBe(false);
+  });
+
+  it("compares Solana allowlist entries case-sensitively", () => {
+    vi.stubEnv("ZK_VERIFY_ALLOWLIST", "So11111111111111111111111111111111111111112");
+    const flags = zkFlags();
+    expect(isWalletAllowed(flags, "So11111111111111111111111111111111111111112")).toBe(true);
+    expect(isWalletAllowed(flags, "so11111111111111111111111111111111111111112")).toBe(false);
   });
 });

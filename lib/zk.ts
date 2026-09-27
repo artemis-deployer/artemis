@@ -4,6 +4,11 @@ import { verifyMessage, type Address } from "viem";
 
 export const ZK_NONCE_TTL_MS = 5 * 60 * 1000;
 export const ZK_PROOF_TTL_MS = 10 * 60 * 1000;
+const ZK_CLOCK_SKEW_MS = 30 * 1000;
+
+export function isProofTimestampFresh(timestampMs: number | null, nowMs = Date.now()): boolean {
+  return timestampMs !== null && timestampMs <= nowMs + ZK_CLOCK_SKEW_MS && timestampMs >= nowMs - ZK_PROOF_TTL_MS;
+}
 
 /** "@Handle" / "handle" → lowercase bare handle, null when unusable. */
 export function normalizeHandle(value: unknown): string | null {
@@ -19,36 +24,74 @@ type ProofLike = {
     context?: unknown;
     identifier?: unknown;
     timestampS?: unknown;
-    parameters?: unknown;
-    provider?: unknown;
   };
 };
 
-/**
- * Best-effort handle extraction from Reclaim claim parameters. Prefers keys
- * mentioning user/screen/handle/name, falls back to any handle-shaped value
- * that is not obviously an id, url, or timestamp.
- */
-export function extractHandle(proof: unknown): string | null {
-  if (typeof proof !== "object" || proof === null) return null;
-  const params = (proof as ProofLike).claimData?.parameters;
-  if (typeof params !== "object" || params === null || Array.isArray(params)) return null;
-  const entries = Object.entries(params as Record<string, unknown>);
-  const preferred = entries.filter(([k]) => /user|screen|handle|name|login/i.test(k));
-  const ordered = [...preferred, ...entries.filter(([k]) => !/user|screen|handle|name|login/i.test(k))];
-  for (const [, v] of ordered) {
-    if (typeof v !== "string") continue;
-    if (/^\d+$/.test(v) || v.includes("://") || v.includes(" ")) continue;
-    const h = normalizeHandle(v);
-    if (h) return h;
+/** Extract a handle only from Reclaim's verified `data[].extractedParameters`. */
+export function extractVerifiedHandle(parameters: unknown): string | null {
+  if (typeof parameters !== "object" || parameters === null || Array.isArray(parameters)) return null;
+  const matches = Object.entries(parameters as Record<string, unknown>)
+    .filter(([key]) => /user.?name|screen.?name|handle|login/i.test(key))
+    .map(([, value]) => normalizeHandle(value))
+    .filter((value): value is string => value !== null);
+  const unique = [...new Set(matches)];
+  return unique.length === 1 ? unique[0] : null;
+}
+
+export type NormalizedProofContext = {
+  address: string;
+  message: Record<string, unknown>;
+  sessionId: string;
+};
+
+function parseContextMessage(value: unknown): Record<string, unknown> | null {
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value) as unknown;
+      return typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)
+        ? parsed as Record<string, unknown>
+        : null;
+    } catch {
+      return null;
+    }
   }
-  return null;
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : null;
+}
+
+export function normalizeProofContext(value: unknown): NormalizedProofContext | null {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return null;
+  const context = value as Record<string, unknown>;
+  const address = typeof context.contextAddress === "string"
+    ? context.contextAddress
+    : typeof context.address === "string" ? context.address : "";
+  const message = parseContextMessage(context.contextMessage ?? context.message);
+  const sessionId = typeof context.reclaimSessionId === "string" ? context.reclaimSessionId : "";
+  return address && message ? { address, message, sessionId } : null;
 }
 
 export function proofSessionId(proof: unknown): string | null {
+  if (Array.isArray(proof)) {
+    if (proof.length !== 1) return null;
+    return proofSessionId(proof[0]);
+  }
   if (typeof proof !== "object" || proof === null) return null;
-  const s = (proof as ProofLike).sessionId;
-  return typeof s === "string" && s.length > 0 ? s : null;
+  const p = proof as ProofLike;
+  const s = p.sessionId;
+  if (typeof s === "string" && s.length > 0) return s;
+  const rawContext = p.claimData?.context;
+  let context: unknown = rawContext;
+  if (typeof rawContext === "string") {
+    try {
+      context = JSON.parse(rawContext) as unknown;
+    } catch {
+      return null;
+    }
+  }
+  if (typeof context !== "object" || context === null || Array.isArray(context)) return null;
+  const reclaimSessionId = (context as Record<string, unknown>).reclaimSessionId;
+  return typeof reclaimSessionId === "string" && reclaimSessionId.length > 0 ? reclaimSessionId : null;
 }
 
 export function proofTimestampMs(proof: unknown): number | null {
@@ -59,18 +102,16 @@ export function proofTimestampMs(proof: unknown): number | null {
 }
 
 /** Context round-trips through Reclaim as a JSON string; parse defensively. */
-export function proofContext(proof: unknown): { address?: string; message?: Record<string, unknown> } | null {
+export function proofContext(proof: unknown): NormalizedProofContext | null {
   const ctx = (proof as unknown as ProofLike)?.claimData?.context;
   if (typeof ctx === "string") {
     try {
-      const parsed = JSON.parse(ctx) as unknown;
-      if (typeof parsed === "object" && parsed !== null) return parsed as { address?: string };
+      return normalizeProofContext(JSON.parse(ctx) as unknown);
     } catch {
       return null;
     }
   }
-  if (typeof ctx === "object" && ctx !== null) return ctx as { address?: string };
-  return null;
+  return normalizeProofContext(ctx);
 }
 
 /** Exact message the wallet signs for a nonce (SIWE-style, EIP-191 personal_sign). */

@@ -5,3 +5,6 @@ node_modules
 .superpowers/
 next-env.d.ts
 tsconfig.tsbuildinfo
+out/
+cache/
+broadcast/

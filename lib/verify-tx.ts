@@ -35,6 +35,7 @@ export async function verifyEvmTx(
 ): Promise<boolean> {
   try {
     if (!/^0x[0-9a-fA-F]{64}$/.test(txHash)) return false;
+    if (expectedFrom !== undefined && !/^0x[0-9a-fA-F]{40}$/.test(expectedFrom)) return false;
     const cfg = getHoodConfig(Number(chainId) as 4663 | 46630);
     if (!cfg) return false;
     const receipt = await publicClientFor(cfg).getTransactionReceipt({ hash: txHash as `0x${string}` });
@@ -103,6 +104,15 @@ function extractAccountKeys(message: unknown): string[] {
   return raw.map(keyToBase58).filter((k): k is string => typeof k === "string");
 }
 
+function expectedCreatorSigned(message: unknown, expectedCreator: string): boolean {
+  if (!message || typeof message !== "object") return false;
+  const msg = message as { header?: { numRequiredSignatures?: unknown } };
+  const required = msg.header?.numRequiredSignatures;
+  if (!Number.isInteger(required) || (required as number) < 1) return false;
+  const keys = extractAccountKeys(message);
+  return keys.slice(0, required as number).includes(expectedCreator);
+}
+
 // True only if the signature is confirmed/finalized without error and the
 // mint appears in the transaction's account keys. A null transaction body
 // (pruned history) proves nothing about the mint, so return false.
@@ -120,8 +130,9 @@ export async function verifySolanaTx(rpc: string, mint: string, sig: string, exp
     const message = (tx.transaction as unknown as { message?: unknown })?.message;
     const keys = extractAccountKeys(message);
     if (!mintInKeys(keys, mint)) return false;
-    if (expectedCreator !== undefined && /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(expectedCreator)) {
-      if (!keys.includes(expectedCreator)) return false;
+    if (expectedCreator !== undefined) {
+      if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(expectedCreator)) return false;
+      if (!expectedCreatorSigned(message, expectedCreator)) return false;
     }
     return true;
   } catch {

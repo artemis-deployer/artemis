@@ -6,6 +6,7 @@ import { Search, Copy, Check, ExternalLink, Globe } from "lucide-react";
 import { TransitionLink } from "../../components/PageTransition";
 import ProofDrawer from "../../components/ProofDrawer";
 import ZkBadge from "../../components/ZkBadge";
+import ZkVerifyPanel from "../../components/ZkVerifyPanel";
 import { dedupeLocalReceipts, listReceipts, type Receipt } from "../../lib/receipts";
 import { displayArtworkUrl } from "../../lib/showcase";
 import { explorerTokenUrl, explorerTxUrl, getChain } from "../../lib/chains";
@@ -30,14 +31,22 @@ type Token = {
   web_url?: string;
 };
 
+function xHandle(value: string): string | null {
+  const candidate = value.trim().replace(/^@/, "").replace(/^https?:\/\/(www\.)?(x|twitter)\.com\//i, "").replace(/\/$/, "");
+  return /^[A-Za-z0-9_]{1,15}$/.test(candidate) ? candidate.toLowerCase() : null;
+}
+
 export default function TokensPage() {
   const [tokens, setTokens] = useState<Token[] | null>(null);
   const [local, setLocal] = useState<Receipt[]>([]);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "hood" | "solana" | "local" | "zk">("all");
-  const [badges, setBadges] = useState<Record<string, { id: string; handle: string; testnet: boolean } | null>>({});
+  const [badges, setBadges] = useState<Record<string, { id: string; handle: string; testnet: boolean; revoked: boolean; revokeReason?: string } | null>>({});
   const [proofId, setProofId] = useState<string | null>(null);
-  const badgeCache = useRef<Record<string, { id: string; handle: string; testnet: boolean } | null>>({});
+  const [verifyTarget, setVerifyTarget] = useState<string | null>(null);
+  const [zkUiEnabled, setZkUiEnabled] = useState(false);
+  const [zkBadgePublic, setZkBadgePublic] = useState(false);
+  const badgeCache = useRef<Record<string, { id: string; handle: string; testnet: boolean; revoked: boolean; revokeReason?: string } | null>>({});
   const [copied, setCopied] = useState<string | null>(null);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -71,6 +80,19 @@ export default function TokensPage() {
       alive = false;
       if (copyTimer.current) clearTimeout(copyTimer.current);
     };
+  }, []);
+
+  useEffect(() => {
+    let alive = true;
+    void fetch("/api/features")
+      .then((res) => res.json())
+      .then((config: { zk?: { uiEnabled?: boolean; badgePublic?: boolean } }) => {
+        if (!alive) return;
+        setZkUiEnabled(config.zk?.uiEnabled === true);
+        setZkBadgePublic(config.zk?.badgePublic === true);
+      })
+      .catch(() => undefined);
+    return () => { alive = false; };
   }, []);
 
   function copyText(text: string) {
@@ -109,7 +131,7 @@ export default function TokensPage() {
           try {
             const res = await fetch(`/api/zk/token/${encodeURIComponent(t.chain)}/${encodeURIComponent(t.address)}`);
             const json = (await res.json().catch(() => null)) as {
-              badge?: { id: string; handle: string; testnet: boolean } | null;
+              badge?: { id: string; handle: string; testnet: boolean; revoked: boolean; revokeReason?: string } | null;
             } | null;
             return [t.key, json?.badge ?? null] as const;
           } catch {
@@ -145,7 +167,7 @@ export default function TokensPage() {
     if (filter === "hood" && !["4663", "46630"].includes(String(t.chain_id))) return false;
     if (filter === "solana" && !String(t.chain_id).toLowerCase().includes("solana")) return false;
     if (filter === "local") return false;
-    if (filter === "zk" && !badges[tokenKey(t)]?.handle) return false;
+    if (filter === "zk" && (!badges[tokenKey(t)]?.handle || badges[tokenKey(t)]?.revoked)) return false;
     if (!q) return true;
     return [t.name, t.symbol, t.address, t.tx_hash, t.tagline, t.description, t.lore, storyHook(t)].some((f) =>
       (f ?? "").toLowerCase().includes(q),
@@ -221,7 +243,7 @@ export default function TokensPage() {
                 ["hood", "Robinhood Chain"],
                 ["solana", "Solana (soon)"],
                 ["local", `Local Receipts (${local.length})`],
-                ["zk", "ZK Verified"],
+                ...(zkBadgePublic ? [["zk", "ZK Verified"] as const] : []),
               ] as const
             ).map(([v, label]) => (
               <button
@@ -330,12 +352,12 @@ export default function TokensPage() {
                     <span className="rounded border border-white/15 bg-white/5 px-2 py-0.5 font-mono text-[10px] whitespace-nowrap text-white/70 uppercase">
                       {chainInfo?.name ?? `Chain ${t.chain_id}`}
                     </span>
-                    {badges[tokenKey(t)]?.handle && (
+                    {zkBadgePublic && badges[tokenKey(t)]?.handle && (
                       <ZkBadge
-                        state={badges[tokenKey(t)]?.testnet ? "verified-testnet" : "verified"}
+                        state={badges[tokenKey(t)]?.revoked ? "revoked" : badges[tokenKey(t)]?.testnet ? "verified-testnet" : "verified"}
                         handle={badges[tokenKey(t)]?.handle}
                         size="sm"
-                        title="Creator proved control of this X account with zkTLS. Click to inspect the proof."
+                        title={badges[tokenKey(t)]?.revoked ? `Verification revoked: ${badges[tokenKey(t)]?.revokeReason ?? "no reason supplied"}. Click to inspect the receipt.` : "Creator proved control of this X account with zkTLS. Click to inspect the proof."}
                         onInspect={() => {
                           const id = badges[tokenKey(t)]?.id;
                           if (id) setProofId(id);
@@ -372,6 +394,33 @@ export default function TokensPage() {
                     )}
                   </div>
                 </div>
+                {zkUiEnabled && ["4663", "46630", "solana-mainnet", "solana-devnet"].includes(String(t.chain_id)) && (!badges[tokenKey(t)]?.handle || badges[tokenKey(t)]?.revoked) && xHandle(t.xUrl ?? t.x_url ?? "") && (
+                  <div className="flex flex-col gap-2 border-b border-white/10 pb-3">
+                    {verifyTarget === tokenKey(t) ? (
+                      <ZkVerifyPanel
+                        token={t.address}
+                        chainId={t.chain_id}
+                        txHash={t.tx_hash}
+                        expectedHandle={xHandle(t.xUrl ?? t.x_url ?? "") ?? undefined}
+                        onVerified={() => {
+                          setVerifyTarget(null);
+                          void fetch(`/api/zk/token/${encodeURIComponent(t.chain_id)}/${encodeURIComponent(t.address)}`)
+                            .then((res) => res.json())
+                            .then((json: { badge?: { id: string; handle: string; testnet: boolean; revoked: boolean; revokeReason?: string } | null }) => {
+                              const badge = json.badge ?? null;
+                              badgeCache.current[tokenKey(t)] = badge;
+                              setBadges((prev) => ({ ...prev, [tokenKey(t)]: badge }));
+                            })
+                            .catch(() => undefined);
+                        }}
+                      />
+                    ) : (
+                      <button type="button" onClick={() => setVerifyTarget(tokenKey(t))} className="min-h-9 cursor-pointer rounded border border-[#fae8a4]/30 px-3 font-mono text-[10px] font-bold tracking-wider text-[#fae8a4] hover:bg-[#fae8a4]/10">
+                        VERIFY CREATOR @{xHandle(t.xUrl ?? t.x_url ?? "")}
+                      </button>
+                    )}
+                  </div>
+                )}
 
                 {storyHook(t) !== "" && (
                   <div className="border-b border-white/10 pb-3 text-left">
@@ -508,9 +557,9 @@ export default function TokensPage() {
                     <span className="rounded border border-[#cadcf0]/30 bg-[#cadcf0]/10 px-2 py-0.5 font-mono text-[10px] whitespace-nowrap text-[#cadcf0] uppercase">
                       Local
                     </span>
-                    {r.token && badges[`${r.chainId}:${r.token}`]?.handle && (
+                    {zkBadgePublic && r.token && badges[`${r.chainId}:${r.token}`]?.handle && (
                       <ZkBadge
-                        state={badges[`${r.chainId}:${r.token}`]?.testnet ? "verified-testnet" : "verified"}
+                        state={badges[`${r.chainId}:${r.token}`]?.revoked ? "revoked" : badges[`${r.chainId}:${r.token}`]?.testnet ? "verified-testnet" : "verified"}
                         handle={badges[`${r.chainId}:${r.token}`]?.handle}
                         size="sm"
                         title="Creator proved control of this X account with zkTLS. Click to inspect the proof."

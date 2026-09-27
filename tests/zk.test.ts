@@ -4,8 +4,9 @@ import { privateKeyToAccount } from "viem/accounts";
 import { ed25519 } from "@noble/curves/ed25519.js";
 import bs58 from "bs58";
 import {
-  extractHandle,
+  extractVerifiedHandle,
   isTestnetChain,
+  isProofTimestampFresh,
   normalizeHandle,
   proofContext,
   proofSessionId,
@@ -32,23 +33,27 @@ describe("normalizeHandle", () => {
 
 describe("extractHandle", () => {
   it("prefers username-ish keys", () => {
-    const proof = { claimData: { parameters: { id: "12345", screen_name: "Artemis" } } };
-    expect(extractHandle(proof)).toBe("artemis");
+    expect(extractVerifiedHandle({ id: "12345", screen_name: "Artemis" })).toBe("artemis");
   });
   it("skips ids, urls, sentences", () => {
-    const proof = { claimData: { parameters: { a: "123", b: "https://x.com", c: "two words" } } };
-    expect(extractHandle(proof)).toBeNull();
+    expect(extractVerifiedHandle({ a: "123", b: "https://x.com", c: "two words" })).toBeNull();
   });
   it("rejects non-objects", () => {
-    expect(extractHandle(null)).toBeNull();
-    expect(extractHandle({ claimData: { parameters: [] } })).toBeNull();
+    expect(extractVerifiedHandle(null)).toBeNull();
+    expect(extractVerifiedHandle([])).toBeNull();
+  });
+  it("rejects ambiguous verified username fields", () => {
+    expect(extractVerifiedHandle({ username: "one", screen_name: "two" })).toBeNull();
   });
 });
 
 describe("proof parsing", () => {
   it("reads session id", () => {
     expect(proofSessionId({ sessionId: "abc" })).toBe("abc");
+    expect(proofSessionId({ claimData: { context: JSON.stringify({ reclaimSessionId: "sdk-session" }) } })).toBe("sdk-session");
+    expect(proofSessionId([{ claimData: { context: JSON.stringify({ reclaimSessionId: "sdk-session" }) } }])).toBe("sdk-session");
     expect(proofSessionId({})).toBeNull();
+    expect(proofSessionId([{ sessionId: "one" }, { sessionId: "two" }])).toBeNull();
   });
   it("converts timestampS to ms", () => {
     expect(proofTimestampMs({ claimData: { timestampS: 1000 } })).toBe(1000000);
@@ -56,13 +61,25 @@ describe("proof parsing", () => {
     expect(proofTimestampMs({})).toBeNull();
   });
   it("parses string or object context", () => {
-    expect(proofContext({ claimData: { context: '{"address":"0x1"}' } })).toEqual({ address: "0x1" });
-    expect(proofContext({ claimData: { context: { address: "0x1" } } })).toEqual({ address: "0x1" });
+    expect(proofContext({ claimData: { context: '{"address":"0x1","message":{}}' } })).toEqual({ address: "0x1", message: {}, sessionId: "" });
+    expect(proofContext({ claimData: { context: { address: "0x1", message: {} } } })).toEqual({ address: "0x1", message: {}, sessionId: "" });
     expect(proofContext({ claimData: { context: "nope{" } })).toBeNull();
+  });
+  it("normalizes the current Reclaim context shape", () => {
+    expect(proofContext({ claimData: { context: JSON.stringify({
+      contextAddress: "0xabc",
+      contextMessage: JSON.stringify({ nonce: "n1" }),
+      reclaimSessionId: "session-1",
+    }) } })).toEqual({ address: "0xabc", message: { nonce: "n1" }, sessionId: "session-1" });
   });
   it("pins TTL constants", () => {
     expect(ZK_NONCE_TTL_MS).toBe(5 * 60 * 1000);
     expect(ZK_PROOF_TTL_MS).toBe(10 * 60 * 1000);
+  });
+  it("rejects future proof timestamps outside clock skew", () => {
+    expect(isProofTimestampFresh(1_000_000, 1_000_000)).toBe(true);
+    expect(isProofTimestampFresh(1_000_000 + 30_001, 1_000_000)).toBe(false);
+    expect(isProofTimestampFresh(1_000_000 - ZK_PROOF_TTL_MS - 1, 1_000_000)).toBe(false);
   });
 });
 

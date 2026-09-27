@@ -14,6 +14,7 @@ type Props = {
   chainId?: number | string;
   /** Deploy tx hash: required with token so the wallet must be the deployer. */
   txHash?: string;
+  expectedHandle?: string;
   onVerified?: (handle: string, wallet: string) => void;
 };
 
@@ -41,7 +42,7 @@ function short(addr: string): string {
   return addr.length > 12 ? `${addr.slice(0, 6)}…${addr.slice(-4)}` : addr;
 }
 
-export default function ZkVerifyPanel({ token, chainId, txHash, onVerified }: Props) {
+export default function ZkVerifyPanel({ token, chainId, txHash, expectedHandle, onVerified }: Props) {
   const [phase, setPhase] = useState<Phase>("idle");
   const [note, setNote] = useState("");
   const [handle, setHandle] = useState<string | null>(null);
@@ -61,7 +62,7 @@ export default function ZkVerifyPanel({ token, chainId, txHash, onVerified }: Pr
       setNote("Verification timed out. Start again.");
       return;
     }
-    let s: { status?: string; failReason?: string; handle?: string; wallet?: string };
+    let s: { status?: string; failReason?: string; revokeReason?: string; handle?: string; wallet?: string };
     try {
       const res = await fetch(`/api/zk/status?session=${encodeURIComponent(sessionId)}`);
       s = (await res.json().catch(() => null)) as typeof s;
@@ -83,6 +84,11 @@ export default function ZkVerifyPanel({ token, chainId, txHash, onVerified }: Pr
       setNote(ERRORS[s.failReason ?? ""] ?? "Verification failed. Try again.");
       return;
     }
+    if (s?.status === "revoked") {
+      setPhase("error");
+      setNote(`Verification revoked${s.revokeReason ? `: ${s.revokeReason}` : "."}`);
+      return;
+    }
     // Pending (or transient fetch failure): keep polling every 3s.
     pollRef.current = setTimeout(() => void poll(sessionId, tries + 1), 3000);
   }
@@ -93,8 +99,9 @@ export default function ZkVerifyPanel({ token, chainId, txHash, onVerified }: Pr
     setHandle(null);
     try {
       // 1. Wallet + nonce.
-      const evm = getActiveEvmProvider();
-      const sol = !evm ? getActiveSolanaProvider() : null;
+      const solanaTarget = String(chainId ?? "").startsWith("solana-");
+      const evm = solanaTarget ? null : getActiveEvmProvider();
+      const sol = solanaTarget || (!token && !evm) ? getActiveSolanaProvider() : null;
       if (!evm && !sol) {
         setPhase("error");
         setNote("Connect a wallet first (top bar).");
@@ -160,6 +167,7 @@ export default function ZkVerifyPanel({ token, chainId, txHash, onVerified }: Pr
           token: token ?? "",
           chainId: chainId ?? "",
           txHash: txHash ?? "",
+          expectedHandle: expectedHandle ?? "",
         }),
       });
       const init = (await initRes.json().catch(() => null)) as { config?: string; sessionId?: string; error?: string } | null;

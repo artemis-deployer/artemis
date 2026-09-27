@@ -1,0 +1,233 @@
+{
+  "schemaVersion": 1,
+  "status": "testnet-rehearsal",
+  "chainId": 46630,
+  "protocol": "0xbow-privacy-pools-core-v1.2.1",
+  "sourceCommit": "a80836a47451e662f127af17e11430ffa976c234",
+  "compiler": "solc 0.8.28",
+  "denominationWei": "1000000000000000",
+  "lifetimeDepositCapWei": "10000000000000000000",
+  "protocolFeeBps": 0,
+  "relayFeeBps": 0,
+  "deployer": "0xCdbdc82A021071eE445d9f897433a7E4B4EAfD8d",
+  "aspPostman": "0xCdbdc82A021071eE445d9f897433a7E4B4EAfD8d",
+  "guardian": "0xCdbdc82A021071eE445d9f897433a7E4B4EAfD8d",
+  "associationSet": {
+    "root": "7815592324345681839639713708752100677569477695550845728528927569263182581436",
+    "cid": "QmPVzXKgUMaH1U8fqSJY9ntGo4XjupPBcfVvt6k8juCB7h",
+    "snapshotBlock": "124547969",
+    "snapshotBlockHash": "0xcc439c6327df273b6d3527d6c0e513b5969de0d91d395d6c402088f1c8e1f96b"
+  },
+  "supersedes": "robinhood-testnet-privacy-pools-v1.2.1.json",
+  "contracts": {
+    "withdrawalVerifier": {
+      "address": "0xbe2b67fa8edd235c50500db107ad9225a76b20ad",
+      "transactionHash": "0x7fc9f8d048bf06648a158027055bded8aeee04f865a0868b56fd4b43f5917d4e",
+      "blockNumber": "124468494"
+    },
+    "commitmentVerifier": {
+      "address": "0x9d5444ac9254dea17a8b757b03817c2116ea38ce",
+      "transactionHash": "0xa3a97466558b3e1a1d17f990353f55d04faacb376f0ba10eea2c37fd1c815d36",
+      "blockNumber": "124468501"
+    },
+    "entrypointImplementation": {
+      "address": "0x46667acb758fe6ca07e1862ecd7e77b83202949e",
+      "transactionHash": "0x495f8964bd2a7d37cd199f0adf52e7a92328bced3fe0faddd790274d1b750d92",
+      "blockNumber": "124468520"
+    },
+    "entrypointProxy": {
+      "address": "0xdba60fc77806cdaf526a7edf6c3f0fc0537e2f38",
+      "transactionHash": "0x6c6a7e79185d45d35b98da317e74aab16d6445e13175f4928fbdfacaebfa096c",
+      "blockNumber": "124479506"
+    },
+    "pool": {
+      "address": "0xda0259e59826e5e09586011330b2f5d00c103518",
+      "transactionHash": "0x43cb19251dab40342504cc49cab9a7f23e9836abbff08670639e481f3aed9402",
+      "blockNumber": "124479525"
+    },
+    "libraries": {
+      "PoseidonT3": {
+        "address": "0x1056aa6e2fa03215dbca636b6d6c85612bbc677b",
+        "transactionHash": "0x61e2b29766c75b04ebb0def9dd3f01a03e9264889e0b4a4dc20d402dc6ae8880",
+        "blockNumber": "124469989"
+      },
+      "PoseidonT4": {
+        "address": "0x1395f7b6a72505e65adb387c1bc4d710e248c484",
+        "transactionHash": "0xf29e248c33b69bf835deeff743953f6468709ee67c736e2f8a8b786a4cb2dca8",
+        "blockNumber": "124469998"
+      }
+    }
+  },
+  "transactions": {
+    "rootTx": "0x82a227d381d332699be146831975dd5773d2544fad482c05b96324e5297b582b",
+    "registerTx": "0x9402d94a8e4bbbd78affe1088bdb446228a0f3b70218cdd115af2b40c1e92b70",
+    "renounceOwnerRoleTx": "0x704d8fb3499b10a75766db413724c5b97b8b48ae18008a82bc409c9f05b644d7"
+  },
+  "publishedAt": "2026-09-26T07:40:04.864Z",
+  "privacyClaim": "Testnet rehearsal only. No production privacy or compliance claim.",
+  "poolDeploymentBlock": "124479525",
+  "entrypointDeploymentBlock": "124479506",
+  "associationSetHistory": [
+    {
+      "root": "21888242871839275222246405745257275088548364400416034343698204186575808495616",
+      "cid": "QmW1feb8e2yvMYaxmy423G2ZMHKFbCWvRuNV5CZ4qgrLrR",
+      "transactionHash": "0x82a227d381d332699be146831975dd5773d2544fad482c05b96324e5297b582b"
+    },
+    {
+      "root": "21888242871839275222246405745257275088548364400416034343698204186575808495616",
+      "cid": "QmRHm54JDyu5xEccACivU63ZxEixgtLzALgUEh1Hi9EMh8",
+      "snapshotBlock": "124479681",
+      "snapshotBlockHash": "0x1e6b7dc86b1d9387d0a59f9ac7c409a32212eb546a90bdc74fbdd10c8c89d7d1",
+      "transactionHash": "0x23e0b3ce44bb332b54c099c6e8ca37efd43daacc310a5c510cd6ca93be753087",
+      "publishedAt": "2026-09-26T07:40:44.276Z"
+    },
+    {
+      "root": "14034305231279025495162044429551636575484799700062200175136158640033818279227",
+      "cid": "Qmf8sMWyK2HXo3y37WQDTDUMYhUWwbDDGr9gCmSshueEiZ",
+      "snapshotBlock": "124499643",
+      "snapshotBlockHash": "0x07e8c17f86489f4879e9a0c7da707d8e0a08715e6e59799e0c31be42c41298b5",
+      "transactionHash": "0x8158ee38f3a4828f7007121aab123e51c8a70e70afba02f79f45bdf88910da2b",
+      "publishedAt": "2026-09-26T08:43:23.169Z"
+    },
+    {
+      "root": "367728820211001618268517233688453788121842318984506093558723838892125006339",
+      "cid": "QmR5akj9hvgsEVAEqy9hn1qVFxACdDAUvoVLVzfXxMDxox",
+      "snapshotBlock": "124506358",
+      "snapshotBlockHash": "0x388b3b34aa84500299fb760a07549eedb8f3c6690dbb6d2804763b55dbf866fb",
+      "transactionHash": "0xd0110ba2b610e46cb43d2a6eb7dcf635546d49939e3083864d3700de7b006bd3",
+      "publishedAt": "2026-09-26T09:02:03.525Z"
+    },
+    {
+      "root": "12443080543113472356116016458907451399863344753372991701973863371044255695774",
+      "cid": "QmXKWmoNDV6fktZ6BeFb2WWrapVxz9q9nykpJA3ihf9A69",
+      "snapshotBlock": "124541347",
+      "snapshotBlockHash": "0x3ddc34b626df5adbeee7091dd3534f8ffc8b36cb243e13f3e5a4e99178b8479b",
+      "transactionHash": "0x8dd47008dff1ba3a6f48561656c333ce91b9d0b2162f7eee231020e81cf99a43",
+      "publishedAt": "2026-09-26T10:34:29.699Z"
+    },
+    {
+      "root": "12443080543113472356116016458907451399863344753372991701973863371044255695774",
+      "cid": "QmNMWeKfkCgLkgntKZM77CW9LXqiiNFh4iHuBj9pMFG9HA",
+      "snapshotBlock": "124542065",
+      "snapshotBlockHash": "0xc60f77883a12cd7ae64b320dec696ad101ab7a57cb92e199f3c5c7ab8fc56c3e",
+      "transactionHash": "0xf95b9cf23ca9a0f86e2a17734850cf45a50b5d54ba03a4dc520f47d13dfb3239",
+      "publishedAt": "2026-09-26T10:36:25.595Z"
+    },
+    {
+      "root": "7515611594806999640541855088924620980126377825044091616554121689183235706651",
+      "cid": "QmcF3ZbeSdTLXX4DcBvMqDPKQ4UeswizctFuEVa6PEbbZG",
+      "snapshotBlock": "124543530",
+      "snapshotBlockHash": "0xc762c7c6760c17f1e22f64ce9877ef684440be1db525cf4a563ff46f6b2d132f",
+      "transactionHash": "0x77c4ab46272302ecdcda56057c52dc3b137cf798918130fec9ecdf064ef7d925",
+      "publishedAt": "2026-09-26T10:40:24.697Z"
+    },
+    {
+      "root": "7815592324345681839639713708752100677569477695550845728528927569263182581436",
+      "cid": "QmPVzXKgUMaH1U8fqSJY9ntGo4XjupPBcfVvt6k8juCB7h",
+      "snapshotBlock": "124547969",
+      "snapshotBlockHash": "0xcc439c6327df273b6d3527d6c0e513b5969de0d91d395d6c402088f1c8e1f96b",
+      "transactionHash": "0xec5451070fa44dfb7f65fd11992ec7461a33158057bb5850ac751af816afd25c",
+      "publishedAt": "2026-09-26T10:51:27.430Z"
+    }
+  ],
+  "rehearsal": {
+    "status": "passed_with_preexisting_residual_balance",
+    "denominationWei": "1000000000000000",
+    "depositTransactionHash": "0x6131ad43a3e22b92d878d72d8a07d7eb452765210b40d53d7eb522845c54e2bb",
+    "associationPublishTransactionHash": "0xec5451070fa44dfb7f65fd11992ec7461a33158057bb5850ac751af816afd25c",
+    "withdrawalTransactionHash": "0xb55a03b36f7162dabe74d2b4be97ed7db72c24ae904e46231d5780497374da59",
+    "recipientSweepTransactionHash": "0xb157967084a596447f7734e5f730dd4a290de9e38b9b3758ea51b208b41c5210",
+    "recoveredPriorRecipientSweepTransactionHash": null,
+    "checkedNullifier": "16199346293492911768262879750797576164702473084883726822570505579947562252391",
+    "poolReconciliation": {
+      "startingBalanceWei": "1000000000000000",
+      "endingBalanceWei": "1000000000000000",
+      "depositEvents": 7,
+      "withdrawalEvents": 6,
+      "totalDepositedWei": "7000000000000000",
+      "totalWithdrawnWei": "6000000000000000",
+      "unspentPoolBalanceWei": "1000000000000000",
+      "recoveryStatus": "All three later rehearsal notes were withdrawn; the pre-existing 0.001 ETH residual note remains unrecovered.",
+      "depositMinusWithdrawalInvariantHolds": true,
+      "readOnlyReconciliationCommand": "npm run shield:reconcile-testnet",
+      "scannedFromBlock": "124479525",
+      "scannedToBlock": "124578700",
+      "reconciliationTransactionBroadcast": false
+    },
+    "passedScenarios": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      8,
+      10,
+      11
+    ],
+    "partiallyPassedScenarios": [
+      7,
+      12
+    ],
+    "relayProtectionChecks": [
+      "tampered_recipient_rejected",
+      "stale_association_root_rejected",
+      "unknown_merkle_state_root_rejected",
+      "spent_nullifier_replay_rejected"
+    ],
+    "observedDepositWithdrawInvariant": true,
+    "depositCapCheck": {
+      "status": "passed",
+      "method": "read-only eth_call with ephemeral state overrides",
+      "revert": "PoolDepositCapExceeded",
+      "transactionBroadcast": false,
+      "persistentStateUnchanged": true
+    },
+    "completedAt": "2026-09-26T11:14:53.629Z",
+    "pendingScenarios": [
+    ],
+    "waivedScenarios": [
+      9
+    ],
+    "observedDepositTransactions": [
+      "0xd7963b957bc0cac1a32b6bc3cd2af328de0ace6a2c9f634a9d027bd5c2e28a5a",
+      "0x61903f2ee2815659feff2207803aa3e85084b55c8a8454adc73dd066d026c20a",
+      "0x630fdaeebd92bad27565bab4c06f6098aaff94e14223e532f93890776536c894",
+      "0x7cfb0748350b6805c2f757c2a5020eac938adf56b7a1716a1f1bd7dc93dc4914",
+      "0xede3bb3a8539b86d7ed4916a3bd1ba17ec5632c7633be4e534f068d711b7d733",
+      "0x75743611099ca301984059e31aded912c16bd2d293140d9e19bf28dd3fc55e9b",
+      "0x6131ad43a3e22b92d878d72d8a07d7eb452765210b40d53d7eb522845c54e2bb"
+    ],
+    "observedWithdrawalTransactions": [
+      "0x267d975801826055f510439a81bc5ba156ac4166cb7978ba6f2715bfa057b708",
+      "0xb093972b2ede7d2bb9b88aac2b19b3004c51b7a2c544f2efce0bc551de563570",
+      "0x963269d95684840357894e3533f9c8fcd0c1a8be31bbbbc2cb55771e1b447f94",
+      "0x4a8bbcdcde90f1095ddfdda26a6a8d560d72ae71ee0c5e0e28def2dd6bda5bc7",
+      "0x1cd850f651e37df21d6629e389f1395a997bf9140c92adc1293bf7cd5ed047ae",
+      "0xb55a03b36f7162dabe74d2b4be97ed7db72c24ae904e46231d5780497374da59"
+    ],
+    "depositPauseCheck": {
+      "status": "passed",
+      "method": "read-only eth_call with ephemeral state override",
+      "revert": "DepositsArePaused",
+      "transactionBroadcast": false,
+      "persistentStateUnchanged": true
+    },
+    "withdrawalWhilePausedCheck": {
+      "status": "passed",
+      "method": "read-only eth_call with ephemeral state override",
+      "validProof": true,
+      "transactionBroadcast": false,
+      "persistentStateUnchanged": true
+    },
+    "recipientSweepConfirmed": true,
+    "recipientSweepHashCaptured": false,
+    "modelInvariantCheck": {
+      "status": "passed",
+      "seed": "0x5a17ed",
+      "operations": 2000,
+      "modelOnly": true,
+      "contractLevelFuzzing": false
+    }
+  }
+}

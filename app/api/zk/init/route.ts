@@ -6,6 +6,7 @@ import { checkRateLimit, clientIp } from "../../../../lib/rate-limit";
 import { verifyEvmTx, verifySolanaTx } from "../../../../lib/verify-tx";
 import { consumeNonce, saveSession } from "../../../../lib/zk-db";
 import { verifyEvmSigner, verifySolanaSigner } from "../../../../lib/zk";
+import { normalizeHandle } from "../../../../lib/zk";
 import { baseUrl, isEvmWallet, isSolanaWallet, readJsonBody } from "../../../../lib/zk-http";
 import { isWalletAllowed, zkFlags } from "../../../../lib/zk-flags";
 
@@ -50,15 +51,27 @@ export async function POST(req: Request) {
   const token = typeof b.token === "string" ? b.token.trim() : "";
   const chainId = typeof b.chainId === "string" || typeof b.chainId === "number" ? String(b.chainId) : "";
   const txHash = typeof b.txHash === "string" ? b.txHash.trim() : "";
+  const expectedHandle = normalizeHandle(b.expectedHandle);
+  if (token && (!chainId || !txHash || !expectedHandle)) {
+    return NextResponse.json({ error: "token_proof_required" }, { status: 400 });
+  }
+  if (token && !["4663", "46630", "solana-mainnet", "solana-devnet"].includes(chainId)) {
+    return NextResponse.json({ error: "unsupported_chain" }, { status: 400 });
+  }
   const evm = isEvmWallet(wallet);
   const sol = !evm && isSolanaWallet(wallet);
   if ((!evm && !sol) || !signature || !nonce) {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
   }
+  if (token && ((evm && chainId.startsWith("solana-")) || (sol && !chainId.startsWith("solana-")))) {
+    return NextResponse.json({ error: "unsupported_wallet" }, { status: 400 });
+  }
   if (!isWalletAllowed(flags, wallet)) {
     return NextResponse.json({ error: "allowlist_only" }, { status: 403 });
   }
-  if (!(await checkRateLimit(`zk-init:${clientIp(req)}:${wallet.toLowerCase()}`, 5, 3600000)).ok) {
+  const ipLimit = await checkRateLimit(`zk-init-ip:${clientIp(req)}`, 5, 3600000);
+  const walletLimit = await checkRateLimit(`zk-init-wallet:${wallet.toLowerCase()}`, 5, 3600000);
+  if (!ipLimit.ok || !walletLimit.ok) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
   const creds = zkCreds();
@@ -77,9 +90,8 @@ export async function POST(req: Request) {
     : verifySolanaSigner(wallet, signature, nonce);
   if (!owned) return NextResponse.json({ error: "wallet_signature_rejected" }, { status: 400 });
 
-  // 2. Optional per-token deployer binding (token requires its deploy tx).
+  // 2. Per-token claims must prove both the launch transaction and listed handle.
   if (token) {
-    if (!chainId || !txHash) return NextResponse.json({ error: "token_proof_required" }, { status: 400 });
     if (!(await assertDeployer(wallet, token, chainId, txHash))) {
       return NextResponse.json({ error: "not_deployer" }, { status: 400 });
     }
@@ -87,11 +99,17 @@ export async function POST(req: Request) {
 
   // 3. Issue the Reclaim request bound to this wallet.
   try {
-    const request = await ReclaimProofRequest.init(creds.appId, creds.secret, creds.providerId);
-    request.setContext(wallet, JSON.stringify({ app: "artemis", token, chainId, nonce }));
+    const request = await ReclaimProofRequest.init(creds.appId, creds.secret, creds.providerId, {
+      acceptTeeAttestation: true,
+    });
+    request.setContext(wallet, JSON.stringify({ app: "artemis", token, chainId, expectedHandle: expectedHandle ?? "", nonce }));
     request.setAppCallbackUrl(`${baseUrl(req)}/api/zk/callback`, true);
     const sessionId = request.getSessionId();
-    await saveSession({ sessionId, wallet, token, chainId, nonce });
+    const providerConfig = request.getProviderVersion();
+    if (providerConfig.providerId !== creds.providerId || !providerConfig.providerVersion) {
+      throw new Error("reclaim_provider_version_unavailable");
+    }
+    await saveSession({ sessionId, wallet, token, chainId, nonce, expectedHandle: expectedHandle ?? "", providerConfig });
     return NextResponse.json({ config: request.toJsonString(), sessionId });
   } catch {
     return NextResponse.json({ error: "zk_offline" }, { status: 502 });

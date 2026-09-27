@@ -6,7 +6,9 @@ import { zkFlags } from "../../../../../lib/zk-flags";
 
 /** Raw proof for inspection/download. Revoked proofs stay visible, marked REVOKED. */
 export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }) {
-  if (!zkFlags().enabled) return NextResponse.json({ error: "zk_disabled" }, { status: 503 });
+  const flags = zkFlags();
+  if (!flags.enabled) return NextResponse.json({ error: "zk_disabled" }, { status: 503 });
+  if (!flags.badgePublic) return NextResponse.json({ error: "not_found" }, { status: 404 });
   if (!(await checkRateLimit(`zk-proof:${clientIp(req)}`, 30, 60000)).ok) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }

@@ -164,7 +164,8 @@ artemis/
 │   ├── 0004_showcase_story.sql  # Tagline / description / lore catalog fields
 │   ├── 0005_showcase_hook.sql   # Marketing hook catalog field
 │   └── 0006_showcase_links.sql  # X + website link fields
-│   └── 0007_zk.sql              # ZK sessions + verifications (nonces)
+│   ├── 0007_zk.sql              # ZK sessions + verifications (nonces)
+│   └── 0008_zk_creator_binding_and_revoke.sql # Handle binding + revocation audit
 │
 ├── public/assets/               # Branded visuals, logos, and WebP assets
 │   ├── artemis-banner.png       # High-resolution cosmic hero banner
@@ -255,6 +256,7 @@ psql "$DATABASE_URL" -f migrations/0004_showcase_story.sql
 psql "$DATABASE_URL" -f migrations/0005_showcase_hook.sql
 psql "$DATABASE_URL" -f migrations/0006_showcase_links.sql
 psql "$DATABASE_URL" -f migrations/0007_zk.sql
+psql "$DATABASE_URL" -f migrations/0008_zk_creator_binding_and_revoke.sql
 ```
 
 ### 5. Run Development Server

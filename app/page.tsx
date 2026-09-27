@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { DraftProvider } from '../components/DraftContext';
 import { ArrivalPreloader } from '../components/ArrivalPreloader';
 import { InkTrail } from '../components/InkTrail';
@@ -21,18 +21,25 @@ import { TransparencySection } from '../components/TransparencySection';
 import ZkSection from '../components/ZkSection';
 import { ShieldPanel } from '../components/ShieldPanel';
 
-// Gate: the ZK section makes live claims, so it renders ONLY when the
-// feature is enabled AND verified in production (brief: no cosmetic ZK).
-const ZK_LIVE = process.env.NEXT_PUBLIC_ZK_LIVE === "1";
-// Gate: shielded pool rehearsal UI (brief §B5, default off).
-const SHIELD_LIVE = process.env.NEXT_PUBLIC_SHIELD_ENABLED === "1";
 import { Footer } from '../components/Footer';
 import { useMotion } from '../hooks/useMotion';
 
 function MainApp() {
   useMotion();
+  const [features, setFeatures] = useState({ zkLanding: false, shield: false });
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [soonFeature, setSoonFeature] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    void fetch('/api/features')
+      .then((res) => res.json())
+      .then((flags: { zk?: { landingSection?: boolean }; shield?: { enabled?: boolean } }) => {
+        if (alive) setFeatures({ zkLanding: flags.zk?.landingSection === true, shield: flags.shield?.enabled === true });
+      })
+      .catch(() => undefined);
+    return () => { alive = false; };
+  }, []);
 
   const handleOpenSoon = (feature: string) => {
     setSoonFeature(feature);
@@ -103,17 +110,17 @@ function MainApp() {
         <ExecutionSection onOpenSoon={handleOpenSoon} />
 
         {/* 10b. Zero-Knowledge Verification (gated: live only) */}
-        {ZK_LIVE && <ZkSection />}
+        {features.zkLanding && <ZkSection />}
 
         {/* 10c. Shielded Pools rehearsal (gated: off by default) */}
-        {SHIELD_LIVE && <ShieldPanel />}
+        {features.shield && <ShieldPanel />}
 
         {/* 11. Transparency & Disclosures Accordion */}
         <TransparencySection onOpenSoon={handleOpenSoon} />
       </main>
 
       {/* 12. Footer with Huge Watermark & Pixels */}
-      <Footer onOpenSoon={handleOpenSoon} />
+      <Footer onOpenSoon={handleOpenSoon} zkEnabled={features.zkLanding} />
     </div>
   );
 }

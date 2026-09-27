@@ -17,6 +17,9 @@ export async function GET(req: Request) {
       return NextResponse.json({ status: s.status, failReason: s.fail_reason || undefined });
     }
     const v = await getVerificationBySession(session);
+    if (v?.revoked_at) {
+      return NextResponse.json({ status: "revoked", revokeReason: v.revoke_reason || undefined });
+    }
     return NextResponse.json({
       status: s.status,
       handle: v?.handle,
