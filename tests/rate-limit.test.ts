@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { bucketCount, checkDailyLimit, checkRateLimit, clearRateLimits, clientIp } from "../lib/rate-limit";
+import { bucketCount, checkDailyLimit, checkRateLimit, checkSharedRateLimit, clearRateLimits, clientIp } from "../lib/rate-limit";
 
 describe("checkRateLimit", () => {
   it("allows up to the limit then refuses", async () => {
@@ -44,6 +44,15 @@ describe("checkRateLimit", () => {
     try {
       expect((await checkRateLimit("fb1", 1, 60000)).ok).toBe(true);
       expect((await checkRateLimit("fb1", 1, 60000)).ok).toBe(false);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
+  it("refuses shared limits when no database is configured", async () => {
+    vi.stubEnv("DATABASE_URL", "");
+    try {
+      await expect(checkSharedRateLimit("shield-relay:test", 5, 60_000)).rejects.toThrow("shared_rate_limit_unavailable");
     } finally {
       vi.unstubAllEnvs();
     }

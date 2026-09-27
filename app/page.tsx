@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { DraftProvider } from '../components/DraftContext';
 import { ArrivalPreloader } from '../components/ArrivalPreloader';
 import { InkTrail } from '../components/InkTrail';
@@ -18,13 +18,29 @@ import { AudiencesSection } from '../components/AudiencesSection';
 import { ComparisonSection } from '../components/ComparisonSection';
 import { ExecutionSection } from '../components/ExecutionSection';
 import { TransparencySection } from '../components/TransparencySection';
+import ZkSection from '../components/ZkSection';
+import { ShieldPanel } from '../components/ShieldPanel';
+
 import { Footer } from '../components/Footer';
 import { useMotion } from '../hooks/useMotion';
 
 function MainApp() {
-  useMotion();
+  const [features, setFeatures] = useState({ zkLanding: false, shield: false });
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [soonFeature, setSoonFeature] = useState<string | null>(null);
+  // Re-scans motion targets when flag-gated sections mount late.
+  useMotion(features);
+
+  useEffect(() => {
+    let alive = true;
+    void fetch('/api/features')
+      .then((res) => res.json())
+      .then((flags: { zk?: { landingSection?: boolean }; shield?: { enabled?: boolean } }) => {
+        if (alive) setFeatures({ zkLanding: flags.zk?.landingSection === true, shield: flags.shield?.enabled === true });
+      })
+      .catch(() => undefined);
+    return () => { alive = false; };
+  }, []);
 
   const handleOpenSoon = (feature: string) => {
     setSoonFeature(feature);
@@ -94,12 +110,18 @@ function MainApp() {
         {/* 10. Execution Rails Toggle & Cards */}
         <ExecutionSection onOpenSoon={handleOpenSoon} />
 
+        {/* 10b. Zero-Knowledge Verification (gated: live only) */}
+        {features.zkLanding && <ZkSection />}
+
+        {/* 10c. Shielded Pools rehearsal (gated: off by default) */}
+        {features.shield && <ShieldPanel />}
+
         {/* 11. Transparency & Disclosures Accordion */}
         <TransparencySection onOpenSoon={handleOpenSoon} />
       </main>
 
       {/* 12. Footer with Huge Watermark & Pixels */}
-      <Footer onOpenSoon={handleOpenSoon} />
+      <Footer onOpenSoon={handleOpenSoon} zkEnabled={features.zkLanding} />
     </div>
   );
 }

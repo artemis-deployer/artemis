@@ -108,14 +108,25 @@ describe("verifySolanaTx pruned history (no network)", () => {
     const creator = "Creator11111111111111111111111111111111";
     mockConn({
       getSignatureStatuses: async () => ({ value: [{ err: null, confirmationStatus: "finalized" }] }),
-      getTransaction: async () => ({ transaction: { message: { accountKeys: [mint, creator] } } }),
+      getTransaction: async () => ({ transaction: { message: { accountKeys: [mint, creator], header: { numRequiredSignatures: 2 } } } }),
     });
     await expect(verifySolanaTx("https://rpc.test", mint, sig, creator)).resolves.toBe(true);
     mockConn({
       getSignatureStatuses: async () => ({ value: [{ err: null, confirmationStatus: "finalized" }] }),
       getTransaction: async () => ({
-        transaction: { message: { accountKeys: [mint, "Other1111111111111111111111111111111111"] } },
+        transaction: { message: { accountKeys: [mint, "Other1111111111111111111111111111111111"], header: { numRequiredSignatures: 2 } } },
       }),
+    });
+    await expect(verifySolanaTx("https://rpc.test", mint, sig, creator)).resolves.toBe(false);
+  });
+  it("rejects a creator key that is present but not a transaction signer", async () => {
+    const mint = "Mint111111111111111111111111111111111111";
+    const creator = "Creator11111111111111111111111111111111";
+    mockConn({
+      getSignatureStatuses: async () => ({ value: [{ err: null, confirmationStatus: "finalized" }] }),
+      getTransaction: async () => ({ transaction: { message: {
+        accountKeys: [mint, creator], header: { numRequiredSignatures: 1 },
+      } } }),
     });
     await expect(verifySolanaTx("https://rpc.test", mint, sig, creator)).resolves.toBe(false);
   });
@@ -165,6 +176,10 @@ describe("verifyEvmTx creator binding (no network)", () => {
   it("accepts when tx.from equals expectedFrom", async () => {
     mockReceipt({ status: "success", from, contractAddress: addr, logs: [] });
     await expect(verifyEvmTx(4663, addr, hash, from)).resolves.toBe(true);
+  });
+  it("rejects a malformed expected creator even when the token creation tx matches", async () => {
+    mockReceipt({ status: "success", from, contractAddress: addr, logs: [] });
+    await expect(verifyEvmTx(4663, addr, hash, "So11111111111111111111111111111111111111112")).resolves.toBe(false);
   });
   it("rejects when tx.from differs from expectedFrom", async () => {
     mockReceipt({ status: "success", from, contractAddress: addr, logs: [] });

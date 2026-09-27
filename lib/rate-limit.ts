@@ -31,6 +31,14 @@ export async function checkRateLimit(key: string, limit: number, windowMs: numbe
   return checkRateLimitMemory(key, limit, windowMs);
 }
 
+/** Use for actions that spend server funds and cannot safely use per-instance memory quotas. */
+export async function checkSharedRateLimit(key: string, limit: number, windowMs: number): Promise<RateDecision> {
+  if (!isDbConfigured()) throw new Error("shared_rate_limit_unavailable");
+  const decision = await dbHit(key, limit, windowMs);
+  if (!decision) throw new Error("shared_rate_limit_unavailable");
+  return decision;
+}
+
 function checkRateLimitMemory(key: string, limit: number, windowMs: number): RateDecision {
   const t = now();
   let bucket = buckets.get(key);
