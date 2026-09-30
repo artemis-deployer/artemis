@@ -8,3 +8,5 @@ tsconfig.tsbuildinfo
 out/
 cache/
 broadcast/
+.vercel
+.env*
