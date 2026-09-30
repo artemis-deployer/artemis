@@ -4,6 +4,10 @@ Target: `https://artemiszk.tech` serves `main`. Nothing below activates any
 public feature; all UI flags stay off until the staged rollout in
 `DevBrief-Activation.md`.
 
+**Status 2026-09-27: DONE via Vercel CLI** (all vars below set for Production,
+fresh production deployment Ready and verified: zk endpoints live with UI dark,
+shield configured on mainnet pool with all flags off).
+
 ## 1. Open Vercel
 
 Project → Settings → Environment Variables. Add each variable for the
