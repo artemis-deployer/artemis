@@ -26,6 +26,11 @@
 > Blockscout via UI (payload siap di `deployments/verification/`), flag hosting,
 > proof X sungguhan untuk ZK, dan post publik owner.
 
+> **LIVE 2026-09-27 (owner: "buka semuanya"):** flag production ON — ZK UI/badge/landing
+> + Shield deposit/withdraw/ready attestations + NEXT_PUBLIC_* live di artemiszk.tech.
+> Terbukti via /api/features. Satu-satunya yang tetap butuh manusia: proof X pertama,
+> deposit/penggunaan nyata, dan postingan.
+
 > **Aturan utama:** tidak ada post, badge, atau copy "live" sebelum checklist **Go / No-Go** di brief ini lolos dan owner memberi persetujuan tertulis.
 
 ---
