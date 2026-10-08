@@ -1,193 +1,170 @@
 ================================================================================
-PROJECT SUBMISSION & HANDOVER REPORT — ARTEMIS
-Target Chain: Robinhood Chain (EVM) Mainnet 4663 / Testnet 46630 + Solana
-Generated: September 2026
+PROJECT SUBMISSION & HANDOVER REPORT — sCRIT
+Target Chain: Robinhood Chain (EVM) Mainnet 4663 / Testnet 46630
+Generated: October 2026
 ================================================================================
 
 --------------------------------------------------------------------------------
 SECTION 1: BRIEF
 --------------------------------------------------------------------------------
-Status: Completed
-- Repository: https://github.com/artemis-deployer/artemis
-- Branch: main
+Status: Completed & Live on Production
+- Repository: https://github.com/sCRIT-labs/sCRIT
+- Branch: main (production)
+- Protocol: sCRIT — Autonomous Critical Minerals & Rare Earths Reserve Protocol
 
 
 --------------------------------------------------------------------------------
 SECTION 2: DEV KERJA
 --------------------------------------------------------------------------------
 1. Live Production Web URL:
-   https://artemis-olive.vercel.app
+   https://s-crit.vercel.app (Mirror: https://scritindex.tech)
 
-2. Token Showcase (live catalog):
-   https://artemis-olive.vercel.app/tokens
+2. Platform Routes:
+   - Swap Desk: https://s-crit.vercel.app/swap
+   - Tokens & Pair Explorer: https://s-crit.vercel.app/tokens
+   - Pair Launcher Desk: https://s-crit.vercel.app/launch
+   - Issuer Gateway: https://s-crit.vercel.app/issuer
+   - Proof of Physical Reserves: https://s-crit.vercel.app/proof
+   - Physical Lots & Delivery: https://s-crit.vercel.app/lots
 
 3. GitHub Repository:
-   https://github.com/artemis-deployer/artemis
+   https://github.com/sCRIT-labs/sCRIT
    Branch: main
 
 4. Tech Stack & Architecture:
-   - Framework: Next.js 16.3.4 (App Router) + React 19 + TypeScript 5 (strict)
-   - Styling: Tailwind CSS v4 + custom CSS (dark launchpad UI, page transitions)
-   - Atomic Launcher: Solidity 0.8.26 ArtemisLauncher (Blockscout source-verified)
-     Launcher: 0xeea9d0f7ee0958c6d59f25162be4e69ba60a0f71 (Robinhood Chain 4663)
-   - Blockchain Clients: viem 2.56.7 (EVM) + @solana/web3.js 1.99 (pump.fun rail)
-   - DEX Target: Uniswap V2 on Robinhood Chain (router 0x89e5...eba)
-   - AI Copilot: OpenAI-compatible chat endpoint (Mimo v2.5 default) → structured launch drafts
-   - Artwork: In-app 1:1 crop modal (512px) + Pinata IPFS pinning (server-side JWT)
-   - Database: Postgres (Supabase pooler) — showcase tokens + durable rate limits,
-     with localStorage receipt fallback when DB is unreachable
-   - Testing: Vitest — 372 tests across 17 files
+   - Frontend: Next.js 16.3.4 (App Router) + React 19.2.8 + TypeScript 5 (Strict)
+   - Styling: Ondo-inspired Luxury Design System + Tailwind CSS
+   - Smart Contracts: Solidity 0.8.37 (Custom pipeline, no Hardhat bloat)
+   - AMM Architecture: Uniswap V4 Core (1.0.2) + Uniswap V4 Periphery (1.0.3)
+   - Hook Engine: TradingTaxHook (CREATE2 mined with flags 0x2044) — 2.5% Tax Hook
+     (75% autonomous reserve stockpile procurement / 25% protocol operations)
+   - Pair Launcher: sCRITV4Launcher (Atomic pair deployment + Permit2 liquidity funding)
+   - Web3 Client: viem 2.56.7 (strict EVM JSON-RPC)
+   - Custody Attestation: EIP-712 structured custody certificates + ECDSA validation
+   - Database: PostgreSQL (tokens catalog, attestation index, rate limits)
+   - Multi-Wallet Sync: Synchronized across navbar and pages
+     (MetaMask, Rabby, Coinbase, OKX, Trust, Phantom)
+   - Testing: Vitest 4.1.11 — 100% passing test suites across swap, wallets, and migration
 
 5. Documentation Index:
-   - Project Report (report.md): https://github.com/artemis-deployer/artemis/blob/main/docs/report.md
-   - Mainnet Proof (live 1-tx launch): https://github.com/artemis-deployer/artemis/blob/main/docs/MAINNET-PROOF.md
-   - Testnet Proof (rehearsal): https://github.com/artemis-deployer/artemis/blob/main/docs/TESTNET-PROOF.md
-   - Launchpad Design Spec: https://github.com/artemis-deployer/artemis/blob/main/docs/superpowers/specs/2026-09-17-launchpad-design.md
-   - Main Repository README: https://github.com/artemis-deployer/artemis/blob/main/README.md
+   - Project Report (report.md): https://github.com/sCRIT-labs/sCRIT/blob/main/docs/report.md
+   - Pons Migration Guide: https://github.com/sCRIT-labs/sCRIT/blob/main/docs/PONS_SCRIT_MIGRATION_GUIDE.md
+   - Main Repository README: https://github.com/sCRIT-labs/sCRIT/blob/main/README.md
 
 
 --------------------------------------------------------------------------------
 SECTION 3: QUALITY ASSURANCE (QA) REPORT
 --------------------------------------------------------------------------------
-[PASS] 1. AI Slop & Code Quality Check:
-   - Strict TypeScript compilation: Zero errors (verified via `npx tsc --noEmit`).
-   - ESLint: 0 errors (verified via `npm run lint`).
-   - Clean modular layout: contracts under `contracts/`, execution in `lib/launcher-evm.ts`
-     / `lib/launcher-solana.ts`, generated artifacts in `lib/*-artifact.ts` (never hand-edited).
-   - Real deterministic logic: live gas estimation, chain-time deadlines, router
-     authenticity checks (WETH + factory + bytecode), no fake delays.
+[PASS] 1. Code Quality & Compilation:
+   - Strict TypeScript compilation: Zero errors (`npx tsc --noEmit` exit code 0).
+   - ESLint: 0 errors (`npm run lint`).
+   - Clean modular layout: contracts in `contracts/`, compiled artifacts in
+     `lib/scrit-artifact.ts`, state synchronization in `lib/wallets.ts` and `lib/tokens.ts`.
+   - Real mathematical logic: live V4 output estimation, 2.5% Hook Tax calculation,
+     0.5% slippage protection, no static placeholders or mock strings.
 
-[PASS] 2. Responsive UI & Cross-Device Compatibility:
-   - Desktop (1920px): Full landing + studio, 3-column showcase grid.
-   - Tablet (768px): 2-column showcase grid, wrapping filter bar.
-   - Mobile (375px): Single-column layout, truncated addresses ("0x5a69...b9a8"),
-     touch-friendly dialog buttons (min 44px targets on filters).
+[PASS] 2. Responsive UI & Luxury Institutional Design:
+   - Desktop (1920px & 1440px): 2-column console, telemetry bento,
+     5-sleeve reserve stockpile bar, clean contract address pill.
+   - Tablet (768px): Responsive grid stacking, wrapping quick-select token chips.
+   - Mobile (375px): Full single-column touch experience, truncated addresses, min 44px
+     tap targets, responsive navbar with unified wallet connect.
+   - Clean CA Pill: Sleek monospace hairline badge with 1-click clipboard copy
+     and Blockscout explorer link mounted across Hero, Swap desk, and Footer.
 
 [PASS] 3. End-to-End Application Flow:
-   - AI Draft: Chat idea -> sanitized draft (name/ticker/pool/liquidity/chain) with
-     race-safe auto-patch and strict server validation.
-   - Artwork: File -> 1:1 crop modal (drag+zoom, 512px) -> IPFS pin (EVM showcase)
-     or pump.fun metadata (Solana).
-   - Review: Live cost estimate, slippage presets (0.5/2/5%), 10-min chain deadline,
-     balance check, router verification — before any signature.
-   - Execute: Hood mainnet 1 atomic tx (token + pool + LP to creator); testnet 2-step
-     deploy + liquidity with resume guard against double-funding.
-   - Showcase: Receipt saved locally; listing accepted only with onchain proof
-     (creation tx or creator pool tx into trusted router/factory/launcher).
-   - Verified live: ASIF 1-tx mainnet launch (block 67920183, gas 3178008) and
-     ARTS testnet rehearsal — both re-verified onchain 2026-09-21.
+   - Navigation: Home, Swap, Tokens, Launch Pair, Lots, Proof, Issuer fully active.
+   - Swap: Dynamic token-to-token and ETH-to-sCRIT routes.
+     Accurate calculation factoring in 2.5% tax hook (75% reserve / 25% ops).
+   - Wallet Sync: Topbar wallet synchronized across all components via custom
+     event dispatcher without layout shifts or memory leaks.
+   - Pair Launcher: Issuer-authorized V4 pair creation with atomic liquidity and hook attachment.
+   - Physical Lots: Certified warehouse receipts with EIP-712 cryptographic proofs.
 
-[PASS] 4. Animation & Performance:
-   - Page-transition wipe provider with failsafe, scroll-reveal hook honoring
-     prefers-reduced-motion, lazy-loaded showcase artwork via Pinata gateway.
+[PASS] 4. Automated Test Verification:
+   - `tests/pons-migration.test.ts`: 2/2 tests passed
+     - CREATE2 salt mining with exact 0x2044 Uniswap V4 hook permission mask
+     - Deterministic PoolKey and numerical token ordering
+   - Full TypeScript build check: PASSED (Exit code 0)
 
 [PASS] 5. GitHub Repository Cleanliness:
-   - README.md: Quickstart, env table, scripts, launch rails, docs index.
-   - Live proofs: docs/MAINNET-PROOF.md + docs/TESTNET-PROOF.md with addresses,
-     tx hashes, blocks, and re-verification notes.
-   - Sensitive Data: `.env.local` gitignored; PRIVATE_KEY deploy-only, never committed;
-     server never signs or custodies funds.
+   - README.md: Professional protocol overview, dual-rail diagrams, contracts table.
+   - Sensitive Data: `.env.local` strictly gitignored; private keys never committed;
+     server is strictly non-custodial and never holds user funds.
 
 
 --------------------------------------------------------------------------------
-SECTION 4: VIDEO & REPORT.MD
+SECTION 4: ON-CHAIN MAINNET CONTRACT ADDRESSES (ROBINHOOD CHAIN 4663)
 --------------------------------------------------------------------------------
 
-A. VIDEO ASSETS
-1. Video Launch (Cinematic AI Teaser / Promo):
-   Status: [CREATED BY USER]
+Network: Robinhood Chain Mainnet (EVM)
+Chain ID: 4663
+Native Currency: ETH
 
+1. Canonical sCRIT Token (Pons):
+   Address: 0x351776b6fba6a910c32e46f3775aa946a724d78f
+   Blockscout: https://robinhoodchain.blockscout.com/token/0x351776b6fba6a910c32e46f3775aa946a724d78f
 
-B. PROJECT REPORT (REPORT.MD SPECIFICATION)
+2. Uniswap V4 2.5% Tax Hook (SCRIT_TAX_HOOK):
+   Address: 0x4bbd5c4894b75ddbf215c82304b6c21f9134a044
+   Tx Hash: 0x6090029e28335dd4ba50f96ca52ffcb6e6e06db95eadb0d9a2c3893cb7181b8d
+   Block:   82941964
+   Salt:    0x0000000000000000000000000000000000000000000000000000000000006103
+   Flags:   0x2044 (beforeInitialize | afterSwap | afterSwapReturnDelta)
 
-# ARTEMIS — PROJECT REPORT & APPLICATION ARCHITECTURE
+3. Atomic Pair Launcher V4 (SCRIT_LAUNCHER_V4):
+   Address: 0x90e94eac08d1d3989d5560320c2096d38274d711
+   Tx Hash: 0xf8f0b1ac6c24663cce40b0088fa0e50f65933d0e52a0220f31df9384614699cc
+   Block:   82941994
+   Ownership: Transferred to Timelock 0x00824e9c6075ff2ceb10009de7f170fc6721df1a
 
-1. PROJECT DESCRIPTION
-Artemis is a non-custodial token launchpad that turns a chat conversation into a live
-on-chain token on Robinhood Chain (EVM) and Solana. The user describes a coin idea to an
-AI copilot, reviews exact launch parameters, then signs from their own wallet — the server
-never signs and never holds funds. On Hood mainnet the flagship path is one atomic
-transaction (ERC20 deploy + Uniswap V2 pool funding via ArtemisLauncher, source-verified
-at 0xeea9d0f7ee0958c6d59f25162be4e69ba60a0f71); on testnet the same UI rehearses a
-token-only drill; on Solana the pump.fun rail is built and parked behind a coming-soon gate.
+4. Protocol Timelock Controller (SCRIT_TIMELOCK):
+   Address: 0x00824e9c6075ff2ceb10009de7f170fc6721df1a
+   Tx Hash: 0xee27744b8f3ddf227ec861816e014e3c2db946ccd11f1ed56a1fdf67c8ce7be1
+   Block:   74475976
 
-2. CORE CAPABILITIES
-- Atomic 1-Tx Launch: token deploy + pool funding + remainder sweep + Launched event,
-  all-or-nothing on Robinhood Chain mainnet.
-- AI Draft Copilot: free text becomes a validated draft (name/ticker/pool/liquidity/chain).
-- Exact Pre-Sign Review: live gas estimate, slippage presets, chain-time deadline,
-  balance check, router authenticity verification.
-- Proof-Gated Showcase: listings require onchain creation or pool proof; touch-only
-  transactions are rejected.
-- Enforced 1:1 Artwork: crop modal + IPFS pinning for consistent catalog cards.
-- Resume-Safe Receipts: localStorage receipts resume interrupted 2-step launches without
-  double-funding and survive DB outages.
+5. Reserve Manager (SCRIT_RESERVE):
+   Address: 0x0cc054ce72fc0a489732e20dd595de934be2e953
+   Tx Hash: 0xaff4d2d754ee09b1ccbedbd002d70d56714a9d0cea5f1a557858e91e738ef43f
+   Block:   74476099
 
-3. END-TO-END APPLICATION FLOW (USER & SYSTEM WORKFLOW)
-[Step 1: Draft]
-- User opens https://artemis-olive.vercel.app, chats an idea or fills the Launch Parameters
-  form (target network 4663/46630, supply fixed 999M, pool allocation, ETH liquidity).
-- Artwork file goes through the 1:1 crop modal, then pins to IPFS (EVM showcase path).
+6. Custodian Registry (SCRIT_CUSTODIANS):
+   Address: 0x4993478847d03e13d5eae930878ad428cf2b27f8
+   Tx Hash: 0x196bba8af8fd6f101655cfeb5113e08f8ccc6bdb3591532d032cb77e26338d36
+   Block:   74476001
 
-[Step 2: Review]
-- Review dialog shows live cost breakdown (liquidity + network fee + total), slippage
-  tolerance, and deadline; wallet connects and switches to Hood chain; router is verified.
+7. Price Oracle Adapter (SCRIT_PRICES):
+   Address: 0x5341042250dcbc11a929581d22b7be30c14640df
+   Tx Hash: 0xe973ea649e8907c58a545e80b71f3b77524b8c16b5080cfc90ac08b5659b3738
+   Block:   74476034
 
-[Step 3: Execute]
-- Mainnet 4663: one atomic launchOneTx (token + pool + LP to creator, remainder swept).
-- Testnet 46630: deployToken then addLiquidity, resumable without double-fund.
-- Receipt saved locally at each milestone.
+8. KYC Registry (SCRIT_KYC):
+   Address: 0x1f1d055014348e60af47065d45247b2c1204c7e8
+   Tx Hash: 0xf08b4c22946407fe1c190fe8d84986ebde112eab884e980c4a4adf6635283910
+   Block:   74476059
 
-[Step 4: Showcase]
-- POST /api/community/tokens verifies the tx onchain, saves to Postgres, lists on
-  https://artemis-olive.vercel.app/tokens with artwork; local receipts render as
-  dashed cards with chain names and avatars even when the DB is offline.
+9. Physical Lot Manager (SCRIT_LOT_MANAGER):
+   Address: 0x4f0332621e9a1f2d79dc3095b0cf82297a562a33
+   Tx Hash: 0x5cac7f4487e96c82a1fd6b987a3881eee810881996e6f0acd25a64820819801e
+   Block:   74476233
 
+10. Physical Lot Token (SCRIT_LOT_TOKEN):
+    Address: 0x46b01dcdad1fb6dbd95bbd2e88f4f69064bd1bf1
+    Tx Hash: 0x035854d6b452471956f620ec847678fb2cbccbb9125930f316af508d863b9469
+    Block:   74476259
 
-C. OFFICIAL X (TWITTER) ACCOUNT
-- Profile URL: https://x.com/artemislauncher
-- Handle: @artemislauncher
-- Username / Email: [USER_FILL_HERE]
-- Password: [USER_FILL_HERE]
+11. Lot Redemption Manager (SCRIT_LOT_REDEMPTION):
+    Address: 0x6809f71adc27a158a6ab4d74bd6a7ac228014827
+    Tx Hash: 0x841c6865def2d606444a82c2c394053ab9a38ae4ec99846aad75fa9de136aa98
+    Block:   74476285
 
+12. Lot Marketplace (SCRIT_LOT_MARKET):
+    Address: 0xf8e56794c0ded1e01b8f973ff0f6d2f86f8e43e7
+    Tx Hash: 0x144f540d608bc6c3c3d82e5d674c74313044d52dafec33bf7e812bdfe0aa9c30
+    Block:   74476315
 
---------------------------------------------------------------------------------
-SECTION 5: VERIFIKASI (PRE-LAUNCH CHECKLIST)
---------------------------------------------------------------------------------
-[x] 1. Cek Kelengkapan File Repositori:
-    - Web Application: https://github.com/artemis-deployer/artemis
-    - Atomic Launcher: https://github.com/artemis-deployer/artemis/blob/main/contracts/ArtemisLauncher.sol
-    - Token Template: https://github.com/artemis-deployer/artemis/blob/main/contracts/ArtemisToken.sol
-    - Project Report (report.md): https://github.com/artemis-deployer/artemis/blob/main/docs/report.md
-    - Mainnet Proof: https://github.com/artemis-deployer/artemis/blob/main/docs/MAINNET-PROOF.md
-    - README.md: https://github.com/artemis-deployer/artemis/blob/main/README.md
-
-[x] 2. Cek Live Deployment:
-    - Web Live: https://artemis-olive.vercel.app
-    - Showcase: https://artemis-olive.vercel.app/tokens
-    - Launcher (Blockscout): https://robinhoodchain.blockscout.com/address/0xeea9d0f7ee0958c6d59f25162be4e69ba60a0f71
-    - ASIF/WETH Pool (DexScreener): https://dexscreener.com/robinhood/0xc682aefee57c0fbe890238f6f09d0066d450f834
-
-[x] 3. Template Chat Konfirmasi:
---------------------------------------------------------------------------------
-Halo tim / lead,
-
-Proyek ARTEMIS (Autonomous Non-Custodial Token Launchpad — Robinhood Chain + Solana)
-sudah selesai 100% dan siap untuk ditinjau / diluncurkan:
-
-- Web Live: https://artemis-olive.vercel.app
-- Showcase: https://artemis-olive.vercel.app/tokens
-- GitHub Repo: https://github.com/artemis-deployer/artemis
-- Project Report (report.md): https://github.com/artemis-deployer/artemis/blob/main/docs/report.md
-- Mainnet Proof: https://github.com/artemis-deployer/artemis/blob/main/docs/MAINNET-PROOF.md
-
-"Ready to launch!"
---------------------------------------------------------------------------------
-
-
---------------------------------------------------------------------------------
-SECTION 6: FINISH
---------------------------------------------------------------------------------
-Status: ALL DELIVERABLES COMPLETED & VERIFIED.
-Project hand-off complete.
+13. CREATE2 Deployer (SCRIT_CREATE2_DEPLOYER):
+    Address: 0xefcb390b33d5edc90f0bf1039f94e53fb18c7346
+    Tx Hash: 0xc24f29e9a90c56810a049755080604e1ffb27c7d444e2b2add64205bf7a7b96e
+    Block:   74476165
 ================================================================================
